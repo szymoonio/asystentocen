@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 from fastapi.responses import RedirectResponse
 
+from app.assistant.notes.assist import CLASSIFY_TASK, SPLIT_TASK, classify_note, split_note
 from app.assistant.notes.criteria import criteria_for
 from app.assistant.notes.repository import NoteAlreadyRevised, NoteInput, NoteNotFound
 from app.assistant.notes.stats import compute_stats
@@ -210,6 +211,10 @@ def teczka_osoby(
         groups[-1][1].append(item)
 
     rated_codes = sorted({r.criterion_code for n in all_notes for r in n.ratings})
+    hints = {
+        note_id: list(dict.fromkeys(h["criterion_code"] for h in entries))
+        for note_id, entries in svc.notes_repo.hints_for(n.id for n in notes).items()
+    }
     return render(
         request,
         "assistant/teczka_osoba.html",
@@ -230,6 +235,7 @@ def teczka_osoby(
         point_labels=_point_labels(c),
         points=PARTIAL_POINTS,
         notice=request.query_params.get("zapisano"),
+        hints=hints,
     )
 
 
@@ -280,6 +286,8 @@ def _form_page(
     action: str,
     editing: Note | None = None,
     status_code: int = 200,
+    assistant_notice: str | None = None,
+    assistant_error: str | None = None,
 ):
     evaluation = c.evaluations.current_for(subject.id)
     if editing and editing.evaluation_id:
@@ -307,9 +315,44 @@ def _form_page(
         editing=editing,
         point_labels=_point_labels(c),
         points=PARTIAL_POINTS,
+        split_available=services(c).llm.available(SPLIT_TASK),
+        assistant_notice=assistant_notice,
+        assistant_error=assistant_error,
     )
     response.status_code = status_code
     return response
+
+
+def _merge_lines(existing: str, proposed: list[str]) -> str:
+    lines = _lines(existing)
+    lines += [p for p in proposed if p not in lines]
+    return "\n".join(lines)
+
+
+def _split_page(request: Request, c: Container, subject: Employee, raw: dict, action: str, editing: Note | None):
+    """Akcja „Podziel opis”: propozycja LLM trafia do pól formularza, nic się nie zapisuje."""
+    values = _values_from_raw(raw)
+    outcome = split_note(services(c), subject, values["body"])
+    notice = None
+    if not outcome.error:
+        values["strengths"] = _merge_lines(values["strengths"], outcome.strengths)
+        values["improvements"] = _merge_lines(values["improvements"], outcome.improvements)
+        notice = (
+            f"Asystent zaproponował: zalety — {len(outcome.strengths)}, obszary do poprawy — "
+            f"{len(outcome.improvements)}. Sprawdź i popraw punkty przed zapisem. Suwaki ustawiasz sam."
+            if not outcome.empty
+            else "Asystent nie znalazł w opisie wyraźnych zalet ani obszarów do poprawy."
+        )
+    return _form_page(
+        request, c, subject, values=values, errors=[], action=action, editing=editing,
+        assistant_notice=notice, assistant_error=outcome.error,
+    )  # fmt: skip
+
+
+def _classify_later(background: BackgroundTasks, c: Container, note: Note, subject: Employee) -> None:
+    svc = services(c)
+    if svc.llm.available(CLASSIFY_TASK):
+        background.add_task(classify_note, svc, c.catalog, note, subject, c.clock.now())
 
 
 def _values_from_note(note: Note) -> dict:
@@ -345,24 +388,27 @@ def nowa_notatka(subject_id: str, request: Request):
 
 @router.post("/teczka/{subject_id}/nowa")
 @html_errors
-async def zapisz_notatke(subject_id: str, request: Request):
+async def zapisz_notatke(subject_id: str, request: Request, background: BackgroundTasks):
     c = get_container(request)
     user = get_current_user(request)
     subject = _require_subordinate(c, user, subject_id)
     data, raw, errors = await _parse_form(request, c.clock.today())
+    if raw.get("akcja") == "podziel":
+        return _split_page(request, c, subject, raw, f"/asystent/teczka/{subject_id}/nowa", None)
     if errors:
         return _form_page(
             request, c, subject, values=_values_from_raw(raw), errors=errors,
             action=f"/asystent/teczka/{subject_id}/nowa", status_code=422,
         )  # fmt: skip
     evaluation = c.evaluations.current_for(subject_id)
-    services(c).notes_repo.create(
+    note = services(c).notes_repo.create(
         author_id=user.employee_id,
         subject_id=subject_id,
         evaluation_id=evaluation.id if evaluation else None,
         data=data,
         now=c.clock.now(),
     )
+    _classify_later(background, c, note, subject)
     return RedirectResponse(f"/asystent/teczka/{subject_id}?zapisano=1", status_code=303)
 
 
@@ -394,20 +440,25 @@ def edytuj_notatke(subject_id: str, note_id: str, request: Request):
 
 @router.post("/teczka/{subject_id}/notatka/{note_id}/edytuj")
 @html_errors
-async def zapisz_poprawke(subject_id: str, note_id: str, request: Request):
+async def zapisz_poprawke(subject_id: str, note_id: str, request: Request, background: BackgroundTasks):
     c = get_container(request)
     user = get_current_user(request)
     subject = _employee_or_404(c, subject_id)
     note = _own_current_note(c, user, subject_id, note_id)
     data, raw, errors = await _parse_form(request, c.clock.today())
     action = f"/asystent/teczka/{subject_id}/notatka/{note_id}/edytuj"
+    if raw.get("akcja") == "podziel":
+        return _split_page(request, c, subject, raw, action, note)
     if errors:
         return _form_page(
             request, c, subject, values=_values_from_raw(raw), errors=errors,
             action=action, editing=note, status_code=422,
         )  # fmt: skip
     try:
-        services(c).notes_repo.revise(author_id=user.employee_id, note_id=note_id, data=data, now=c.clock.now())
+        revised = services(c).notes_repo.revise(
+            author_id=user.employee_id, note_id=note_id, data=data, now=c.clock.now()
+        )
     except NoteAlreadyRevised as exc:
         raise PageError(409, "Ta wersja notatki została już poprawiona.") from exc
+    _classify_later(background, c, revised, subject)
     return RedirectResponse(f"/asystent/teczka/{subject_id}?zapisano=1", status_code=303)

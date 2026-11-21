@@ -79,16 +79,20 @@ class NoteNudges:
             except KeyError:
                 continue
             all_notes = self._notes.current(supervisor_id, subject.id)
+            cycle_notes = [n for n in all_notes if n.evaluation_id == evaluation.id]
+            hints = self._notes.hints_for(n.id for n in cycle_notes)
+            hinted = {h["criterion_code"] for items in hints.values() for h in items}
             check = check_subject(
                 subject=subject,
                 evaluation=evaluation,
                 history=evaluations.history(subject.id),
-                notes=[n for n in all_notes if n.evaluation_id == evaluation.id],
+                notes=cycle_notes,
                 all_notes=all_notes,
                 criteria=criteria_for(evaluation, self._catalog).current,
                 absences=employees.absences(subject.id),
                 today=today,
                 cfg=self.config,
+                hinted=hinted,
             )
             if check.findings:
                 digest.people.append(PersonNudges(subject, check.findings))

@@ -154,14 +154,18 @@ def coverage_gaps(
     today: date,
     cfg: NudgesConfig,
     subject_id: str,
+    hinted: frozenset[str] | set[str] = frozenset(),
 ) -> list[CoverageGap]:
-    """Kryteria bez suwaka. Bez notatek nie zgłaszamy (to robi no_note), w świeżym cyklu też nie."""
+    """Kryteria bez obserwacji: bez suwaka i bez podpowiedzi LLM (`hinted`).
+
+    Bez notatek nie zgłaszamy (to robi no_note), w świeżym cyklu też nie.
+    """
     if not notes or not criteria:
         return []
     if start is None or (today - start).days < cfg.coverage_min_cycle_days:
         return []
     stats = compute_stats(notes, criteria_codes=[c.code for c in criteria])
-    missing = set(uncovered(stats))
+    missing = set(uncovered(stats)) - set(hinted)
     return [CoverageGap(subject_id, c) for c in criteria if c.code in missing]
 
 
@@ -197,13 +201,14 @@ def check_subject(
     absences: Sequence[Absence],
     today: date,
     cfg: NudgesConfig,
+    hinted: frozenset[str] | set[str] = frozenset(),
 ) -> SubjectCheck:
     """Wszystkie reguły dla jednej osoby. `notes` — z bieżącego cyklu, `all_notes` — wszystkie autora o tej osobie."""
     if evaluation.state not in ACTIVE_STATES:
         return SubjectCheck([], [])
     start = cycle_start(evaluation, history, subject)
     sid = subject.id
-    gaps = coverage_gaps(notes, criteria, start, today, cfg, sid)
+    gaps = coverage_gaps(notes, criteria, start, today, cfg, sid, hinted)
     before_interview = pre_interview(notes, gaps, evaluation.due_date, today, cfg, sid)
     findings = [
         *no_note(notes, start, today, cfg, sid),

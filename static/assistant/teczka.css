@@ -94,3 +94,10 @@
 .t-other summary { cursor: pointer; font-weight: 500; margin-top: 0.75rem; }
 .t-submit { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
 .t-snoozed { margin: 0.75rem 0 0; }
+
+/* asystent przy notatce */
+.t-default-submit { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.t-assist { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: center; margin-top: 0.5rem; }
+.t-assist-msg { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.t-assist-error { background: var(--warn-soft); color: var(--warn); }
+.t-hint { margin: 0.35rem 0 0; font-style: italic; }

@@ -31,12 +31,22 @@
   {% endif %}
 
   <form method="post" action="{{ action }}" class="t-form">
+    {# Enter w polu formularza ma zapisywać, a nie wywoływać asystenta — pierwszy przycisk submit wygrywa. #}
+    <button type="submit" name="akcja" value="zapisz" class="t-default-submit" tabindex="-1" aria-hidden="true">Zapisz</button>
     <section class="card">
       <label for="observed_on">Kiedy to się wydarzyło?</label>
       <input type="date" id="observed_on" name="observed_on" value="{{ values.observed_on }}" max="{{ today.isoformat() }}" required class="t-date">
 
       <label for="body">Opis sytuacji</label>
       <textarea id="body" name="body" rows="4" placeholder="Co się wydarzyło — fakty, bez ocen osoby.">{{ values.body }}</textarea>
+      {% if split_available %}
+        <div class="t-assist">
+          <button type="submit" name="akcja" value="podziel" class="secondary" formnovalidate>Podziel opis na zalety i obszary</button>
+          <span class="muted small">Asystent zaproponuje punkty, a Ty je sprawdzisz. Imiona i nazwiska są zastępowane przed wysłaniem.</span>
+        </div>
+      {% endif %}
+      {% if assistant_error %}<p class="t-assist-msg t-assist-error" role="alert">{{ assistant_error }}</p>{% endif %}
+      {% if assistant_notice %}<p class="t-assist-msg" role="status">{{ assistant_notice }}</p>{% endif %}
 
       <div class="t-two">
         <div>
@@ -72,7 +82,7 @@
     </section>
 
     <div class="t-submit">
-      <button type="submit">{% if editing %}Zapisz poprawkę{% else %}Zapisz notatkę{% endif %}</button>
+      <button type="submit" name="akcja" value="zapisz">{% if editing %}Zapisz poprawkę{% else %}Zapisz notatkę{% endif %}</button>
       <a class="button secondary" href="/asystent/teczka/{{ subject.id }}">Anuluj</a>
     </div>
   </form>

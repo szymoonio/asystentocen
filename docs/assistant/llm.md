@@ -35,6 +35,13 @@ Implementacje: `ClaudeClient` (SDK `anthropic`) i `NullClient`. Wybór w `build_
    - `restore(text)` — odwrócenie lokalnie; osoby wracają w pełnym brzmieniu (mianownik).
    Imię lub nazwisko noszone przez kilka osób zamieniamy tylko w pełnym brzmieniu.
 
+## Notatki z LLM (`app/assistant/notes/assist.py`)
+
+- **`split_note`** — przycisk „Podziel opis na zalety i obszary” w formularzu notatki (widoczny tylko, gdy zadanie jest dostępne). Wysyła `akcja=podziel`: opis przechodzi detektor (trafienie = nie wysyłamy, komunikat dla przełożonego) i pseudonimizację, propozycja jest dopisywana do pól „Co poszło dobrze” / „Obszary do poprawy”. **Nic się nie zapisuje** — przełożony poprawia i klika „Zapisz”. Suwaków LLM nie dotyka.
+- **`classify_note`** — po zapisie notatki lub poprawki (`BackgroundTasks`). Punkty `B`, `S1…`, `I1…` → najwyżej 2 kody kryteriów na punkt; katalog 14 kryteriów jest w stałym prompcie systemowym (cache). Nieznane kody są odrzucane. Wynik w `asst_criteria_hints` z `generator`, np. `claude-opus-5-5:classify_note:v1`. Notatki z danymi wrażliwymi są pomijane.
+- Podpowiedzi są widoczne na osi czasu jako „Asystent: dotyczy …” i liczą się do pokrycia kryteriów w przypomnieniach.
+- Znane ograniczenie: de-pseudonimizacja wstawia pełne imię i nazwisko w mianowniku („Uprzedzać Ewa Rzetelna”), więc punkt czasem wymaga poprawki gramatycznej.
+
 ## Testy
 
 Testy nie wołają sieci: `tests/assistant/conftest.py` usuwa `ANTHROPIC_API_KEY`, a `ClaudeClient` dostaje fałszywe SDK. Do testów funkcji domenowych jest `FakeLLMClient` (fixture `fake_llm`).

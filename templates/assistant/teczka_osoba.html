@@ -143,6 +143,11 @@
               {% endfor %}
             </div>
           {% endif %}
+          {% if hints.get(n.id) %}
+            <p class="t-hint small muted" title="Podpowiedź asystenta — nie jest częścią notatki. Przypisania sprawdzisz przy podsumowaniu cyklu.">
+              Asystent: dotyczy {% for code in hints[n.id] %}{{ criterion_name(code) }}{% if not loop.last %}, {% endif %}{% endfor %}
+            </p>
+          {% endif %}
           {% if item.previous_versions %}
             <details class="t-versions">
               <summary class="small muted">Poprzednie wersje ({{ item.previous_versions | length }})</summary>

@@ -10,7 +10,7 @@ from datetime import date, datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased, sessionmaker
 
-from app.assistant.notes.models import NoteRow
+from app.assistant.notes.models import CriteriaHintRow, NoteRow
 from app.contracts.enums import NoteSource
 from app.contracts.models import CriterionRating, Note
 
@@ -162,6 +162,21 @@ class NotesRepository:
         with self._sf.begin() as s:
             s.add(_row_from_model(note))
         return note
+
+    # --- podpowiedzi kryteriów (LLM) ------------------------------------------------------
+
+    def save_hints(self, note_id: str, hints: list[dict], generator: str, now: datetime) -> None:
+        with self._sf.begin() as s:
+            s.add(CriteriaHintRow(note_id=note_id, hints=list(hints), generator=generator, created_at=now))
+
+    def hints_for(self, note_ids: Iterable[str]) -> dict[str, list[dict]]:
+        """Najnowsza podpowiedź dla każdej notatki (brak wpisu = notatka niesklasyfikowana)."""
+        ids = list(note_ids)
+        if not ids:
+            return {}
+        stmt = select(CriteriaHintRow).where(CriteriaHintRow.note_id.in_(ids)).order_by(CriteriaHintRow.id)
+        with self._sf() as s:
+            return {row.note_id: list(row.hints or []) for row in s.scalars(stmt)}
 
     # --- seed -------------------------------------------------------------------------
 
