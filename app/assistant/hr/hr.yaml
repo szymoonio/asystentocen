@@ -20,7 +20,7 @@ topics:
     patterns: ["mobbing", "mobbuj", "nękan", "nęka ", "dyskrymin", "molestow", "szykan", "poniża", "zastrasz"]
   KRYZYS:
     label: "kryzys psychiczny lub zagrożenie życia"
-    patterns: ["samobój", "odebrać sobie życie", "odebrał\\w* sobie życie", "nie chce\\w* (\\w+ )?(się )?żyć", "zrobić sobie krzywdę",
+    patterns: ["samobój", "odebrać sobie życie", "odebrał\\w* sobie życie", "nie chce\\w*(?: \\w+){0,3} żyć", "zrobić sobie krzywdę",
                "zrobi sobie krzywdę", "samookalecz", "zagrożeni\\w* życia", "kryzys\\w* psychiczn", "załamani\\w* nerwow"]
   DYSCYPLINARNE_PRAWNE:
     label: "sprawy dyscyplinarne i spory prawne"

@@ -39,6 +39,7 @@ class ClaudeClient:
     def __init__(self, config: LLMConfig, client: Any | None = None) -> None:
         self._config = config
         self._client = client  # wstrzykiwany w testach; inaczej tworzony leniwie
+        self.last_usage: dict | None = None
 
     # --- konfiguracja -------------------------------------------------------------------
 
@@ -90,11 +91,19 @@ class ClaudeClient:
         if reason == "max_tokens":
             raise LLMIncomplete(f"odpowiedź ucięta (max_tokens) w zadaniu {task}")
 
-    @staticmethod
-    def _log_usage(task: str, response: Any) -> None:
+    def _log_usage(self, task: str, response: Any) -> None:
         usage = getattr(response, "usage", None)
         if usage is None:
             return
+        # do evals/: tokeny z odpowiedzi API, nie szacowane
+        self.last_usage = {
+            "model": getattr(response, "model", None),
+            "input_tokens": getattr(usage, "input_tokens", None),
+            "output_tokens": getattr(usage, "output_tokens", None),
+            "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", None),
+            "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", None),
+            "stop_reason": getattr(response, "stop_reason", None),
+        }
         log.info(
             "llm task=%s model=%s in=%s out=%s cache_read=%s request_id=%s",
             task,

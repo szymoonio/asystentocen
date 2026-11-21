@@ -1,0 +1,62 @@
+# Zadanie classify_note: punkt notatki → kryteria (zał. 1 rozporządzenia).
+#
+# Źródło etykiet (provenance): uzasadnienia w przykładowych arkuszach z context/5. — oceniający
+# sami przypisali fragment tekstu do kryterium („rzetelność – …”, „współpraca – …”). Tekst
+# przeredagowany na styl notatki (bez nazwy kryterium na początku i bez poziomu oceny), żeby
+# model nie dostał etykiety w treści. `expected` = kryteria, które oceniający łączył z fragmentem;
+# trafienie = model wskazał co najmniej jedno z nich. Przypadki ujemne (`expected: []`) —
+# napisane przez zespół, nie dotyczą żadnego kryterium.
+cases:
+  - {id: c01, source: "arkusz 09", expected: [RZETELNOSC],
+     text: "Po stwierdzeniu wycieku danych nie zachował właściwej procedury; sposób postępowania po incydencie pokazał brak należytej staranności."}
+  - {id: c02, source: "arkusz 09", expected: [WSPOLPRACA],
+     text: "Przy rozwiązywaniu incydentu wycieku danych nie działał razem z pracownikami i przełożonymi, co podważyło zaufanie w zespole."}
+  - {id: c03, source: "arkusz 09", expected: [KOMUNIKACJA],
+     text: "Wbrew procedurom nie przekazał przełożonym i kolegom istotnych informacji o incydencie."}
+  - {id: c04, source: "arkusz 12", expected: [WSPOLPRACA],
+     text: "Nie konsultował trudnych spraw z innymi, patrzył wyłącznie z perspektywy własnego biurka, przez co problemy rozwiązywano wolniej."}
+  - {id: c05, source: "arkusz 12", expected: [KOMUNIKACJA],
+     text: "Nie wymieniał informacji z kolegami z zespołu ani z przełożonymi; kontakt z klientami zewnętrznymi ograniczał do minimum."}
+  - {id: c06, source: "arkusz 12", expected: [ORIENTACJA_NA_KLIENTA],
+     text: "Odpowiedzi na zapytania były merytorycznie poprawne, ale nie wychodził z inicjatywą kontaktu z klientem, nawet gdy przyspieszyłoby to sprawę."}
+  - {id: c07, source: "arkusz 12", expected: [KREATYWNOSC],
+     text: "Działał wyłącznie według zapisów regulaminu, bez elastyczności tam, gdzie własna inicjatywa ułatwiłaby realizację zadania."}
+  - {id: c08, source: "arkusz 11", expected: [RZETELNOSC],
+     text: "Mimo dużego obciążenia i nadgodzin wszystkie obowiązki realizowała z wzorowym zachowaniem procedur i terminów."}
+  - {id: c09, source: "arkusz 11", expected: [WSPOLPRACA],
+     text: "Bardzo dobrze działała z innymi członkami zespołu; koledzy mówią, że jest pomocna w trudnych sytuacjach."}
+  - {id: c10, source: "arkusz 13", expected: [ZARZADZANIE_LUDZMI],
+     text: "Mimo braków kadrowych i dużej rotacji tak rozdzielał pracę w departamencie, że wszystkie zadania zostały zrealizowane dostępnymi siłami."}
+  - {id: c11, source: "arkusz 13", expected: [ORGANIZACJA_PRACY],
+     text: "Sprawnie układał działania departamentu w codziennej pracy i przy nieprzewidzianych wyzwaniach wymagających intensyfikacji prac."}
+  - {id: c12, source: "arkusz 13", expected: [WYKORZYSTYWANIE_WIEDZY, KOMUNIKACJA],
+     text: "Zaraz po szkoleniu wdrożył w departamencie narzędzia elektroniczne wspomagające przepływ informacji i zaczął ich skutecznie używać."}
+  - {id: c13, source: "arkusz 13", expected: [WYSTAPIENIA_PUBLICZNE],
+     text: "Jego prezentacje na konferencjach i spotkaniach zewnętrznych były mało porywające, choć to część zadań na stanowisku."}
+  - {id: c14, source: "arkusz 05", expected: [RZETELNOSC],
+     text: "Wykonywał zadania terminowo, z dużą starannością i dbałością o jakość opracowywanych dokumentów."}
+  - {id: c15, source: "arkusz 05", expected: [ORGANIZACJA_PRACY],
+     text: "Efektywnie planował i realizował zadania, koncentrując się na osiągnięciu założonych rezultatów programu."}
+  - {id: c16, source: "arkusz 05", expected: [WSPOLPRACA],
+     text: "Skutecznie współdziałał z pracownikami komórki i przedstawicielami innych instytucji przy wypracowywaniu rozwiązań."}
+  - {id: c17, source: "arkusz 05", expected: [KOMUNIKACJA],
+     text: "Jasno i rzeczowo przedstawiał stanowiska i rekomendacje, dzięki czemu informacje sprawnie docierały do interesariuszy."}
+  - {id: c18, source: "arkusz 05", expected: [MYSLENIE_ANALITYCZNE],
+     text: "Poprawnie analizował dane i dokumentację projektową i formułował z nich wnioski potrzebne do realizacji zadań."}
+  - {id: c19, source: "arkusz 05", expected: [WYKORZYSTYWANIE_WIEDZY],
+     text: "Przy wdrażaniu programu na bieżąco stosował obowiązujące przepisy i wytyczne, korzystając z posiadanej wiedzy merytorycznej."}
+  - {id: c20, source: "arkusz 01", expected: [WSPOLPRACA, KOMUNIKACJA],
+     text: "Uruchomił system dzielenia się wiedzą, w który włączył inne inspektoraty w województwie, i rozsyłał informacje o wspólnych inicjatywach."}
+  - {id: c21, source: "arkusz 02", expected: [WYSTAPIENIA_PUBLICZNE],
+     text: "Często prowadzi prezentacje na spotkaniach i szkoleniach wewnętrznych; ankiety uczestników oceniają je bardzo dobrze."}
+  - {id: c22, source: "arkusz 03", expected: [PODEJMOWANIE_DECYZJI],
+     text: "Skutecznie rozwiązuje sytuacje problemowe, w których trzeba szybko rozstrzygnąć i wziąć odpowiedzialność za wybór."}
+  - {id: c23, source: "arkusz 04", expected: [RZETELNOSC],
+     text: "W przygotowanych dokumentach wielokrotnie znajdowano błędy wymagające korekt; nie sprawdzał kompletności informacji przed wysłaniem."}
+  # --- przypadki ujemne: nic nie pasuje -----------------------------------------------------
+  - {id: n01, source: "zespół", expected: [],
+     text: "Zgłosił w kadrach zmianę adresu do korespondencji."}
+  - {id: n02, source: "zespół", expected: [],
+     text: "Odebrał nowy identyfikator w recepcji."}
+  - {id: n03, source: "zespół", expected: [],
+     text: "Przeniesiono go do pokoju 214 na czas remontu."}

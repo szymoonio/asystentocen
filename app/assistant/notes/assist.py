@@ -118,10 +118,13 @@ def note_items(note: Note) -> list[tuple[str, str, str]]:
     return items
 
 
-def classify_note(
-    svc: AssistantServices, catalog: CriteriaCatalog, note: Note, subject: Employee, now: datetime
-) -> list[dict] | None:
-    """Zapisuje podpowiedź kryteriów dla notatki. Zwraca zapisane wpisy albo None, gdy pominięto."""
+def classify_items(
+    svc: AssistantServices, catalog: CriteriaCatalog, note: Note, subject: Employee
+) -> tuple[list[dict], str] | None:
+    """Punkty notatki → kryteria. Zwraca (podpowiedzi, generator) albo None, gdy pominięto.
+
+    Rzuca `LLMError` — `classify_note` (tło) go łapie, a `evals/` liczy jako błąd wywołania.
+    """
     if not svc.llm.available(CLASSIFY_TASK):
         return None
     if detect(note_text(note)):
@@ -135,11 +138,7 @@ def classify_note(
     user = "\n".join(f"{item_id}: {session.apply(text)}" for item_id, _, text in items)
     prompt = load_prompt(CLASSIFY_TASK)
     system = f"{prompt.text}\n\n{catalog_prompt(catalog)}"
-    try:
-        result = svc.llm.structured(CLASSIFY_TASK, system, user, Classification)
-    except LLMError as err:
-        log.warning("classify_note %s: %s", note.id, err)
-        return None
+    result = svc.llm.structured(CLASSIFY_TASK, system, user, Classification)
 
     valid = {c.code for c in catalog.all()}
     by_id = {item_id: (kind, text) for item_id, kind, text in items}
@@ -150,5 +149,20 @@ def classify_note(
         kind, text = by_id[entry.id]
         for code in [c for c in entry.criteria if c in valid][:2]:
             hints.append({"item": text, "kind": kind, "criterion_code": code})
-    svc.notes_repo.save_hints(note.id, hints, generator_id(svc.llm, CLASSIFY_TASK, prompt.version), now)
+    return hints, generator_id(svc.llm, CLASSIFY_TASK, prompt.version)
+
+
+def classify_note(
+    svc: AssistantServices, catalog: CriteriaCatalog, note: Note, subject: Employee, now: datetime
+) -> list[dict] | None:
+    """W tle po zapisie: zapisuje podpowiedź kryteriów. Zwraca zapisane wpisy albo None, gdy pominięto."""
+    try:
+        classified = classify_items(svc, catalog, note, subject)
+    except LLMError as err:
+        log.warning("classify_note %s: %s", note.id, err)
+        return None
+    if classified is None:
+        return None
+    hints, generator = classified
+    svc.notes_repo.save_hints(note.id, hints, generator, now)
     return hints

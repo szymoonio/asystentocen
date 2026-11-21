@@ -1,0 +1,22 @@
+# Zadanie split_note: opis sytuacji → zalety i obszary do poprawy.
+#
+# Źródło (provenance): opisy z seed/office.yaml (z punktami wpisanymi przez autora seedu)
+# oraz kilka opisów napisanych przez zespół. Oczekujemy tylko tego, czy dana lista powinna
+# być niepusta — treść punktów oceniamy regułami (ugruntowanie w tekście, długość).
+cases:
+  - {id: s01, source: "seed N001", strengths: true, improvements: false,
+     text: "Sprawa wniosku z brakującym załącznikiem — tym razem sam zadzwonił do Wydziału Kadr i uzupełnił dokument w dwa dni zamiast odsyłać wniosek."}
+  - {id: s02, source: "seed N002", strengths: false, improvements: true,
+     text: "Na odprawie referatu nie przekazał informacji o opóźnieniu tłumaczenia dla ministerstwa — dowiedziałem się od klienta."}
+  - {id: s03, source: "seed N003", strengths: true, improvements: false,
+     text: "Zaproponował nowy szablon odpowiedzi na typowe zapytania klientów, zespół zaczął go używać. Dobra inicjatywa."}
+  - {id: s04, source: "seed N005", strengths: true, improvements: true,
+     text: "W korespondencji z interesantem odpowiedział poprawnie merytorycznie, ale bardzo lakonicznie — interesant dopytywał trzy razy."}
+  - {id: s05, source: "seed N007", strengths: true, improvements: true,
+     text: "Przy pilnym zleceniu przesunęła priorytety bez przypominania, ale nie uprzedziła zespołu, że inne zadania się opóźnią."}
+  - {id: s06, source: "zespół", strengths: true, improvements: true,
+     text: "Tłumaczenie umowy oddał dzień przed terminem i bez błędów merytorycznych, ale nie zastosował glosariusza referatu, więc weryfikator poprawiał terminologię w kilku miejscach."}
+  - {id: s07, source: "zespół", strengths: false, improvements: true,
+     text: "Drugi raz w tym miesiącu nie odpowiedział na pismo interesanta w terminie; sprawę przejęła koleżanka."}
+  - {id: s08, source: "zespół", strengths: false, improvements: false,
+     text: "Spotkanie referatu w sprawie planu urlopów na grudzień."}
