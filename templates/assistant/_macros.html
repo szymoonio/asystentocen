@@ -1,0 +1,10 @@
+{% macro head() %}<link rel="stylesheet" href="/static/assistant/teczka.css">{% endmacro %}
+
+{% macro num(x) %}{% if x is none %}—{% else %}{{ ("%.1f" | format(x)) | replace(".0", "") | replace(".", ",") }}{% endif %}{% endmacro %}
+
+{% macro days_ago(days) -%}
+  {%- if days is none -%}brak
+  {%- elif days == 0 -%}dziś
+  {%- elif days == 1 -%}wczoraj
+  {%- else -%}{{ days }} dni temu{%- endif -%}
+{%- endmacro %}
