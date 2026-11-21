@@ -1,0 +1,47 @@
+# Katalog działań rozwojowych do szkieletu IPRZ (docs/ARCHITEKTURA.md § 6.2).
+# Kryterium z oceną cząstkową ≤ 3 → te pozycje trafiają do projektu „Wnioski dotyczące IPRZ”.
+# Tabela do edycji przez kadry; kody jak w config/regulation/v2016/criteria.yaml.
+actions:
+  KOMUNIKACJA:
+    - szkolenie z komunikacji interpersonalnej i jasnego formułowania wypowiedzi
+    - warsztat z pisania pism urzędowych prostym językiem
+    - uzgodnione z przełożonym zasady informowania o postępach i ryzykach w zadaniach
+  KREATYWNOSC:
+    - warsztat kreatywnego rozwiązywania problemów
+    - udział w zespole zadaniowym usprawniającym procedury komórki
+  NEGOCJOWANIE:
+    - szkolenie z technik negocjacyjnych i przygotowania stanowiska negocjacyjnego
+    - udział w negocjacjach prowadzonych przez doświadczonego pracownika (job shadowing)
+  ORGANIZACJA_PRACY:
+    - szkolenie z zarządzania czasem i ustalania priorytetów
+    - wspólne z przełożonym planowanie zadań z kamieniami milowymi
+  ORIENTACJA_NA_KLIENTA:
+    - szkolenie z obsługi klienta/interesanta, w tym trudnego rozmówcy
+    - przegląd wzorów odpowiedzi na typowe zapytania wspólnie z doświadczonym pracownikiem
+  PODEJMOWANIE_DECYZJI:
+    - szkolenie z podejmowania decyzji i oceny ryzyka
+    - stopniowe powierzanie zadań wymagających samodzielnych rozstrzygnięć, z omówieniem po realizacji
+  RADZENIE_SOBIE_W_KRYZYSIE:
+    - szkolenie z zarządzania w sytuacjach kryzysowych
+    - udział w ćwiczeniach z planów ciągłości działania urzędu
+  RZETELNOSC:
+    - uzgodnienie listy kontrolnej (check-listy) dla powtarzalnych zadań
+    - szkolenie z przepisów i procedur stosowanych na stanowisku
+  MYSLENIE_ANALITYCZNE:
+    - szkolenie z analizy danych i wnioskowania
+    - przygotowanie analizy problemu komórki pod opieką doświadczonego analityka
+  WYKORZYSTYWANIE_WIEDZY:
+    - szkolenia lub e-learning z zakresu merytorycznego stanowiska
+    - dzielenie się wiedzą w zespole (np. krótkie prezentacje po szkoleniach)
+  WSPOLPRACA:
+    - warsztat ze współpracy w zespole
+    - udział w zadaniach międzywydziałowych z wyznaczoną osobą kontaktową
+  WYSTAPIENIA_PUBLICZNE:
+    - szkolenie z wystąpień publicznych i prezentacji
+    - przygotowanie i wygłoszenie prezentacji na spotkaniu komórki z omówieniem
+  ZARZADZANIE_LUDZMI:
+    - szkolenie z przywództwa i udzielania informacji zwrotnej
+    - mentoring doświadczonego kierownika
+  ZARZADZANIE_STRATEGICZNE:
+    - szkolenie z planowania strategicznego w administracji
+    - udział w pracach nad planem działalności urzędu

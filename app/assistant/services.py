@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.assistant.nudges.provider import NoteNudges
     from app.assistant.nudges.snooze import SnoozeRepository
     from app.assistant.privacy import Pseudonymizer
+    from app.assistant.summarize.provider import AssistantDraftProvider
     from app.container import Container
 
 _ATTR = "_assistant_services"
@@ -27,6 +28,7 @@ class AssistantServices:
     llm_config: LLMConfig
     llm: LLMClient  # w testach podmieniany na fake — testy nie wołają sieci
     pseudonymizer: Callable[[], Pseudonymizer]  # budowany na bieżąco z c.employees.all()
+    drafts: AssistantDraftProvider
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

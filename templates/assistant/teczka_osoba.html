@@ -17,9 +17,14 @@
         {% endif %}
       </p>
     </div>
-    {% if is_subordinate %}
-      <a class="button" href="/asystent/teczka/{{ subject.id }}/nowa">+ Nowa notatka</a>
-    {% endif %}
+    <div class="t-nudge-actions">
+      {% if evaluation and evaluation.evaluator_id == me.id %}
+        <a class="button secondary" href="/asystent/podsumowanie/{{ evaluation.id }}">Podsumowanie cyklu</a>
+      {% endif %}
+      {% if is_subordinate %}
+        <a class="button" href="/asystent/teczka/{{ subject.id }}/nowa">+ Nowa notatka</a>
+      {% endif %}
+    </div>
   </div>
 
   {% if notice %}<div class="card t-notice">Notatka zapisana.</div>{% endif %}

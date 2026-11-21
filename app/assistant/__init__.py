@@ -30,10 +30,13 @@ def register(c: Container) -> None:
     from app.assistant.nudges.snooze import SnoozeRepository, SnoozeRow
     from app.assistant.privacy import Pseudonymizer
     from app.assistant.services import AssistantServices, attach
+    from app.assistant.summarize.evidence import EvidenceBuilder, load_development_actions
+    from app.assistant.summarize.provider import AssistantDraftProvider
+    from app.assistant.summarize.store import DraftRow, DraftStore
 
     # Tabele asst_* zakładamy od razu (create_all w kontenerze jest dopiero po register),
     # bo przy pustej bazie importujemy notatki z seedu.
-    tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__]
+    tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__, DraftRow.__table__]
     models.Base.metadata.create_all(c.engine, tables=tables)
     repo = NotesRepository(c.session_factory)
     import_seed_if_empty(repo, c.seed.notes)
@@ -49,6 +52,12 @@ def register(c: Container) -> None:
         config=config,
     )
     llm_config = LLMConfig.load(c.settings.config_dir)
+    drafts = AssistantDraftProvider(
+        builder=lambda: EvidenceBuilder(repo=repo, evaluations=c.evaluations, employees=c.employees, catalog=c.catalog),
+        store=DraftStore(c.session_factory),
+        actions=load_development_actions(),
+        now=c.clock.now,
+    )
     attach(
         c,
         AssistantServices(
@@ -59,8 +68,9 @@ def register(c: Container) -> None:
             llm_config=llm_config,
             llm=build_client(llm_config),
             pseudonymizer=lambda: Pseudonymizer(c.employees.all()),
+            drafts=drafts,
         ),
     )
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)
     c.reminder_providers.append(nudges)
-    # Kolejny krok (docs/AGENT_B.md): c.drafts = AssistantDraftProvider(c)
+    c.drafts = drafts
