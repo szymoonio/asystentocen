@@ -30,8 +30,10 @@
   .text { white-space: pre-wrap; min-height: 18mm; }
   .small { font-size: 8.5pt; color: var(--muted); }
   .page-break { break-before: page; }
-  .toolbar { position: sticky; top: 0; background: #f0f3f7; padding: 8px 16px; border-bottom: 1px solid #ccd; font-family: system-ui, sans-serif; }
-  .toolbar button { font: inherit; padding: 4px 12px; }
+  .toolbar { position: sticky; top: 0; display: flex; gap: 16px; align-items: center; background: #F2F2F2; padding: 8px 16px; border-bottom: 1px solid #DDDDDD; font-family: "Source Sans 3", Arial, sans-serif; font-size: 15px; }
+  .toolbar button { font: inherit; font-weight: 700; min-height: 40px; padding: 6px 16px; border: 2px solid #0052A5; border-radius: 0; background: #0052A5; color: #fff; cursor: pointer; }
+  .toolbar button:hover { background: #003B78; border-color: #003B78; }
+  .toolbar a { color: #0052A5; }
   @media print { .toolbar { display: none; } .sheet { padding: 0; } }
   @page { size: A4; margin: 12mm; }
 </style>

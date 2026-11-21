@@ -1,41 +1,56 @@
 {# ZAMROŻONE (krok 0). Szablony modułów: {% extends "base.html" %} + {% block content %}. #}
+{%- set path = request.url.path -%}
+{%- macro nav_link(href, label, active) -%}
+  <a href="{{ href }}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a>
+{%- endmacro -%}
 <!doctype html>
 <html lang="pl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }} · Asystent Ocen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="/static/base.css">
   {% block head %}{% endblock %}
 </head>
 <body>
+  <a class="skip-link" href="#tresc">Przejdź do treści</a>
   <header class="topbar">
-    <div class="brand">
-      <strong>Asystent Ocen</strong>
-      <span class="muted">{{ office.name }}</span>
+    <div class="wrap">
+      <a class="brand" href="/">
+        <span class="flag" aria-hidden="true"></span>
+        <span class="brand-text">
+          <span class="brand-name">Asystent Ocen</span>
+          <span class="brand-office">{{ office.name }}</span>
+        </span>
+      </a>
+      <details class="userswitch">
+        <summary>{{ me.full_name }} <span class="muted">· {{ me.position.title }}</span></summary>
+        <div class="menu">
+          <p class="muted small">Demo: zaloguj jako</p>
+          {% for u in demo_users %}
+            <a href="/login/{{ u.id }}" {% if u.id == me.id %}aria-current="true"{% endif %}>
+              {{ u.full_name }} <span class="muted small">{{ u.position.title }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </details>
     </div>
-    <nav class="nav">
-      <a href="/core/">Pulpit</a>
-      <a href="/core/oceny">Oceny</a>
-      {% if user.has("OCENIAJACY") %}<a href="/asystent/teczka">Teczka</a>{% endif %}
-      {% if user.has("OCENIAJACY") %}<a href="/asystent/hr">Asystent HR</a>{% endif %}
-      {% if user.has("KADRY") %}<a href="/core/kadry">Kadry</a>{% endif %}
-    </nav>
-    <details class="userswitch">
-      <summary>{{ me.full_name }} <span class="muted">· {{ me.position.title }}</span></summary>
-      <div class="menu">
-        <p class="muted small">Demo: zaloguj jako</p>
-        {% for u in demo_users %}
-          <a href="/login/{{ u.id }}" {% if u.id == me.id %}aria-current="true"{% endif %}>
-            {{ u.full_name }} <span class="muted small">{{ u.position.title }}</span>
-          </a>
-        {% endfor %}
-      </div>
-    </details>
   </header>
-  <main class="page">
+  <nav class="nav" aria-label="Menu główne">
+    <div class="wrap">
+      {{ nav_link("/core/", "Pulpit", path in ["/", "/core/", "/core"]) }}
+      {{ nav_link("/core/oceny", "Oceny", path.startswith("/core/oceny")) }}
+      {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/teczka", "Teczka", path.startswith("/asystent/teczka") or path.startswith("/asystent/notatka")) }}{% endif %}
+      {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/hr", "Asystent HR", path.startswith("/asystent/hr")) }}{% endif %}
+      {% if user.has("KADRY") %}{{ nav_link("/core/kadry", "Kadry", path.startswith("/core/kadry")) }}{% endif %}
+    </div>
+  </nav>
+  <main class="page" id="tresc">
     {% block content %}{% endblock %}
   </main>
-  <footer class="footer muted small">Dziś: {{ today | pl_date }} · prototyp, dane fikcyjne</footer>
+  <footer class="footer muted small"><div class="wrap">Dziś: {{ today | pl_date }} · prototyp, dane fikcyjne</div></footer>
 </body>
 </html>
