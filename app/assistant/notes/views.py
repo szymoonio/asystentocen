@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
+import tempfile
 from datetime import date
+from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, File, Request, UploadFile
+from fastapi.responses import JSONResponse, RedirectResponse
+from starlette.concurrency import run_in_threadpool
 
 from app.assistant.notes.assist import CLASSIFY_TASK, SPLIT_TASK, classify_note, split_note
 from app.assistant.notes.criteria import criteria_for
@@ -14,8 +18,9 @@ from app.assistant.notes.repository import NoteAlreadyRevised, NoteInput, NoteNo
 from app.assistant.notes.stats import compute_stats
 from app.assistant.pages import PageError, html_errors
 from app.assistant.services import services
+from app.assistant.stt import TranscriptionError
 from app.container import Container
-from app.contracts.enums import LEVEL_LABELS, PARTIAL_POINTS, EvaluationState
+from app.contracts.enums import LEVEL_LABELS, PARTIAL_POINTS, EvaluationState, NoteSource
 from app.contracts.models import CriterionRating, Employee, EvaluationSummary, Note, UserContext
 from app.contracts.regulation import load_scale
 from app.deps import get_container, get_current_user
@@ -271,6 +276,7 @@ async def _parse_form(request: Request, today: date) -> tuple[NoteInput, dict[st
         strengths=_lines(raw.get("strengths", "")),
         improvements=_lines(raw.get("improvements", "")),
         ratings=ratings,
+        source=NoteSource.VOICE if raw.get("source") == NoteSource.VOICE.value else NoteSource.TEXT,
     )
     if data.is_empty():
         errors.append("Wpisz opis sytuacji albo przynajmniej jedną zaletę lub obszar do poprawy.")
@@ -317,6 +323,9 @@ def _form_page(
         point_labels=_point_labels(c),
         points=PARTIAL_POINTS,
         split_available=services(c).llm.available(SPLIT_TASK),
+        voice_available=services(c).stt.available() and editing is None,
+        max_upload_mb=services(c).stt_config.max_upload_mb,
+        voice_max_seconds=services(c).stt_config.max_seconds,
         assistant_notice=assistant_notice,
         assistant_error=assistant_error,
     )
@@ -363,6 +372,7 @@ def _values_from_note(note: Note) -> dict:
         "strengths": "\n".join(note.strengths),
         "improvements": "\n".join(note.improvements),
         "ratings": {r.criterion_code: r.value for r in note.ratings},
+        "source": note.source.value,
     }
 
 
@@ -372,6 +382,7 @@ def _values_from_raw(raw: dict[str, str]) -> dict:
         "body": raw.get("body", ""),
         "strengths": raw.get("strengths", ""),
         "improvements": raw.get("improvements", ""),
+        "source": raw.get("source", NoteSource.TEXT.value),
         "ratings": {
             k.removeprefix("rating_"): int(v) for k, v in raw.items() if k.startswith("rating_") and v.isdigit()
         },
@@ -411,6 +422,62 @@ async def zapisz_notatke(subject_id: str, request: Request, background: Backgrou
     )
     _classify_later(background, c, note, subject)
     return RedirectResponse(f"/asystent/teczka/{subject_id}?zapisano=1", status_code=303)
+
+
+# --- notatka głosowa -------------------------------------------------------------------
+
+
+async def _save_upload(upload: UploadFile, limit_bytes: int) -> Path:
+    suffix = Path(upload.filename or "").suffix[:8] or ".webm"
+    fd, name = tempfile.mkstemp(prefix="asst-voice-", suffix=suffix)
+    size = 0
+    try:
+        with os.fdopen(fd, "wb") as out:
+            while chunk := await upload.read(1024 * 1024):
+                size += len(chunk)
+                if size > limit_bytes:
+                    raise TranscriptionError(f"Plik jest za duży. Limit: {limit_bytes // (1024 * 1024)} MB.")
+                out.write(chunk)
+    except BaseException:
+        Path(name).unlink(missing_ok=True)
+        raise
+    if size == 0:
+        Path(name).unlink(missing_ok=True)
+        raise TranscriptionError("Nagranie jest puste.")
+    return Path(name)
+
+
+@router.post("/teczka/{subject_id}/glos")
+@html_errors
+async def notatka_glosowa(subject_id: str, request: Request, audio: UploadFile = File(...)):
+    """Nagranie → transkrypt do akceptacji. Audio kasujemy od razu po transkrypcji (także przy błędzie).
+
+    `Accept: application/json` (nagrywanie w przeglądarce) → JSON; bez JS (plik z telefonu) → formularz notatki.
+    """
+    c = get_container(request)
+    user = get_current_user(request)
+    subject = _require_subordinate(c, user, subject_id)
+    svc = services(c)
+    wants_json = "application/json" in request.headers.get("accept", "")
+    action = f"/asystent/teczka/{subject_id}/nowa"
+    try:
+        if not svc.stt.available():
+            raise TranscriptionError("Notatki głosowe są wyłączone.")
+        path = await _save_upload(audio, svc.stt_config.max_upload_mb * 1024 * 1024)
+        try:
+            text = await run_in_threadpool(svc.stt.transcribe, path)
+        finally:
+            path.unlink(missing_ok=True)
+    except TranscriptionError as err:
+        if wants_json:
+            return JSONResponse({"error": err.message}, status_code=422)
+        values = {"observed_on": c.clock.today().isoformat(), "ratings": {}}
+        return _form_page(request, c, subject, values=values, errors=[], action=action, assistant_error=err.message, status_code=422)
+    if wants_json:
+        return JSONResponse({"text": text})
+    values = {"observed_on": c.clock.today().isoformat(), "body": text, "source": NoteSource.VOICE.value, "ratings": {}}
+    notice = "Transkrypt gotowy — sprawdź go i popraw przed zapisem. Nagranie zostało usunięte z serwera."
+    return _form_page(request, c, subject, values=values, errors=[], action=action, assistant_notice=notice)
 
 
 def _own_current_note(c: Container, user: UserContext, subject_id: str, note_id: str) -> Note:

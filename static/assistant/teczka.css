@@ -150,3 +150,11 @@
 .t-sr { position: absolute; left: -9999px; }
 .t-source { margin: 0.4rem 0; }
 .t-source summary { cursor: pointer; }
+
+/* notatka głosowa */
+.t-voice { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; align-items: center; margin: 0.25rem 0 0.5rem; }
+.t-voice[hidden] { display: none; }
+.t-recording { background: var(--danger); border-color: var(--danger); color: #fff; }
+.t-voice-upload summary { cursor: pointer; font-weight: 500; }
+.t-voice-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+.t-voice-form input[type=file] { width: auto; flex: 1 1 14rem; }

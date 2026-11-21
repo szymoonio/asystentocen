@@ -30,6 +30,17 @@
     </div>
   {% endif %}
 
+  {% if voice_available %}
+    <details class="card t-voice-upload">
+      <summary>Masz nagranie z telefonu? Wgraj je</summary>
+      <form method="post" action="/asystent/teczka/{{ subject.id }}/glos" enctype="multipart/form-data" class="t-voice-form">
+        <input type="file" name="audio" accept="audio/*" capture required>
+        <button type="submit" class="secondary">Przepisz nagranie</button>
+      </form>
+      <p class="muted small">Do {{ max_upload_mb }} MB. Nagranie jest przepisywane na serwerze urzędu i zaraz potem usuwane. Nie analizujemy tonu ani emocji — tylko tekst.</p>
+    </details>
+  {% endif %}
+
   <form method="post" action="{{ action }}" class="t-form">
     {# Enter w polu formularza ma zapisywać, a nie wywoływać asystenta — pierwszy przycisk submit wygrywa. #}
     <button type="submit" name="akcja" value="zapisz" class="t-default-submit" tabindex="-1" aria-hidden="true">Zapisz</button>
@@ -37,7 +48,14 @@
       <label for="observed_on">Kiedy to się wydarzyło?</label>
       <input type="date" id="observed_on" name="observed_on" value="{{ values.observed_on }}" max="{{ today.isoformat() }}" required class="t-date">
 
-      <label for="body">Opis sytuacji</label>
+      <input type="hidden" name="source" id="source" value="{{ values.source or 'TEXT' }}">
+      <label for="body">Opis sytuacji {% if values.source == "VOICE" %}<span class="badge">z nagrania</span>{% endif %}</label>
+      {% if voice_available %}
+        <div class="t-voice" id="voice" hidden>
+          <button type="button" id="rec" class="secondary">● Nagraj notatkę głosową</button>
+          <span id="rec-status" class="muted small" role="status" aria-live="polite"></span>
+        </div>
+      {% endif %}
       <textarea id="body" name="body" rows="4" placeholder="Co się wydarzyło — fakty, bez ocen osoby.">{{ values.body }}</textarea>
       {% if split_available %}
         <div class="t-assist">
@@ -86,4 +104,58 @@
       <a class="button secondary" href="/asystent/teczka/{{ subject.id }}">Anuluj</a>
     </div>
   </form>
+  {% if voice_available %}
+  <script>
+  (function () {
+    const box = document.getElementById("voice");
+    if (!box || !navigator.mediaDevices || !window.MediaRecorder) return;  // bez wsparcia zostaje wgranie pliku
+    box.hidden = false;
+    const btn = document.getElementById("rec"), status = document.getElementById("rec-status");
+    const body = document.getElementById("body"), source = document.getElementById("source");
+    const maxMs = {{ voice_max_seconds }} * 1000;
+    let recorder = null, chunks = [], timer = null, started = 0;
+    function stopTracks() { if (recorder) recorder.stream.getTracks().forEach((t) => t.stop()); }
+    async function upload(blob) {
+      status.textContent = "Przepisuję nagranie…";
+      btn.disabled = true;
+      const form = new FormData();
+      form.append("audio", blob, "nagranie.webm");
+      try {
+        const res = await fetch("/asystent/teczka/{{ subject.id }}/glos", {method: "POST", headers: {Accept: "application/json"}, body: form});
+        const data = await res.json();
+        if (!res.ok) { status.textContent = data.error || "Nie udało się przepisać nagrania."; return; }
+        body.value = body.value.trim() ? body.value.trim() + "\n" + data.text : data.text;
+        source.value = "VOICE";
+        status.textContent = "Gotowe — sprawdź transkrypt przed zapisem. Nagranie zostało usunięte z serwera.";
+        body.focus();
+      } catch (e) {
+        status.textContent = "Brak połączenia z serwerem.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    btn.addEventListener("click", async () => {
+      if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+      catch (e) { status.textContent = "Brak dostępu do mikrofonu."; return; }
+      chunks = [];
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      recorder.onstop = () => {
+        clearInterval(timer); stopTracks();
+        btn.textContent = "● Nagraj notatkę głosową"; btn.classList.remove("t-recording");
+        upload(new Blob(chunks, {type: recorder.mimeType || "audio/webm"}));
+      };
+      recorder.start();
+      started = Date.now();
+      btn.textContent = "■ Zakończ nagrywanie"; btn.classList.add("t-recording");
+      timer = setInterval(() => {
+        status.textContent = "Nagrywam… " + Math.floor((Date.now() - started) / 1000) + " s";
+        if (Date.now() - started >= maxMs) recorder.stop();
+      }, 500);
+    });
+  })();
+  </script>
+  {% endif %}
 {% endblock %}

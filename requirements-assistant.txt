@@ -1,4 +1,4 @@
 # Zależności modułu ASSISTANT (agent B). Instalacja: pip install -r requirements-assistant.txt
 anthropic
-# faster-whisper   # transkrypcja lokalna (ciężka paczka — odkomentuj, gdy potrzebna)
+# faster-whisper   # notatki głosowe: transkrypcja lokalna (ciężka paczka — odkomentuj, gdy potrzebna; config: stt w config/llm.yaml)
 # pypdf          # tylko do jednorazowej ekstrakcji bazy wiedzy: python -m app.assistant.hr.knowledge_build

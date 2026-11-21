@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.assistant.nudges.provider import NoteNudges
     from app.assistant.nudges.snooze import SnoozeRepository
     from app.assistant.privacy import Pseudonymizer
+    from app.assistant.stt import SttConfig, Transcriber
     from app.assistant.summarize.provider import AssistantDraftProvider
     from app.container import Container
 
@@ -35,6 +36,8 @@ class AssistantServices:
     hr: HrConfig
     roleplays: RoleplayStore
     knowledge: Callable[[], KnowledgeBase]  # leniwie — baza wiedzy ładowana przy pierwszym pytaniu
+    stt_config: SttConfig
+    stt: Transcriber  # w testach podmieniany na fake
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

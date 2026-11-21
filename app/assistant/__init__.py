@@ -33,6 +33,7 @@ def register(c: Container) -> None:
     from app.assistant.nudges.snooze import SnoozeRepository, SnoozeRow
     from app.assistant.privacy import Pseudonymizer
     from app.assistant.services import AssistantServices, attach
+    from app.assistant.stt import SttConfig, build_transcriber
     from app.assistant.summarize.evidence import EvidenceBuilder, load_development_actions
     from app.assistant.summarize.provider import AssistantDraftProvider
     from app.assistant.summarize.store import DraftRow, DraftStore
@@ -56,6 +57,7 @@ def register(c: Container) -> None:
         config=config,
     )
     llm_config = LLMConfig.load(c.settings.config_dir)
+    stt_config = SttConfig.load(c.settings.config_dir)
     drafts = AssistantDraftProvider(
         builder=lambda: EvidenceBuilder(repo=repo, evaluations=c.evaluations, employees=c.employees, catalog=c.catalog),
         store=DraftStore(c.session_factory),
@@ -76,6 +78,8 @@ def register(c: Container) -> None:
             hr=HrConfig.load(),
             roleplays=RoleplayStore(c.session_factory),
             knowledge=default_knowledge,
+            stt_config=stt_config,
+            stt=build_transcriber(stt_config),
         ),
     )
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)
