@@ -1,0 +1,148 @@
+<!doctype html>
+{# Wydruk arkusza zgodny z układem wzorów z załączników 2–4 do rozporządzenia PRM z 4.04.2016. #}
+{% set urzednik = employee.is_urzednik %}
+{% macro x(cond) %}{{ "X" if cond else "" }}{% endmacro %}
+{% macro sig(place, day, label) %}
+  <table class="sig"><tr><td>{{ place or "" }}</td><td>{{ day or "" }}</td><td>{{ "/potwierdzono w systemie/" if day else "" }}</td></tr>
+  <tr class="lbl"><td>miejscowość</td><td>data (dd.mm.rrrr)</td><td>{{ label }}</td></tr></table>
+{% endmacro %}
+{% macro d(iso) %}{% if iso %}{{ iso[8:10] }}.{{ iso[5:7] }}.{{ iso[0:4] }}{% endif %}{% endmacro %}
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arkusz {{ sheet }} · {{ employee.full_name }}</title>
+<style>
+  :root { --line: #000; --muted: #444; }
+  body { font-family: "Times New Roman", Georgia, serif; font-size: 11pt; color: #000; background: #fff; margin: 0; }
+  .sheet { max-width: 190mm; margin: 0 auto; padding: 12mm 10mm; }
+  h1 { text-align: center; font-size: 13pt; margin: 0 0 2mm; }
+  .center { text-align: center; }
+  h2 { font-size: 11pt; text-align: center; margin: 6mm 0 2mm; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
+  td, th { border: 1px solid var(--line); padding: 1.5mm 2mm; vertical-align: top; }
+  th { background: #eee; font-weight: bold; text-align: left; }
+  .label { width: 45%; background: #f6f6f6; }
+  .x { text-align: center; font-weight: bold; width: 14mm; }
+  .sig { margin-top: 4mm; }
+  .sig td { border: none; border-bottom: 1px dotted var(--line); height: 6mm; text-align: center; }
+  .sig .lbl td { border: none; font-size: 8pt; color: var(--muted); height: auto; }
+  .text { white-space: pre-wrap; min-height: 18mm; }
+  .small { font-size: 8.5pt; color: var(--muted); }
+  .page-break { break-before: page; }
+  .toolbar { position: sticky; top: 0; background: #f0f3f7; padding: 8px 16px; border-bottom: 1px solid #ccd; font-family: system-ui, sans-serif; }
+  .toolbar button { font: inherit; padding: 4px 12px; }
+  @media print { .toolbar { display: none; } .sheet { padding: 0; } }
+  @page { size: A4; margin: 12mm; }
+</style>
+</head>
+<body>
+<div class="toolbar"><button onclick="window.print()">Drukuj / zapisz PDF</button> <a href="/core/oceny/{{ row.id }}">wróć do oceny</a></div>
+<div class="sheet">
+  <p class="center small">{{ sheet_def.title.upper() }}</p>
+  <h1>OCENA OKRESOWA<br>URZĘDNIKA SŁUŻBY CYWILNEJ LUB PRACOWNIKA SŁUŻBY CYWILNEJ</h1>
+
+  <h2>CZĘŚĆ I</h2>
+  <table>
+    <tr><th colspan="2">NAZWA URZĘDU</th></tr>
+    <tr><td colspan="2">{{ office.name }}</td></tr>
+    <tr><th colspan="2">DANE OCENIANEGO</th></tr>
+    <tr><td class="label">Imię</td><td>{{ employee.first_name }}</td></tr>
+    <tr><td class="label">Nazwisko</td><td>{{ employee.last_name }}</td></tr>
+    {% if sheet_def.has_org_unit %}<tr><td class="label">Komórka organizacyjna</td><td>{{ unit.name }}</td></tr>{% endif %}
+    <tr><td class="label">Stanowisko pracy</td><td>{{ employee.position.title }}</td></tr>
+    <tr><th colspan="2">DANE OCENIAJĄCEGO</th></tr>
+    <tr><td class="label">Imię</td><td>{{ evaluator.first_name if evaluator else "" }}</td></tr>
+    <tr><td class="label">Nazwisko</td><td>{{ evaluator.last_name if evaluator else "" }}</td></tr>
+    {% if sheet_def.has_org_unit %}<tr><td class="label">Komórka organizacyjna</td><td>{{ evaluator_unit.name if evaluator_unit else "" }}</td></tr>{% endif %}
+    <tr><td class="label">Stanowisko</td><td>{{ evaluator.position.title if evaluator else "" }}</td></tr>
+  </table>
+  <table>
+    <tr><th colspan="2">KRYTERIA OCENY I TERMIN SPORZĄDZENIA OCENY</th></tr>
+    <tr><th>Kryteria obowiązkowe</th><th>Kryteria dodatkowe wybrane przez oceniającego (nie więcej niż 3)</th></tr>
+    <tr>
+      <td>{% for c in mandatory %}{{ c.name }}<br>{% endfor %}</td>
+      <td>{% for c in additional %}{{ c.name }}<br>{% else %}brak{% endfor %}
+        <p><b>Termin sporządzenia oceny:</b> {{ row.due_date.strftime("%d.%m.%Y") if row.due_date }}</p></td>
+    </tr>
+  </table>
+  <p class="small">Potwierdzamy: przeprowadzenie rozmowy, o której mowa w § 5 ust. 1 rozporządzenia Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej (Dz. U. poz. 470), i omówienie w trakcie tej rozmowy wszystkich wymaganych zagadnień; zapoznanie ocenianego z kryteriami oceny oraz terminem sporządzenia oceny.</p>
+  {{ sig(form.part1_place_evaluator, d(form.part1_confirmed_by_evaluator_on), "podpis oceniającego") }}
+  {{ sig(form.part1_place_employee, d(form.part1_confirmed_by_employee_on), "podpis ocenianego") }}
+
+  <div class="page-break"></div>
+  <h2>CZĘŚĆ II</h2>
+  <table>
+    <tr><td class="label">DATA PRZEPROWADZENIA ROZMOWY OCENIAJĄCEJ</td><td>{{ d(form.interview_date) }}</td></tr>
+    <tr><td class="label">OKRES, W KTÓRYM OCENIANY PODLEGAŁ OCENIE</td>
+      <td>od: {{ row.period_from.strftime("%d.%m.%Y") if row.period_from }} &nbsp; do: {{ row.period_to.strftime("%d.%m.%Y") if row.period_to }}</td></tr>
+  </table>
+  {% set pts = form.partial_points or {} %}
+  <table>
+    <tr><th>KRYTERIA OBOWIĄZKOWE</th>{% for p in [1,3,5,7,9] %}<th class="x">{{ p }}</th>{% endfor %}</tr>
+    {% for c in mandatory %}<tr><td>{{ c.name }}</td>{% for p in [1,3,5,7,9] %}<td class="x">{{ x(pts.get(c.code) == p) }}</td>{% endfor %}</tr>{% endfor %}
+    <tr><th>KRYTERIA DODATKOWE WYBRANE PRZEZ OCENIAJĄCEGO</th>{% for p in [1,3,5,7,9] %}<th class="x">{{ p }}</th>{% endfor %}</tr>
+    {% for c in additional %}<tr><td>{{ c.name }}</td>{% for p in [1,3,5,7,9] %}<td class="x">{{ x(pts.get(c.code) == p) }}</td>{% endfor %}</tr>{% else %}<tr><td colspan="6">brak</td></tr>{% endfor %}
+  </table>
+  <p class="small">1 – znacznie poniżej oczekiwań, 3 – poniżej oczekiwań, 5 – na poziomie oczekiwań, 7 – powyżej oczekiwań, 9 – znacznie powyżej oczekiwań</p>
+
+  <table>
+    <tr><td class="label">Średnia arytmetyczna z ocen cząstkowych</td><td><b>{{ format_mean(result.mean) if result else "" }}</b></td></tr>
+  </table>
+  <table>
+    <tr><th class="x">X</th><th>Liczba punktów stanowiąca średnią arytmetyczną</th><th>Ogólny poziom spełnienia kryteriów oceny</th></tr>
+    {% for lv, rng in [("ZNACZNIE_PONIZEJ","od 1 punktu do 2 punktów"),("PONIZEJ","powyżej 2 punktów do 4 punktów"),("NA_POZIOMIE","powyżej 4 punktów do 6 punktów"),("POWYZEJ","powyżej 6 punktów do 8 punktów"),("ZNACZNIE_POWYZEJ","powyżej 8 punktów do 9 punktów")] %}
+      <tr><td class="x">{{ x(result and result.level == lv) }}</td><td>{{ rng }}</td><td>{{ LEVEL_LABELS[lv] }}</td></tr>
+    {% endfor %}
+  </table>
+  <table>
+    <tr><th>OCENA OKRESOWA W SŁUŻBIE CYWILNEJ</th><td>POZYTYWNA</td><td class="x">{{ x(result and result.outcome == "POZYTYWNA") }}</td><td>NEGATYWNA</td><td class="x">{{ x(result and result.outcome == "NEGATYWNA") }}</td></tr>
+  </table>
+  <table>
+    <tr><th>UZASADNIENIE PRZYZNANEJ OCENY OKRESOWEJ</th></tr><tr><td class="text">{{ form.justification or "" }}</td></tr>
+    <tr><th>WNIOSKI DOTYCZĄCE INDYWIDUALNEGO PROGRAMU ROZWOJU ZAWODOWEGO</th></tr><tr><td class="text">{{ form.iprz or "" }}</td></tr>
+  </table>
+  {% if urzednik %}
+    {% set prev = form.previous or {} %}
+    <table>
+      <tr><th colspan="3">DANE DOTYCZĄCE POPRZEDNIEJ OCENY OKRESOWEJ URZĘDNIKA SŁUŻBY CYWILNEJ</th></tr>
+      <tr><td>Ocena: {{ (prev.outcome or "brak") | lower }}</td><td>Poziom: {{ LEVEL_LABELS[prev.level] if prev.level else "" }}</td><td>Data sporządzenia: {{ d(prev.assessed_on) }}</td></tr>
+    </table>
+  {% endif %}
+  <table>
+    <tr><th colspan="6">CZY DO OCENY OKRESOWEJ DOŁĄCZONO WNIOSEK O PRZYZNANIE KOLEJNEGO STOPNIA SŁUŻBOWEGO?</th></tr>
+    <tr><td>TAK</td><td class="x">{{ x(form.promotion_choice == "TAK") }}</td><td>NIE</td><td class="x">{{ x(form.promotion_choice == "NIE") }}</td>
+      <td>NIE DOTYCZY (oceniany jest pracownikiem służby cywilnej)</td><td class="x">{{ x(not urzednik) }}</td></tr>
+  </table>
+  <table>
+    <tr><th colspan="2">DANE OCENIAJĄCEGO</th></tr>
+    <tr><td class="label">Imię i nazwisko</td><td>{{ evaluator.full_name if evaluator else "" }}</td></tr>
+    {% if sheet_def.has_org_unit %}<tr><td class="label">Komórka organizacyjna</td><td>{{ evaluator_unit.name if evaluator_unit else "" }}</td></tr>{% endif %}
+    <tr><td class="label">Stanowisko</td><td>{{ evaluator.position.title if evaluator else "" }}</td></tr>
+  </table>
+  {{ sig(form.part2_place_evaluator, d(form.part2_signed_by_evaluator_on), "podpis oceniającego") }}
+  <p class="small">Przeprowadzono ze mną rozmowę oceniającą oraz zapoznałem(-łam) się z oceną okresową i wnioskami dotyczącymi indywidualnego programu rozwoju zawodowego.</p>
+  {{ sig(form.part2_place_employee, d(form.part2_signed_by_employee_on), "podpis ocenianego") }}
+  {% if row.ack_deemed %}<p class="small">Stwierdzono fikcję zapoznania: {{ form.ack_deemed_note }}</p>{% endif %}
+  <p class="small"><b>Pouczenie</b><br>Na podstawie art. 83 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej od oceny okresowej służy, w terminie 7 dni od dnia zapoznania się z oceną, sprzeciw do {{ form.objection_addressee or sheet_def.objection_addressee or "dyrektora generalnego urzędu" }}.</p>
+
+  {% if show_part3 %}
+  <div class="page-break"></div>
+  <h2>CZĘŚĆ III</h2>
+  <p class="small center">Wniosek jest wypełniany i dołączany do arkusza oceny okresowej ocenianego tylko w sytuacji skorzystania przez oceniającego z możliwości przewidzianej w art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej.</p>
+  <table>
+    <tr><th colspan="2">DANE URZĘDNIKA SŁUŻBY CYWILNEJ</th></tr>
+    <tr><td class="label">Imię</td><td>{{ employee.first_name }}</td></tr>
+    <tr><td class="label">Nazwisko</td><td>{{ employee.last_name }}</td></tr>
+    <tr><td class="label">Rok mianowania</td><td>{{ p3.appointed_year or "" }}</td></tr>
+    <tr><td class="label">Posiadany stopień służbowy</td><td>{{ p3.grade or "" }}</td></tr>
+    <tr><td class="label">Data przyznania stopnia służbowego</td><td>{{ d(p3.grade_granted_on) }}</td></tr>
+  </table>
+  <p><b>WNIOSEK O PRZYZNANIE URZĘDNIKOWI SŁUŻBY CYWILNEJ KOLEJNEGO STOPNIA SŁUŻBOWEGO</b></p>
+  <p>W związku z uzyskaniem przez Panią/Pana {{ employee.full_name }} pozytywnej oceny okresowej, na podstawie art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej wnioskuję o przyznanie {{ next_grade or "……" }} stopnia służbowego.</p>
+  <table><tr><th>Umotywowanie wniosku</th></tr><tr><td class="text">{{ p3.motivation or "" }}</td></tr></table>
+  {{ sig(form.part2_place_evaluator, d(form.part2_signed_by_evaluator_on), "podpis oceniającego") }}
+  {% endif %}
+</div>
+</body>
+</html>

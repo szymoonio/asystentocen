@@ -1,0 +1,63 @@
+/* Style modułu CORE (agent A). Kolory z tokenów w static/base.css. */
+.alert { padding: 0.6rem 0.9rem; border-radius: var(--radius); margin-bottom: 1rem; border: 1px solid; }
+.alert.ok { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.alert.error { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.alert.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+
+.pagehead { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; justify-content: space-between; }
+.pagehead h1 { margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0.5rem 0 1rem; }
+.meta div span { display: block; font-size: 0.8rem; color: var(--muted); }
+
+.stepper { display: flex; gap: 0.25rem; list-style: none; padding: 0; margin: 0 0 1rem; overflow-x: auto; }
+.stepper li { flex: 1; min-width: 7rem; padding: 0.4rem 0.5rem; border-top: 4px solid var(--border); font-size: 0.8rem; color: var(--muted); }
+.stepper li.done { border-color: var(--ok); color: var(--text); }
+.stepper li.current { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1rem; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.side .card { position: static; }
+
+.part-title { display: flex; gap: 0.5rem; align-items: baseline; }
+.part-title .badge { font-size: 0.75rem; }
+.kv { display: grid; grid-template-columns: 12rem 1fr; gap: 0.25rem 1rem; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+@media (max-width: 640px) { .kv { grid-template-columns: 1fr; } .kv dd { margin-bottom: 0.4rem; } }
+
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.75rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+
+.matrix { width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+.matrix th, .matrix td { border-bottom: 1px solid var(--border); padding: 0.4rem; text-align: center; }
+.matrix th:first-child, .matrix td:first-child { text-align: left; }
+.matrix thead th { font-size: 0.75rem; color: var(--muted); font-weight: 600; vertical-align: bottom; }
+.matrix td.x { font-weight: 700; color: var(--accent); }
+.matrix input[type=radio] { width: 1.1rem; height: 1.1rem; }
+.matrix .group td { background: var(--bg); font-size: 0.8rem; font-weight: 600; color: var(--muted); text-align: left; }
+.matrix .warnrow td:first-child::after { content: " ⚠"; color: var(--warn); }
+@media (max-width: 640px) { .matrix { display: block; overflow-x: auto; } }
+
+.result { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; padding: 0.75rem; background: var(--bg); border-radius: var(--radius); }
+.result .big { font-size: 1.6rem; font-weight: 700; }
+
+.obs h3 { font-size: 0.95rem; margin: 0.75rem 0 0.25rem; }
+.dist { display: flex; gap: 2px; align-items: flex-end; height: 2rem; }
+.dist span { flex: 1; background: var(--accent-soft); position: relative; min-height: 2px; }
+.dist span.on { background: var(--accent); }
+.distlabels { display: flex; gap: 2px; font-size: 0.7rem; color: var(--muted); }
+.distlabels span { flex: 1; text-align: center; }
+
+.draft { border: 1px dashed var(--accent); border-radius: var(--radius); padding: 0.5rem 0.75rem; margin: 0.5rem 0; background: var(--accent-soft); }
+.draft p { margin: 0 0 0.5rem; white-space: pre-wrap; }
+
+.events { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+.events li { padding: 0.3rem 0; border-bottom: 1px solid var(--border); }
+
+.readonly-text { white-space: pre-wrap; background: var(--bg); padding: 0.5rem 0.75rem; border-radius: 6px; }
+.issues { margin: 0.5rem 0; padding-left: 1.25rem; color: var(--danger); }
+.inline-form { display: inline; }
+button.link { background: none; border: none; color: var(--accent); padding: 0; cursor: pointer; text-decoration: underline; font-size: 0.85rem; }
+.reminder { display: flex; gap: 0.75rem; justify-content: space-between; align-items: start; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+.stat { display: inline-block; min-width: 8rem; margin-right: 1rem; }
+.stat b { display: block; font-size: 1.5rem; }

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
+{% block content %}
+  <h1>Oceny</h1>
+
+  {% if as_evaluator %}
+  <section class="card">
+    <h2>Oceny, które sporządzasz</h2>
+    <table class="table">
+      <thead><tr><th>Oceniany</th><th>Arkusz</th><th>Etap</th><th>Termin oceny</th></tr></thead>
+      <tbody>
+      {% for employee, ev, flag in as_evaluator %}
+        <tr>
+          <td><a href="/core/oceny/{{ ev.id }}">{{ employee.full_name }}</a></td>
+          <td>{{ ev.sheet }}</td>
+          <td>{{ STATE_LABELS[ev.state] }}</td>
+          <td><span class="badge {{ flag }}">{{ ev.due_date | pl_date }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Twoja ocena</h2>
+    {% if own %}
+      <p><a href="/core/oceny/{{ own.id }}">{{ STATE_LABELS[own.state] }}</a> · termin {{ own.due_date | pl_date }}</p>
+    {% else %}
+      <p class="muted">Nie masz trwającego cyklu oceny.</p>
+    {% endif %}
+    {% if history %}
+      <h3>Historia</h3>
+      <table class="table">
+        <thead><tr><th>Data sporządzenia</th><th>Wynik</th><th>Poziom</th><th></th></tr></thead>
+        <tbody>
+        {% for h in history %}
+          <tr>
+            <td>{{ h.result.assessed_on | pl_date }}</td>
+            <td>{{ h.result.outcome | lower }}</td>
+            <td>{{ h.result.level.label }} ({{ format_mean(h.result.mean) }} pkt)</td>
+            <td><a href="/core/oceny/{{ h.id }}">podgląd</a> · <a href="/core/oceny/{{ h.id }}/druk">wydruk</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </section>
+{% endblock %}

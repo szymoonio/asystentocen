@@ -1,0 +1,96 @@
+# Definicja pól arkusza oceny (wspólna dla A/B/C) — wersja przepisów 2016.
+# Źródło: context/4. Formularze ocen/*/formularz oceny okresowej X - schemat pól formularza.docx
+#
+# editable: stany (EvaluationState), w których pole można edytować
+# by:       kto edytuje — EVALUATOR (oceniający), EMPLOYEE (oceniany)
+# Poza tymi stanami pole jest zablokowane; zmiana wyłącznie przez ADMIN w trybie korekty (audyt).
+version: "2016"
+
+fields:
+  # --- Część I ---------------------------------------------------------------------
+  additional_criteria:
+    part: I
+    label: Kryteria dodatkowe wybrane przez oceniającego (nie więcej niż 3)
+    editable: [CYCLE_OPEN]
+    by: EVALUATOR
+  due_date:
+    part: I
+    label: Termin sporządzenia oceny
+    editable: [CYCLE_OPEN]
+    by: EVALUATOR
+    note: domyślnie wyliczony; później zmiana tylko w trybie zmiany terminu (art. 81 ust. 8)
+  part1_place_evaluator:
+    part: I
+    label: Miejscowość (oceniający)
+    editable: [CYCLE_OPEN]
+    by: EVALUATOR
+  part1_place_employee:
+    part: I
+    label: Miejscowość (oceniany)
+    editable: [CRITERIA_CONFIRMED]
+    by: EMPLOYEE
+
+  # --- Część II --------------------------------------------------------------------
+  interview_date:
+    part: II
+    label: Data przeprowadzenia rozmowy oceniającej
+    editable: [OBSERVATION, INTERVIEW_HELD]
+    by: EVALUATOR
+  period:
+    part: II
+    label: Okres, w którym oceniany podlegał ocenie
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+  partial_points:
+    part: II
+    label: Oceny cząstkowe
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+  justification:
+    part: II
+    label: Uzasadnienie przyznanej oceny okresowej
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+    required_when: negative
+  iprz:
+    part: II
+    label: Wnioski dotyczące indywidualnego programu rozwoju zawodowego
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+    required_when: always
+  previous_assessment:
+    part: II
+    label: Dane dotyczące poprzedniej oceny okresowej urzędnika służby cywilnej
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+    visible_when: urzednik
+    note: wypełniane automatycznie z historii; ręcznie tylko gdy brak historii
+  promotion_choice:
+    part: II
+    label: Czy do oceny dołączono wniosek o przyznanie kolejnego stopnia służbowego?
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+  objection_addressee:
+    part: II
+    label: Sprzeciw przysługuje do
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+    sheets: [A]
+  part2_place_evaluator:
+    part: II
+    label: Miejscowość (oceniający)
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+  part2_place_employee:
+    part: II
+    label: Miejscowość (oceniany)
+    editable: [AWAITING_ACK]
+    by: EMPLOYEE
+
+  # --- Część III -------------------------------------------------------------------
+  part3:
+    part: III
+    label: Wniosek o przyznanie kolejnego stopnia służbowego
+    editable: [INTERVIEW_HELD]
+    by: EVALUATOR
+    visible_when: urzednik_and_promotion_yes
