@@ -21,3 +21,11 @@ Rzeczy, które warto potwierdzić z mentorami KPRM albo o których powinien wied
 - Panel „Twoje obserwacje” woła `c.notes.stats_for(author_id=evaluator_id, subject_id, evaluation_id)`. Ostrzeżenie o rozbieżności pojawia się przy ≥ 3 obserwacjach i różnicy ≥ 4 pkt.
 - Projekty tekstów: formularz pokazuje `c.drafts.drafts(evaluation_id, field)` dla `UZASADNIENIE`, `WNIOSKI_IPRZ`, `UMOTYWOWANIE_WNIOSKU`, tylko gdy `c.drafts.available()` i ocena jest w stanie `INTERVIEW_HELD`.
 - Scheduler A wywołuje `due(today)` każdego `ReminderProvider` z `c.reminder_providers`. Wyjątek w jednym providerze jest logowany i nie zatrzymuje pozostałych.
+
+## Pulpit „Do zrobienia”, porady asystenta, przygotowanie do rozmowy (feat/core-ui)
+
+- „Do zrobienia” liczymy na żywo z terminów (nie ze skrzynki przypomnień), więc lista zawsze odpowiada stanowi ocen. Pozostałe przypomnienia trafiają do zwiniętej sekcji „Inne powiadomienia”.
+- Kolejność notatek: najpierw osoby bez notatek, potem te z najstarszą (`NotesReader.notes_for`, data `observed_on`).
+- Porady asystenta HR przy ocenie i strona `/core/oceny/{id}/przygotowanie` nie używają LLM. Bazują na przepisach (§ 5, § 10), terminach i notatkach oceniającego, więc działają bez sieci. Wersję rozszerzoną (LLM) podpinamy linkiem do modułu B.
+- Panel „Twoje obserwacje” pokazuje średnią z suwaków (na `Fraction`) w kolorze poziomu z § 11 i liczbę ocen.
+- Adresy stron B spoza kontraktu (`{teczka_url}/nowa`, `/asystent/hr/przygotowanie?rodzaj=&osoba=`) trzymamy w jednym miejscu: `app/core/guide.py`.

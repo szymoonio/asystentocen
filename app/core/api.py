@@ -10,9 +10,9 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 
-from app.contracts.enums import PARTIAL_POINTS, DraftField, EvaluationState, Level, Role, SheetType
-from app.contracts.models import CriterionStats
-from app.core import scheduler, workflow
+from app.contracts.enums import DraftField, EvaluationState, Level, Role, SheetType
+from app.core import guide, scheduler, workflow
+from app.core.guide import stats_view  # noqa: F401  (używane w testach)
 from app.core.models import EmployeeRow, EvaluationRow
 from app.core.repo import criteria_for, employee_from_row, result_from_row, summary_from_row
 from app.core.rules import careers, deadlines
@@ -102,17 +102,14 @@ def pulpit(request: Request):
     user = get_current_user(request)
     scheduler.run_if_needed(c)
     today = c.clock.today()
-    rows = []
-    for employee in c.employees.subordinates(user.employee_id):
-        ev = c.evaluations.current_for(employee.id)
-        next_due = None
-        if ev:
-            next_due = ev.criteria_due_date if ev.state == EvaluationState.CYCLE_OPEN else ev.due_date
-        rows.append((employee, ev, next_due, urgency(next_due, today)))
+    evaluations = guide.todo_evaluations(c, user, today)
+    notes = guide.todo_notes(c, user, today) if user.has(Role.OCENIAJACY) else []
+    shown = {t.url.split("#")[0].split("/przygotowanie")[0] for t in evaluations}
+    inbox = [r for r in c.reminder_sink.inbox(user.employee_id) if (r.link or "").split("#")[0] not in shown]
     own = c.evaluations.current_for(user.employee_id)
     return render(
-        request, "core/pulpit.html", title="Pulpit", rows=rows, own=own,
-        inbox=c.reminder_sink.inbox(user.employee_id), **_ctx_common(),
+        request, "core/pulpit.html", title="Pulpit", todo=evaluations[:3], todo_more=max(0, len(evaluations) - 3),
+        notes_todo=notes[:3], note_people=notes, inbox=inbox, own=own, **_ctx_common(),
     )
 
 
@@ -149,7 +146,7 @@ def oceny(request: Request):
     own = c.evaluations.current_for(user.employee_id)
     history = list(reversed(c.evaluations.history(user.employee_id)))
     return render(
-        request, "core/oceny.html", title="Oceny", as_evaluator=as_evaluator, own=own, history=history,
+        request, "core/oceny.html", title="Oceny okresowe", as_evaluator=as_evaluator, own=own, history=history,
         **_ctx_common(),
     )
 
@@ -168,31 +165,6 @@ def _load(request: Request, evaluation_id: str):
             raise HTTPException(403, "Brak dostępu do tej oceny")
         s.expunge(row)
         return c, user, row
-
-
-def _num(value: float) -> str:
-    return f"{round(value, 1):g}".replace(".", ",")
-
-
-def stats_view(st: CriterionStats) -> dict[str, Any] | None:
-    """Widok jednego kryterium w panelu obserwacji. Kontrakt dopuszcza None w medianie i średnich
-    połówek (np. wszystkie oceny w pierwszej połowie okresu) oraz wpisy z n_ratings == 0."""
-    counts = {p: n for p, n in st.distribution.items() if n}
-    if st.n_ratings <= 0 or not counts:
-        return None
-    top = max(counts.values())
-    bars = [(p, counts.get(p, 0), round(100 * counts[p] / top) if counts.get(p) else 4) for p in PARTIAL_POINTS]
-    parts = [f"{st.n_ratings} obs."]
-    if st.median is not None:
-        parts.append(f"mediana {_num(st.median)}")
-    first, second = st.first_half_mean, st.second_half_mean
-    if first is not None and second is not None:
-        parts.append(f"trend {_num(first)} → {_num(second)}")
-    elif first is not None:
-        parts.append("tylko w 1. połowie okresu")
-    elif second is not None and st.n_ratings > 1:
-        parts.append("tylko w 2. połowie okresu")
-    return {"bars": bars, "summary": " · ".join(parts)}
 
 
 def _observations(c, row: EvaluationRow, summary) -> dict[str, Any]:
@@ -243,13 +215,22 @@ def ocena(evaluation_id: str, request: Request):
     if state == EvaluationState.OBJECTION:
         step_index = 5
     p3 = form.get("part3") or {}
+    obs = _observations(c, row, summary)
+    period_notes = None
+    if role == EVALUATOR and state == EvaluationState.OBSERVATION:
+        period_notes = c.notes.notes_for(row.evaluator_id, row.employee_id, since=row.period_from or row.cycle_start)
+    tips = guide.tips_for(
+        ev=summary, role=role, today=today, notes=period_notes, warnings=len(obs["warnings"]),
+        objection_until=objection.date if objection else None,
+        new_note=guide.new_note_url(c, row.employee_id) if role == EVALUATOR and row.evaluator_id else None,
+    )
 
     return render(
         request, "core/ocena.html", title=f"Ocena — {employee.full_name}",
         row=row, ev=summary, employee=employee, evaluator=evaluator, role=role, state=state, sheet=sheet,
         sheet_def=c.catalog.sheets[sheet], form=form, criteria=criteria, live=live, result=result, issues=issues,
         additional_options=c.catalog.additional_for(sheet), drafts=drafts,
-        obs=_observations(c, row, summary), events=workflow.events_for(c, row.id),
+        obs=obs, tips=tips, events=workflow.events_for(c, row.id),
         unit=c.employees.org_unit(employee.position.org_unit_id),
         evaluator_unit=c.employees.org_unit(evaluator.position.org_unit_id) if evaluator else None,
         office=c.employees.office(), today=today, steps=STEPS, step_index=step_index,
@@ -260,6 +241,29 @@ def ocena(evaluation_id: str, request: Request):
         EVALUATOR=EVALUATOR, EMPLOYEE=EMPLOYEE, admin_fields=sorted(workflow.ADMIN_FIELDS),
         msg_ok=request.query_params.get("ok"), msg_error=request.query_params.get("error"),
         **_ctx_common(),
+    )
+
+
+@router.get("/oceny/{evaluation_id}/przygotowanie")
+def przygotowanie(evaluation_id: str, request: Request):
+    """„Pomóż mi przygotować się do rozmowy” — ściąga dla oceniającego (§ 10), bez LLM."""
+    c, user, row = _load(request, evaluation_id)
+    if actor_role(row, user) != EVALUATOR or not row.evaluator_id:
+        return render(request, "core/brak_dostepu.html", title="Przygotowanie do rozmowy",
+                      what="Przygotowanie do rozmowy widzi tylko oceniający — opiera się na jego prywatnych notatkach.")
+    summary = summary_from_row(row, c.catalog)
+    employee = c.employees.get(row.employee_id)
+    criteria = criteria_for(SheetType(row.sheet), row.additional or [], c.catalog)
+    since = row.period_from or row.cycle_start
+    notes = c.notes.notes_for(row.evaluator_id, row.employee_id, since=since)
+    stats = {s.criterion_code: s for s in c.notes.stats_for(row.evaluator_id, row.employee_id, row.id)}
+    today = c.clock.today()
+    prep = guide.prepare(ev=summary, criteria=criteria, stats=stats, notes=notes, today=today)
+    return render(
+        request, "core/przygotowanie.html", title=f"Przygotowanie do rozmowy — {employee.full_name}",
+        row=row, ev=summary, employee=employee, prep=prep, since=since, state=EvaluationState(row.state),
+        teczka=c.notes.teczka_url(row.employee_id), new_note=guide.new_note_url(c, row.employee_id),
+        hr_url=guide.hr_prep_url("oceniajaca", row.employee_id), **_ctx_common(),
     )
 
 

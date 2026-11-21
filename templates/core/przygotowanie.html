@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
+{% block content %}
+<p class="small noprint"><a href="/core/oceny/{{ row.id }}">← ocena: {{ employee.full_name }}</a></p>
+<div class="pagehead">
+  <h1>Przygotowanie do rozmowy oceniającej</h1>
+  <div class="noprint">
+    <button class="secondary" type="button" onclick="window.print()">Drukuj ściągę</button>
+  </div>
+</div>
+<div class="meta">
+  <div><span>Oceniany</span>{{ employee.full_name }}, {{ employee.position.title }}</div>
+  <div><span>Okres oceny od</span>{{ since | pl_date }}</div>
+  <div><span>Termin oceny</span>{{ row.due_date | pl_date }}</div>
+  <div><span>Notatki w okresie</span>{{ prep.notes_count }} · ostatnia {{ prep.last_note if prep.notes_count else "—" }}</div>
+</div>
+
+<div class="layout">
+<div class="main">
+  <section class="card coach">
+    <div class="coach-head"><span class="coach-badge">Asystent HR</span><b>Tematy do poruszenia</b></div>
+    <ul>{% for t in prep.topics %}<li>{{ t }}</li>{% endfor %}</ul>
+  </section>
+
+  <section class="card">
+    <h2>Schemat rozmowy <span class="muted small">(§ 10 rozporządzenia)</span></h2>
+    <ol class="outline">
+      {% for title, minutes, points in prep.outline %}
+        <li><b>{{ title }}</b> <span class="muted small">{{ minutes }}</span>
+          <ul>{% for p in points %}<li>{{ p }}</li>{% endfor %}</ul>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <div class="todo-grid">
+    <section class="card">
+      <h2>Mocne strony z notatek</h2>
+      {% for d, t in prep.strengths %}<p class="noteline"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
+      {% else %}<p class="muted small">Brak wpisów w notatkach.</p>{% endfor %}
+    </section>
+    <section class="card">
+      <h2>Obszary do poprawy</h2>
+      {% for d, t in prep.improvements %}<p class="noteline"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
+      {% else %}<p class="muted small">Brak wpisów w notatkach.</p>{% endfor %}
+    </section>
+  </div>
+
+  <section class="card small muted">
+    Dobre praktyki: mów o faktach i zachowaniach, nie o osobie · najpierw słuchaj · nie pytaj o zdrowie ani sprawy prywatne ·
+    ocenę wpisz dopiero po rozmowie.
+  </section>
+</div>
+
+<aside class="side">
+  <section class="card obs">
+    <h2>Kryteria</h2>
+    <ul class="obs-list">
+      {% for cr, view in prep.criteria %}
+        <li>
+          <span class="obs-name">{{ cr.name }}</span>
+          {% if view %}<span class="score {{ view.tone }}">{{ view.mean }}</span><span class="obs-count">{{ view.count }}</span>
+          {% else %}<span class="score none">—</span><span class="obs-count">brak ocen</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section class="card noprint">
+    <h2>Więcej</h2>
+    <p><a class="button" href="{{ hr_url }}">Rozszerz z asystentem AI</a></p>
+    <p class="small muted">Podpowiedzi z modelu językowego na podstawie Twoich notatek (pseudonimizowanych).</p>
+    <p class="small"><a href="{{ teczka }}">Otwórz teczkę</a> · <a href="{{ new_note }}">Dodaj notatkę</a></p>
+    {% if state == "OBSERVATION" %}<p class="small"><a href="/core/oceny/{{ row.id }}#czesc-2">Rozmowa się odbyła → do oceny</a></p>{% endif %}
+  </section>
+</aside>
+</div>
+{% endblock %}
