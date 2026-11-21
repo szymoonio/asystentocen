@@ -10,7 +10,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 
-from app.contracts.enums import DraftField, EvaluationState, Level, Role, SheetType
+from app.contracts.enums import PARTIAL_POINTS, DraftField, EvaluationState, Level, Role, SheetType
+from app.contracts.models import CriterionStats
 from app.core import scheduler, workflow
 from app.core.models import EmployeeRow, EvaluationRow
 from app.core.repo import criteria_for, employee_from_row, result_from_row, summary_from_row
@@ -169,18 +170,44 @@ def _load(request: Request, evaluation_id: str):
         return c, user, row
 
 
+def _num(value: float) -> str:
+    return f"{round(value, 1):g}".replace(".", ",")
+
+
+def stats_view(st: CriterionStats) -> dict[str, Any] | None:
+    """Widok jednego kryterium w panelu obserwacji. Kontrakt dopuszcza None w medianie i średnich
+    połówek (np. wszystkie oceny w pierwszej połowie okresu) oraz wpisy z n_ratings == 0."""
+    counts = {p: n for p, n in st.distribution.items() if n}
+    if st.n_ratings <= 0 or not counts:
+        return None
+    top = max(counts.values())
+    bars = [(p, counts.get(p, 0), round(100 * counts[p] / top) if counts.get(p) else 4) for p in PARTIAL_POINTS]
+    parts = [f"{st.n_ratings} obs."]
+    if st.median is not None:
+        parts.append(f"mediana {_num(st.median)}")
+    first, second = st.first_half_mean, st.second_half_mean
+    if first is not None and second is not None:
+        parts.append(f"trend {_num(first)} → {_num(second)}")
+    elif first is not None:
+        parts.append("tylko w 1. połowie okresu")
+    elif second is not None and st.n_ratings > 1:
+        parts.append("tylko w 2. połowie okresu")
+    return {"bars": bars, "summary": " · ".join(parts)}
+
+
 def _observations(c, row: EvaluationRow, summary) -> dict[str, Any]:
     """Panel „Twoje obserwacje” (docs/ARCHITEKTURA.md § 5.2) — tylko do wglądu."""
     if not row.evaluator_id:
-        return {"stats": {}, "warnings": {}, "url": None}
+        return {"stats": {}, "views": {}, "warnings": {}, "url": None}
     stats = {s.criterion_code: s for s in c.notes.stats_for(row.evaluator_id, row.employee_id, row.id)}
+    views = {code: v for code, st in stats.items() if (v := stats_view(st))}
     points = (row.form or {}).get("partial_points", {})
     warnings = {}
     for code, st in stats.items():
         if code in points and st.n_ratings >= 3 and st.median is not None and abs(points[code] - st.median) >= 4:
             direction = "wyżej" if st.median > points[code] else "niżej"
             warnings[code] = f"Twoje notatki wskazują {direction} (mediana {st.median:g}). Jeśli ocena jest świadoma, warto to uzasadnić."
-    return {"stats": stats, "warnings": warnings, "url": c.notes.teczka_url(row.employee_id)}
+    return {"stats": stats, "views": views, "warnings": warnings, "url": c.notes.teczka_url(row.employee_id)}
 
 
 @router.get("/oceny/{evaluation_id}")

@@ -344,17 +344,16 @@
     <h2>Twoje obserwacje</h2>
     <p class="small muted">Z suwaków w Twoich notatkach. Tylko do wglądu — oceny nie są wypełniane automatycznie.</p>
     {% for cr in criteria %}
-      {% set st = obs.stats.get(cr.code) %}
+      {% set view = obs.views.get(cr.code) %}
       <h3>{{ cr.name }}</h3>
-      {% if st %}
-        {% set maxc = st.distribution.values() | max %}
+      {% if view %}
         <div class="dist" aria-label="rozkład ocen">
-          {% for p in [1,3,5,7,9] %}{% set n = st.distribution.get(p, 0) %}
-            <span class="{{ 'on' if n }}" style="height: {{ (100 * n / maxc) | round | int if n else 4 }}%" title="{{ p }} pkt: {{ n }}"></span>
+          {% for p, n, height in view.bars %}
+            <span class="{{ 'on' if n }}" style="height: {{ height }}%" title="{{ p }} pkt: {{ n }}"></span>
           {% endfor %}
         </div>
-        <div class="distlabels">{% for p in [1,3,5,7,9] %}<span>{{ p }}</span>{% endfor %}</div>
-        <div class="small">{{ st.n_ratings }} obs. · mediana {{ "%g" | format(st.median) }}{% if st.first_half_mean is not none %} · trend {{ "%g" | format(st.first_half_mean | round(1)) }} → {{ "%g" | format(st.second_half_mean | round(1)) }}{% endif %}</div>
+        <div class="distlabels">{% for p, n, height in view.bars %}<span>{{ p }}</span>{% endfor %}</div>
+        <div class="small">{{ view.summary }}</div>
       {% else %}
         <div class="small muted">brak obserwacji</div>
       {% endif %}
