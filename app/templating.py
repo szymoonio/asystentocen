@@ -20,6 +20,18 @@ templates.env.globals["LEVEL_LABELS"] = LEVEL_LABELS
 templates.env.filters["pl_date"] = lambda d: d.strftime("%d.%m.%Y") if d else "—"
 
 
+def asset(path: str) -> str:
+    """'/static/base.css' → '/static/base.css?v=<czas zmiany pliku>': przeglądarka pobiera plik od nowa po każdej zmianie."""
+    try:
+        version = int((ROOT / path.lstrip("/")).stat().st_mtime)
+    except OSError:
+        return path
+    return f"{path}?v={version}"
+
+
+templates.env.globals["asset"] = asset
+
+
 def render(request: Request, template: str, **context: object):
     c = get_container(request)
     user = get_current_user(request)

@@ -24,7 +24,7 @@ Rzeczy, które warto potwierdzić z mentorami KPRM albo o których powinien wied
 
 ## Pulpit „Do zrobienia”, porady asystenta, przygotowanie do rozmowy (feat/core-ui)
 
-- „Do zrobienia” liczymy na żywo z terminów (nie ze skrzynki przypomnień), więc lista zawsze odpowiada stanowi ocen. Pozostałe przypomnienia trafiają do zwiniętej sekcji „Inne powiadomienia”.
+- „Do zrobienia” liczymy na żywo z terminów (nie ze skrzynki przypomnień), więc lista zawsze odpowiada stanowi ocen. Skrzynki przypomnień pulpit nie pokazuje — wszystko, co pilne, jest w „Do zrobienia”.
 - Kolejność notatek: najpierw osoby bez notatek, potem te z najstarszą (`NotesReader.notes_for`, data `observed_on`).
 - Porady asystenta HR przy ocenie i strona `/core/oceny/{id}/przygotowanie` nie używają LLM. Bazują na przepisach (§ 5, § 10), terminach i notatkach oceniającego, więc działają bez sieci. Wersję rozszerzoną (LLM) podpinamy linkiem do modułu B.
 - Panel „Twoje obserwacje” pokazuje średnią z suwaków (na `Fraction`) w kolorze poziomu z § 11 i liczbę ocen.

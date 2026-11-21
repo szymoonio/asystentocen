@@ -117,3 +117,13 @@ def test_analysis_tasks_in_repo_config(container):
 
     cfg = LLMConfig.load(container.settings.config_dir)
     assert {"analyze_person", "analyze_team"} <= set(cfg.tasks)
+
+
+def test_team_analysis_is_in_main_menu_not_in_teczka(client):
+    page = client.get("/asystent/analiza").text
+    assert '<a href="/asystent/analiza" aria-current="page">Analiza zespołu</a>' in page
+    teczka = client.get("/asystent/teczka").text
+    assert '<a href="/asystent/analiza">Analiza zespołu</a>' in teczka  # pozycja menu
+    assert 'class="button secondary" href="/asystent/analiza"' not in teczka  # bez przycisku w teczce
+    client.get("/login/E07")  # bez podwładnych — bez pozycji w menu
+    assert "Analiza zespołu" not in client.get("/core/").text

@@ -127,3 +127,11 @@ button.link:hover { background: none; color: var(--primary-dark); }
   .layout > .side { flex-basis: 14rem; }
   .card { break-inside: avoid; }
 }
+
+/* --- pulpit: własna ocena okresowa --- */
+.own-eval { margin-top: 12px; }
+.own-eval-body { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.own-eval-facts { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0; }
+.own-eval-facts dt { font-size: 13px; color: var(--text-muted); }
+.own-eval-facts dd { margin: 0; font-size: 17px; font-weight: 700; }
+.own-eval-facts dd .muted { font-size: 15px; font-weight: 400; }

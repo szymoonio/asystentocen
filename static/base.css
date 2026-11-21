@@ -48,7 +48,7 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg-page); color: var(--text); line-height: 1.45; font-size: 15px; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-page); color: var(--text); line-height: 1.45; font-size: 15px; }
 a { color: var(--primary); text-underline-offset: 2px; }
 a:hover { color: var(--primary-dark); }
 :focus-visible { outline: 2px solid var(--primary-dark); outline-offset: 2px; }
@@ -98,7 +98,7 @@ p { margin: 0 0 8px; }
 .userswitch .menu a:hover, .userswitch .menu a[aria-current] { background: var(--info-bg); }
 
 /* --- treść i stopka --- */
-.page { max-width: 1240px; margin: 0 auto; padding: 16px 16px 32px; }
+.page { flex: 1 0 auto; width: 100%; max-width: 1240px; margin: 0 auto; padding: 16px 16px 32px; }
 .footer { border-top: 1px solid var(--border); background: var(--bg-subtle); padding: 12px 16px; font-size: 13px; }
 .footer .wrap { padding: 0; }
 

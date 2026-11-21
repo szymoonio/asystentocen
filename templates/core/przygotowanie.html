@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
 {% block content %}
 <p class="small noprint"><a href="/core/oceny/{{ row.id }}">← ocena: {{ employee.full_name }}</a></p>
 <div class="pagehead">
