@@ -5,10 +5,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from app.assistant.notes.views import router as notes_router
+from app.assistant.nudges.views import router as nudges_router
 from app.templating import render
 
 router = APIRouter()
 router.include_router(notes_router)
+router.include_router(nudges_router)
 
 
 @router.get("/hr")

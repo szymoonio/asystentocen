@@ -25,16 +25,28 @@ def register(c: Container) -> None:
     from app.assistant.notes import models
     from app.assistant.notes.reader import DbNotesReader
     from app.assistant.notes.repository import NotesRepository, import_seed_if_empty
+    from app.assistant.nudges.provider import NoteNudges
+    from app.assistant.nudges.snooze import SnoozeRepository, SnoozeRow
     from app.assistant.services import AssistantServices, attach
 
     # Tabele asst_* zakładamy od razu (create_all w kontenerze jest dopiero po register),
     # bo przy pustej bazie importujemy notatki z seedu.
-    models.Base.metadata.create_all(c.engine, tables=[models.NoteRow.__table__, models.CriteriaHintRow.__table__])
+    tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__]
+    models.Base.metadata.create_all(c.engine, tables=tables)
     repo = NotesRepository(c.session_factory)
     import_seed_if_empty(repo, c.seed.notes)
 
-    attach(c, AssistantServices(notes_repo=repo, nudges=NudgesConfig.load(c.settings.config_dir)))
+    config = NudgesConfig.load(c.settings.config_dir)
+    snoozes = SnoozeRepository(c.session_factory)
+    nudges = NoteNudges(
+        employees=lambda: c.employees,
+        evaluations=lambda: c.evaluations,
+        catalog=c.catalog,
+        notes=repo,
+        snoozes=snoozes,
+        config=config,
+    )
+    attach(c, AssistantServices(notes_repo=repo, nudges=config, snoozes=snoozes, note_nudges=nudges))
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)
-    # Kolejne kroki (docs/AGENT_B.md):
-    #   c.drafts = AssistantDraftProvider(c)
-    #   c.reminder_providers.append(NoteNudges(c))
+    c.reminder_providers.append(nudges)
+    # Kolejny krok (docs/AGENT_B.md): c.drafts = AssistantDraftProvider(c)

@@ -1,8 +1,13 @@
 # Przypomnienia o notatkach — agent B (docs/ARCHITEKTURA.md § 5.4, docs/AGENT_B.md).
+# Wszystkie trafiają do JEDNEGO tygodniowego zestawienia na przełożonego (dedupe_key nudge:<id>:<rok>-W<tydzień>).
 no_note_after_days: 45
-coverage_check_every_days: 30
-recency_window_days: 90          # sprawdzane 90 dni przed terminem oceny
+coverage_min_cycle_days: 30      # pokrycie kryteriów sprawdzamy, gdy cykl trwa co najmniej tyle dni
+recency_window_days: 90          # sprawdzane 90 dni przed terminem oceny; „ostatnie” = ostatnie 90 dni
 recency_share_threshold: 0.8     # ≥80% notatek z ostatnich 3 mies. → przypomnienie
-pre_interview_days: [60, 30]
+recency_min_notes: 3             # przy mniejszej liczbie notatek udział nic nie mówi
+pre_interview_days: [60, 30]     # okno przed terminem oceny (największa wartość = początek okna)
 no_positive_after_days: 120
+return_min_absence_days: 30      # „długa” nieobecność
+return_window_days: 30           # ile dni po powrocie przypominamy (jeśli nie ma notatki po powrocie)
+snooze_days: 14                  # „odłóż o 2 tygodnie”
 digest: weekly                   # jedno zestawienie tygodniowo na przełożonego

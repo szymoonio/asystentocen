@@ -16,6 +16,20 @@
 - Tabele `asst_notes` (wersje: edycja = nowy wiersz z `supersedes_id`) i `asst_criteria_hints` (podpowiedzi LLM, osobno od notatki).
 - Przy pustej bazie notatki importują się z `seed/office.yaml`. Reset demo: usuń `data/app.db`.
 
+## Przypomnienia o notatkach (`NoteNudges`)
+
+- Zarejestrowane w `c.reminder_providers` (`name = "assistant.note_nudges"`). Scheduler A woła `due(today)`.
+- **Jedno zestawienie tygodniowo na przełożonego:** `Reminder(kind=NOTE_NUDGE, dedupe_key="nudge:<id>:<rok>-W<tydzień>", link="/asystent/teczka")`, treść w liniach `• Osoba: komunikat`. Codzienne wywołania w tym samym tygodniu deduplikuje sink.
+- Reguły (`app/assistant/nudges/rules.py`, progi w `config/nudges.yaml`) dla ocen w stanach `CYCLE_OPEN`, `CRITERIA_CONFIRMED`, `OBSERVATION`:
+  - brak notatki od N dni (bez notatek — liczone od początku cyklu, a przed ustaleniem kryteriów od zapoznania z poprzednią oceną);
+  - przed oceną (okno 60 dni): liczba notatek i kryteria bez obserwacji;
+  - kryteria bez obserwacji (gdy cykl trwa ≥ 30 dni i są jakieś notatki; poza oknem przed oceną);
+  - skupienie w czasie (≥ 80% notatek z ostatnich 90 dni, w ostatnich 90 dniach przed terminem, min. 3 notatki);
+  - brak pozytywnej obserwacji od 120 dni;
+  - powrót z nieobecności ≥ 30 dni (do 30 dni po powrocie, jeśli od powrotu nie ma notatki).
+- „Odłóż o 14 dni” wycisza osobę u danego przełożonego (`asst_nudge_snoozes`).
+- Ten sam przegląd widać na `/asystent/teczka` (liczony na bieżąco), z przyciskiem „+ Notatka”.
+
 ## Strony
 
 - `/asystent/teczka` — podwładni, liczba notatek w cyklu, ostatnia obserwacja, znacznik po `no_note_after_days` z `config/nudges.yaml`.

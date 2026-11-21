@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.assistant.config import NudgesConfig
     from app.assistant.notes.repository import NotesRepository
+    from app.assistant.nudges.provider import NoteNudges
+    from app.assistant.nudges.snooze import SnoozeRepository
     from app.container import Container
 
 _ATTR = "_assistant_services"
@@ -17,6 +19,8 @@ _ATTR = "_assistant_services"
 class AssistantServices:
     notes_repo: NotesRepository
     nudges: NudgesConfig
+    snoozes: SnoozeRepository
+    note_nudges: NoteNudges
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

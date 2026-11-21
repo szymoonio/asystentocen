@@ -111,11 +111,16 @@ def teczka(request: Request):
                 stale=evaluation is not None and (days is None or days > svc.nudges.no_note_after_days),
             )
         )
+    digest = svc.note_nudges.digest_for(user.employee_id, today)
+    names = {e.id: e.full_name for e in c.employees.subordinates(user.employee_id)}
     return render(
         request,
         "assistant/teczka_lista.html",
         title="Teczka",
         rows=rows,
+        digest=digest,
+        snoozed=[(sid, names.get(sid, sid), until) for sid, until in digest.snoozed.items()],
+        snooze_days=svc.nudges.snooze_days,
         threshold=svc.nudges.no_note_after_days,
         state_labels=STATE_LABELS,
     )

@@ -13,6 +13,22 @@
 .t-actions { text-align: right; white-space: nowrap; }
 .t-actions .button { font-size: 0.85rem; padding: 0.3rem 0.7rem; }
 
+/* przypomnienia */
+.t-nudges { border-left: 4px solid var(--warn); }
+.t-nudge { display: grid; grid-template-columns: 12rem 1fr auto; gap: 0.25rem 1rem; align-items: start; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+.t-nudge:last-of-type { border-bottom: 0; }
+.t-nudge-items { margin: 0; padding-left: 1.1rem; }
+.t-nudge-items li { margin: 0.1rem 0; }
+.t-nudge-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+.t-nudge-actions .button, .t-nudge-actions button { font-size: 0.85rem; padding: 0.3rem 0.7rem; }
+.t-nudge-actions form { margin: 0; }
+@media (max-width: 720px) {
+  .t-nudge { grid-template-columns: 1fr; }
+  .t-nudge-actions { justify-content: flex-start; }
+}
+.t-inline { display: inline; margin: 0; }
+.t-link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font-size: inherit; }
+
 /* zestawienie */
 .t-stats-wrap { overflow-x: auto; }
 .t-stats { min-width: 40rem; }
@@ -77,3 +93,4 @@
 .t-seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -2px; }
 .t-other summary { cursor: pointer; font-weight: 500; margin-top: 0.75rem; }
 .t-submit { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+.t-snoozed { margin: 0.75rem 0 0; }
