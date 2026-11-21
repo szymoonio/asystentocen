@@ -1,42 +1,16 @@
-"""Router modułu ASSISTANT (agent B). Stub z kroku 0 — agent B rozwija dowolnie."""
+"""Router modułu ASSISTANT (agent B), montowany pod /asystent."""
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
-from app.templating import render
+from app.assistant.hr.views import router as hr_router
+from app.assistant.notes.views import router as notes_router
+from app.assistant.nudges.views import router as nudges_router
+from app.assistant.summarize.views import router as summary_router
 
 router = APIRouter()
-
-
-@router.get("/teczka")
-def teczka(request: Request):
-    return render(
-        request,
-        "placeholder.html",
-        title="Teczka",
-        owner="B",
-        what="Notatki o podwładnych (opis, zalety, obszary do poprawy, suwaki), notatki głosowe, historia.",
-    )
-
-
-@router.get("/teczka/{subject_id}")
-def teczka_osoby(subject_id: str, request: Request):
-    return render(
-        request,
-        "placeholder.html",
-        title="Teczka pracownika",
-        owner="B",
-        what=f"Oś czasu notatek o pracowniku {subject_id} i zestawienie suwaków per kryterium.",
-    )
-
-
-@router.get("/hr")
-def hr_partner(request: Request):
-    return render(
-        request,
-        "placeholder.html",
-        title="Asystent HR",
-        owner="B",
-        what="Przygotowanie do trudnej rozmowy, próba rozmowy, notatka → informacja zwrotna, pytania o procedury.",
-    )
+router.include_router(notes_router)
+router.include_router(nudges_router)
+router.include_router(summary_router)
+router.include_router(hr_router)

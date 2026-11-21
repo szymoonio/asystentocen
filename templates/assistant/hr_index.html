@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <div class="t-head">
+    <div>
+      <h1>Asystent HR</h1>
+      <p class="muted">Pomoc przed rozmową i po niej — nigdy zamiast niej. W sprawach mobbingu, zdrowia, kryzysów i sporów prawnych asystent odsyła do kadr.</p>
+    </div>
+  </div>
+
+  <div class="t-hr-grid">
+    <a class="card t-hr-tile" href="/asystent/hr/przygotowanie">
+      <h2>Przygotuj trudną rozmowę</h2>
+      <p class="muted small">Cel, zdanie otwierające w modelu FUKO, prawdopodobne reakcje, czego nie mówić. Checklista z przepisów działa zawsze.</p>
+      {% if not llm.conversation_prep %}<span class="badge">tylko checklista</span>{% endif %}
+    </a>
+    <a class="card t-hr-tile" href="/asystent/hr/proba/nowa">
+      <h2>Próba rozmowy</h2>
+      <p class="muted small">Asystent gra pracownika według karty postaci. Na końcu krótka informacja zwrotna.</p>
+      {% if not llm.roleplay %}<span class="badge warn">wymaga LLM</span>{% endif %}
+    </a>
+    <a class="card t-hr-tile" href="/asystent/hr/fuko">
+      <h2>Notatka → informacja zwrotna</h2>
+      <p class="muted small">Zamień opinię („nie da się na nim polegać”) w fakty, skutki i oczekiwania — gotowe do powiedzenia.</p>
+      {% if not llm.rewrite_feedback %}<span class="badge warn">wymaga LLM</span>{% endif %}
+    </a>
+    <a class="card t-hr-tile" href="/asystent/hr/procedury">
+      <h2>Pytanie o procedurę</h2>
+      <p class="muted small">Odpowiedź z ustawy, rozporządzenia i Poradnika KPRM — zawsze z paragrafem.</p>
+      {% if not llm.procedure_qa %}<span class="badge">tylko wyszukiwanie</span>{% endif %}
+    </a>
+  </div>
+
+  <section class="card">
+    <h2>Sygnały w Twoim zespole</h2>
+    <p class="muted small">To pytania do Ciebie, nie diagnozy o pracownikach. Każdy sygnał wynika z dat Twoich notatek i nieobecności (bez ich przyczyn).</p>
+    {% for p in signals %}
+      <div class="t-signal">
+        <h3><a href="/asystent/teczka/{{ p.employee.id }}">{{ p.employee.full_name }}</a></h3>
+        {% for s in p.signals %}
+          <div class="t-signal-item">
+            <p class="t-signal-q">{{ s.question }}</p>
+            <p class="small muted">Dlaczego: {{ s.why }}</p>
+            <p class="small">Podpowiedź: {{ s.action }}</p>
+          </div>
+        {% endfor %}
+        <p class="small">
+          <a href="/asystent/hr/przygotowanie?osoba={{ p.employee.id }}&rodzaj=informacja">Przygotuj rozmowę</a> ·
+          <a href="/asystent/teczka/{{ p.employee.id }}/nowa">Dodaj notatkę</a>
+        </p>
+      </div>
+    {% else %}
+      <p class="muted">Brak sygnałów — notatki są na bieżąco.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

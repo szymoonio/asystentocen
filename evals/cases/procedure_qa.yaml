@@ -1,0 +1,34 @@
+# Zadanie procedure_qa: pytanie kierownika → odpowiedź z paragrafem.
+#
+# Źródło (provenance): napisane przez zespół na podstawie tekstu przepisów w
+# docs/assistant/wiedza/ (wyciąg z context/), sprawdzone ręcznie z przepisem.
+# `sources` — etykiety fragmentów, z których odpowiedź MOŻE pochodzić (prefiks wystarcza).
+# `must` — lista alternatyw: odpowiedź musi zawierać co najmniej jeden napis (bez wielkości liter).
+# `expect: not_found` — przypadki spoza bazy wiedzy: asystent ma odesłać do kadr, nie zgadywać.
+cases:
+  - {id: q01, question: "Ile dni ma oceniany na wniesienie sprzeciwu od oceny okresowej?",
+     sources: ["art. 83"], must: ["7 dni", "siedmiu dni"]}
+  - {id: q02, question: "Do kogo składa się sprzeciw od oceny okresowej?",
+     sources: ["art. 83"], must: ["dyrektora generalnego"]}
+  - {id: q03, question: "W jakim terminie trzeba rozpatrzyć sprzeciw od oceny?",
+     sources: ["art. 83"], must: ["14 dni", "czternastu dni"]}
+  - {id: q04, question: "Co ile miesięcy sporządza się ocenę okresową?",
+     sources: ["art. 81", "Poradnik KPRM, s. 7", "Poradnik KPRM, s. 8"], must: ["24"]}
+  - {id: q05, question: "Kiedy przeprowadza się ponowną ocenę po ocenie negatywnej?",
+     sources: ["art. 81", "Poradnik KPRM"], must: ["6 miesięcy", "sześciu miesięcy", "6 mies"]}
+  - {id: q06, question: "Ile kryteriów dodatkowych może wybrać oceniający?",
+     sources: ["§ 5 rozporządzenia", "Poradnik KPRM"], must: ["3", "trzy"]}
+  - {id: q07, question: "Co trzeba omówić z ocenianym na rozmowie oceniającej?",
+     sources: ["§ 10 rozporządzenia", "Poradnik KPRM"], must: ["rozwoju"]}
+  - {id: q08, question: "Czy długa nieobecność pracownika przesuwa termin sporządzenia oceny?",
+     sources: ["art. 81", "Poradnik KPRM, s. 10", "Poradnik KPRM, s. 11", "Poradnik KPRM, s. 12"], must: ["miesiąc"]}
+  - {id: q09, question: "Kto dokonuje oceny okresowej urzędnika?",
+     sources: ["§ 2 rozporządzenia", "Poradnik KPRM"], must: ["bezpośredni przełożony", "bezpośredniego przełożonego"]}
+  - {id: q10, question: "Ile punktów odpowiada ocenie cząstkowej „powyżej oczekiwań”?",
+     sources: ["§ 11 rozporządzenia"], must: ["7"]}
+  - {id: q11, question: "Po co prowadzić bieżące notatki o pracy podwładnego w trakcie okresu oceny?",
+     sources: ["Poradnik KPRM, s. 24"], must: ["teczk", "pisemn", "zniekształc"]}
+  # --- poza bazą wiedzy ------------------------------------------------------------------------
+  - {id: x01, question: "Ile dni urlopu wypoczynkowego przysługuje urzędnikowi służby cywilnej?", expect: not_found}
+  - {id: x02, question: "Jak rozliczyć delegację krajową pracownika?", expect: not_found}
+  - {id: x03, question: "Jaka jest stawka dodatku za wieloletnią pracę w służbie cywilnej?", expect: not_found}

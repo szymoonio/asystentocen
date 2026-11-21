@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a></p>
+  <h1>Pytania o procedury</h1>
+  <p class="muted">Źródła: ustawa o służbie cywilnej (art. 81–83, 89), rozporządzenie PRM z 4.04.2016 w sprawie ocen okresowych, Poradnik KPRM (2016). Bez podstawy w źródłach asystent odsyła do kadr.</p>
+
+  <form method="post" action="/asystent/hr/procedury" class="card t-form">
+    <label for="q">Pytanie</label>
+    <input id="q" name="q" value="{{ q }}" placeholder="np. Ile dni ma pracownik na sprzeciw od oceny?">
+    <p>
+      {% if llm_available %}<button type="submit">Zapytaj</button>{% endif %}
+      <button type="submit" formmethod="get" class="{{ 'secondary' if llm_available else '' }}">Pokaż pasujące przepisy</button>
+    </p>
+  </form>
+
+  {% if outcome %}
+    {% if outcome.boundary %}{{ m.boundary(outcome.boundary) }}{% endif %}
+    {% if outcome.error %}<p class="t-assist-msg t-assist-error" role="alert">{{ outcome.error }}</p>{% endif %}
+    {% if outcome.answer %}
+      <section class="card t-plan">
+        <h2>Odpowiedź <span class="badge warn">AI na podstawie źródeł</span></h2>
+        <p>{{ outcome.answer }}</p>
+        <h3>Podstawa</h3>
+        {% for c in outcome.sources %}
+          <details class="t-source"><summary><strong>{{ c.label }}</strong></summary><p class="small t-draft-text">{{ c.text }}</p></details>
+        {% endfor %}
+      </section>
+    {% elif outcome.not_found %}
+      <p class="t-assist-msg" role="status">{{ outcome.not_found }}</p>
+    {% endif %}
+    {% if outcome.fragments and not outcome.answer %}
+      <section class="card">
+        <h2>Najbardziej pasujące fragmenty</h2>
+        {% for c in outcome.fragments %}
+          <details class="t-source" {% if loop.first %}open{% endif %}><summary><strong>{{ c.label }}</strong></summary><p class="small t-draft-text">{{ c.text }}</p></details>
+        {% endfor %}
+      </section>
+    {% elif outcome.question and not outcome.fragments and not outcome.boundary and not outcome.error %}
+      <p class="muted">Nic nie pasuje do tego pytania.</p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

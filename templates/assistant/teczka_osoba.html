@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/teczka">← Teczka</a></p>
+  <div class="t-head">
+    <div>
+      <h1>{{ subject.full_name }}</h1>
+      <p class="muted">
+        {{ subject.position.title }}
+        {% if evaluation %}
+          · arkusz {{ evaluation.sheet }} · {{ state_labels[evaluation.state] }}
+          · okres {{ evaluation.period_from | pl_date }} – termin oceny <strong>{{ evaluation.due_date | pl_date }}</strong>
+          {% if evaluation.after_negative %}<span class="badge warn">ponowna ocena po negatywnej</span>{% endif %}
+        {% else %}
+          · nie podlega ocenie okresowej
+        {% endif %}
+      </p>
+    </div>
+    <div class="t-nudge-actions">
+      {% if evaluation and evaluation.evaluator_id == me.id %}
+        <a class="button secondary" href="/asystent/podsumowanie/{{ evaluation.id }}">Podsumowanie cyklu</a>
+      {% endif %}
+      {% if is_subordinate %}
+        <a class="button" href="/asystent/teczka/{{ subject.id }}/nowa">+ Nowa notatka</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if notice %}<div class="card t-notice">Notatka zapisana.</div>{% endif %}
+
+  {% if evaluation %}
+    <section class="card">
+      <h2>Zestawienie suwaków w bieżącym cyklu</h2>
+      <p class="muted small">
+        Liczone z suwaków w notatkach. Mediana jest główną miarą (skala porządkowa, odporna na jedną skrajną sytuację).
+        Trend: średnia z pierwszej i drugiej połowy okresu oceny. Zestawienie <strong>nie wypełnia</strong> arkusza — ocenę wystawiasz Ty.
+      </p>
+      <div class="t-stats-wrap">
+      <table class="table t-stats">
+        <thead>
+          <tr>
+            <th>Kryterium</th>
+            {% for p in points %}<th class="t-pt" title="{{ point_labels[p] }}">{{ p }}</th>{% endfor %}
+            <th>Mediana</th><th>Trend</th><th>Ostatnio</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in stats %}
+          <tr class="{% if s.n_ratings == 0 %}t-uncovered{% endif %}">
+            <td>
+              <a href="?kryterium={{ s.criterion_code }}&cykl={{ filters.cykl }}">{{ criterion_name(s.criterion_code) }}</a>
+              {% if s.criterion_code not in current_codes %}<br><span class="muted small">poza kryteriami bieżącej oceny</span>{% endif %}
+            </td>
+            {% for p in points %}
+              {% set n = s.distribution.get(p, 0) %}
+              <td class="t-pt"><span class="t-cell t-cell-{{ [n, 3] | min }}">{{ n or "" }}</span></td>
+            {% endfor %}
+            {% if s.n_ratings %}
+              <td><strong>{{ m.num(s.median) }}</strong> <span class="muted small">(n={{ s.n_ratings }})</span></td>
+              <td class="small">
+                {% if s.first_half_mean is not none %}
+                  {{ m.num(s.first_half_mean) }} → {{ m.num(s.second_half_mean) }}
+                  {% if s.second_half_mean > s.first_half_mean %}<span class="t-up" aria-label="poprawa">▲</span>
+                  {% elif s.second_half_mean < s.first_half_mean %}<span class="t-down" aria-label="spadek">▼</span>{% endif %}
+                {% else %}
+                  <span class="muted">— → {{ m.num(s.second_half_mean) }}</span>
+                {% endif %}
+              </td>
+              <td class="small">{{ s.last_rated_on | pl_date }}</td>
+            {% else %}
+              <td colspan="3"><span class="badge warn">brak obserwacji</span></td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Oś czasu</h2>
+    <form class="t-filters" method="get">
+      <div>
+        <label for="f-cykl">Cykl</label>
+        <select id="f-cykl" name="cykl">
+          <option value="" {% if not filters.cykl %}selected{% endif %}>wszystkie</option>
+          {% for ev in evaluations | reverse %}
+            <option value="{{ ev.id }}" {% if filters.cykl == ev.id %}selected{% endif %}>
+              {{ ev.period_from | pl_date }} – {{ ev.due_date | pl_date }}{% if evaluation and ev.id == evaluation.id %} (bieżący){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="f-rodzaj">Pokaż</label>
+        <select id="f-rodzaj" name="rodzaj">
+          <option value="">wszystkie notatki</option>
+          <option value="zalety" {% if filters.rodzaj == "zalety" %}selected{% endif %}>z zaletami</option>
+          <option value="obszary" {% if filters.rodzaj == "obszary" %}selected{% endif %}>z obszarami do poprawy</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-kryterium">Kryterium z suwaka</label>
+        <select id="f-kryterium" name="kryterium">
+          <option value="">dowolne</option>
+          {% for code in rated_codes %}
+            <option value="{{ code }}" {% if filters.kryterium == code %}selected{% endif %}>{{ criterion_name(code) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="t-grow">
+        <label for="f-q">Szukaj</label>
+        <input id="f-q" name="q" value="{{ filters.q }}" placeholder="np. termin, interesant">
+      </div>
+      <div class="t-filter-btn"><button type="submit" class="secondary">Filtruj</button></div>
+    </form>
+    <p class="muted small">Pokazano {{ n_shown }} z {{ n_total }} notatek.</p>
+
+    {% for label, items in groups %}
+      <h3 class="t-month">{{ label }}</h3>
+      <ol class="t-timeline">
+      {% for item in items %}
+        {% set n = item.note %}
+        <li class="t-note" id="{{ n.id }}">
+          <div class="t-note-meta">
+            <strong>{{ n.observed_on | pl_date }}</strong>
+            {% if n.source == "VOICE" %}<span class="badge">głosowa</span>{% endif %}
+            {% if n.version > 1 %}<span class="badge">wersja {{ n.version }}</span>{% endif %}
+            {% if evaluation and n.evaluation_id and n.evaluation_id != evaluation.id %}<span class="badge secondary-badge">poprzedni cykl</span>{% endif %}
+            <span class="t-edit small">
+              {% if fuko_available %}<a href="/asystent/hr/fuko?notatka={{ n.id }}">→ informacja zwrotna</a> · {% endif %}
+              <a href="/asystent/teczka/{{ subject.id }}/notatka/{{ n.id }}/edytuj">Popraw</a>
+            </span>
+          </div>
+          {% if n.body %}<p class="t-body">{{ n.body }}</p>{% endif %}
+          {% if n.strengths %}
+            <ul class="t-points t-plus" aria-label="Zalety">{% for s in n.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
+          {% endif %}
+          {% if n.improvements %}
+            <ul class="t-points t-minus" aria-label="Obszary do poprawy">{% for s in n.improvements %}<li>{{ s }}</li>{% endfor %}</ul>
+          {% endif %}
+          {% if n.ratings %}
+            <div class="t-chips">
+              {% for r in n.ratings %}
+                <span class="t-chip {% if r.criterion_code not in current_codes %}t-chip-out{% endif %}"
+                      title="{{ point_labels[r.value] }}{% if r.criterion_code not in current_codes %} · poza kryteriami bieżącej oceny{% endif %}">
+                  {{ criterion_name(r.criterion_code) }} <strong>{{ r.value }}</strong>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if hints.get(n.id) %}
+            <p class="t-hint small muted" title="Podpowiedź asystenta — nie jest częścią notatki. Przypisania sprawdzisz przy podsumowaniu cyklu.">
+              Asystent: dotyczy {% for code in hints[n.id] %}{{ criterion_name(code) }}{% if not loop.last %}, {% endif %}{% endfor %}
+            </p>
+          {% endif %}
+          {% if item.previous_versions %}
+            <details class="t-versions">
+              <summary class="small muted">Poprzednie wersje ({{ item.previous_versions | length }})</summary>
+              {% for v in item.previous_versions %}
+                <div class="t-version">
+                  <p class="small muted">wersja {{ v.version }} · zapisana {{ v.created_at | pl_date }} · zdarzenie {{ v.observed_on | pl_date }}</p>
+                  {% if v.body %}<p class="small">{{ v.body }}</p>{% endif %}
+                  {% if v.strengths %}<p class="small">Zalety: {{ v.strengths | join("; ") }}</p>{% endif %}
+                  {% if v.improvements %}<p class="small">Do poprawy: {{ v.improvements | join("; ") }}</p>{% endif %}
+                  {% if v.ratings %}<p class="small">Suwaki: {% for r in v.ratings %}{{ criterion_name(r.criterion_code) }} {{ r.value }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+                </div>
+              {% endfor %}
+            </details>
+          {% endif %}
+        </li>
+      {% endfor %}
+      </ol>
+    {% else %}
+      <p class="muted">
+        {% if n_total %}Żadna notatka nie pasuje do filtrów.
+        {% else %}Brak notatek. Krótka notatka po ważnej sytuacji zajmuje pół minuty, a przy ocenie oszczędza godzinę.{% endif %}
+      </p>
+    {% endfor %}
+  </section>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <div class="t-head">
+    <div>
+      <h1>Teczka</h1>
+      <p class="muted">Twoje bieżące obserwacje o pracy podwładnych. Notatki widzisz tylko Ty.</p>
+    </div>
+  </div>
+
+  {% if rows and (not digest.empty or snoozed) %}
+    <section class="card t-nudges" id="przypomnienia">
+      <h2>Przypomnienia w tym tygodniu</h2>
+      {% for p in digest.people %}
+        <div class="t-nudge">
+          <div class="t-nudge-who">
+            <a href="/asystent/teczka/{{ p.employee.id }}" class="t-name">{{ p.employee.full_name }}</a>
+          </div>
+          <ul class="t-nudge-items">
+            {% for f in p.findings %}<li>{{ f.text }}</li>{% endfor %}
+          </ul>
+          <div class="t-nudge-actions">
+            <a class="button" href="/asystent/teczka/{{ p.employee.id }}/nowa">+ Notatka</a>
+            <form method="post" action="/asystent/teczka/{{ p.employee.id }}/odloz">
+              <button type="submit" class="secondary">Odłóż o {{ snooze_days }} dni</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <p class="muted">Na ten tydzień nic więcej.</p>
+      {% endfor %}
+      {% if snoozed %}
+        <div class="muted small t-snoozed">
+          Odłożone:
+          {% for sid, name, until in snoozed %}
+            <span>{{ name }} do {{ until | pl_date }}
+              <form method="post" action="/asystent/teczka/{{ sid }}/przywroc" class="t-inline">
+                <button type="submit" class="t-link">przywróć</button>
+              </form>{% if not loop.last %};{% endif %}
+            </span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <p class="muted small">Raz w tygodniu dostajesz te same informacje w jednym zestawieniu, bez osobnych powiadomień o każdej osobie.</p>
+    </section>
+  {% endif %}
+
+  {% if rows %}
+    <section class="card t-list">
+      <table class="table">
+        <thead>
+          <tr><th>Osoba</th><th>Ocena</th><th>Notatki w cyklu</th><th>Ostatnia obserwacja</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for r in rows %}
+          <tr class="{% if r.stale %}t-stale{% endif %}">
+            <td>
+              <a href="/asystent/teczka/{{ r.employee.id }}" class="t-name">{{ r.employee.full_name }}</a><br>
+              <span class="muted small">{{ r.employee.position.title }}</span>
+            </td>
+            <td>
+              {% if r.evaluation %}
+                <span class="small">termin {{ r.evaluation.due_date | pl_date }}</span><br>
+                <span class="muted small">{{ state_labels[r.evaluation.state] }}{% if r.evaluation.after_negative %} · po ocenie negatywnej{% endif %}</span>
+              {% else %}
+                <span class="muted small">nie podlega ocenie okresowej</span>
+              {% endif %}
+            </td>
+            <td>{{ r.n_notes }}</td>
+            <td>
+              {% if r.last_note_on %}
+                {{ r.last_note_on | pl_date }}<br><span class="muted small">{{ m.days_ago(r.days_since) }}</span>
+              {% else %}
+                <span class="muted">brak notatek</span>
+              {% endif %}
+              {% if r.stale %}
+                <br><span class="badge warn" title="Przypomnienie po {{ threshold }} dniach bez notatki">
+                  {% if r.last_note_on %}dawno bez notatki{% else %}zacznij teczkę{% endif %}
+                </span>
+              {% endif %}
+            </td>
+            <td class="t-actions">
+              <a class="button secondary" href="/asystent/teczka/{{ r.employee.id }}/nowa">+ Notatka</a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <p class="muted small">
+      Poradnik KPRM zaleca prowadzenie bieżących, pisemnych obserwacji, żeby ocena nie opierała się na ostatnich tygodniach.
+      Przypominamy po {{ threshold }} dniach bez notatki.
+    </p>
+  {% else %}
+    <div class="card"><p class="muted">Nie masz bezpośrednich podwładnych, więc teczka jest pusta.</p></div>
+  {% endif %}
+{% endblock %}

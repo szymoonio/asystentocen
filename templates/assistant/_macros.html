@@ -1,0 +1,22 @@
+{% macro head() %}<link rel="stylesheet" href="/static/assistant/teczka.css">{% endmacro %}
+
+{% macro num(x) %}{% if x is none %}—{% else %}{{ ("%.1f" | format(x)) | replace(".0", "") | replace(".", ",") }}{% endif %}{% endmacro %}
+
+{% macro days_ago(days) -%}
+  {%- if days is none -%}brak
+  {%- elif days == 0 -%}dziś
+  {%- elif days == 1 -%}wczoraj
+  {%- else -%}{{ days }} dni temu{%- endif -%}
+{%- endmacro %}
+
+{% macro boundary(hit) %}
+  <div class="card t-boundary" role="alert">
+    <p><strong>{{ hit.message }}</strong></p>
+    <ul>{% for c in hit.contacts %}<li>{{ c.label }}: <strong>{{ c.value }}</strong></li>{% endfor %}</ul>
+    <p class="small muted">Asystent nie przekazał tej treści do modelu językowego.</p>
+  </div>
+{% endmacro %}
+
+{% macro llm_off(what) %}
+  <p class="t-assist-msg t-assist-error">{{ what }} wymaga asystenta LLM, który jest teraz wyłączony (brak klucza API lub zadanie wyłączone w konfiguracji).</p>
+{% endmacro %}

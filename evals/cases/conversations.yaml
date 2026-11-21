@@ -1,0 +1,33 @@
+# Scenariusze rozmów: przygotowanie (conversation_prep) i próba rozmowy (roleplay + roleplay_feedback).
+#
+# Źródło (provenance): napisane przez zespół, oparte na sytuacjach z seedu (Grzegorz po ocenie
+# negatywnej, Ewa bez notatek). Oceniamy regułami (format, brak danych wrażliwych, trzymanie roli,
+# długość wypowiedzi); treść merytoryczną zapisujemy do przejrzenia przez człowieka.
+cases:
+  - id: r01
+    kind: oceniajaca
+    situation: >
+      Za trzy tygodnie ponowna ocena pracownika po ocenie negatywnej. Poprawił się w kontaktach
+      z innymi wydziałami, ale dalej zdarza mu się nie informować o opóźnieniach i odpowiada
+      interesantom zbyt lakonicznie. Chcę uczciwie pokazać postęp i to, co nadal wymaga pracy.
+    manager_turns:
+      - "Dzień dobry, chciałbym porozmawiać o ostatnich miesiącach przed ponowną oceną."
+      - "Widzę wyraźną poprawę we współpracy z Wydziałem Kadr — sam uzupełniłeś dokumenty w lipcu. Doceniam to."
+      - "Jednocześnie 19 sierpnia o opóźnieniu tłumaczenia dowiedziałem się od klienta. Jak to wyglądało z Twojej strony?"
+  - id: r02
+    kind: informacja
+    situation: >
+      Od kwietnia nie rozmawiałem z pracownicą o jej pracy. Wiem, że świetnie obsługuje trudnych
+      interesantów, ale nie dałem jej żadnej informacji zwrotnej. Chcę ją docenić i zapytać o plany.
+    manager_turns:
+      - "Masz chwilę? Chciałem porozmawiać o tym, jak Ci się pracuje."
+      - "W kwietniu słyszałem, jak spokojnie wyjaśniłaś procedurę trudnemu interesantowi. Zrobiło to na mnie wrażenie."
+  - id: r03
+    kind: trudna
+    situation: >
+      Pracownik oddaje tłumaczenia na czas, ale nie korzysta z glosariusza referatu. Weryfikator
+      musi poprawiać terminologię, co opóźnia wysyłkę. Pracownik uważa, że glosariusz jest nieaktualny.
+    manager_turns:
+      - "Chciałbym porozmawiać o glosariuszu referatu."
+      - "W trzech ostatnich tłumaczeniach weryfikator poprawiał terminologię, przez co wysyłka opóźniła się o dwa dni."
+      - "Co proponujesz, żeby terminologia była spójna?"

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+
+{% macro cite(note_ids) -%}
+  {%- for nid in note_ids -%}
+    {%- set n = notes.get(nid) -%}
+    <a class="t-cite" href="/asystent/teczka/{{ subject.id }}#{{ nid }}" title="{{ n.body[:140] if n else nid }}">{{ n.observed_on | pl_date if n else nid }}</a>
+  {%- endfor -%}
+{%- endmacro %}
+
+{% block content %}
+  <p class="small"><a href="/asystent/teczka/{{ subject.id }}">← Teczka: {{ subject.full_name }}</a></p>
+  <div class="t-head">
+    <div>
+      <h1>Podsumowanie cyklu · {{ subject.full_name }}</h1>
+      <p class="muted">
+        Arkusz {{ evaluation.sheet }} · okres {{ evaluation.period_from | pl_date }} – termin oceny <strong>{{ evaluation.due_date | pl_date }}</strong>
+        · {{ ev.notes | length }} notatek w cyklu
+      </p>
+    </div>
+  </div>
+
+  <div class="card t-ai-note">
+    <p><strong>Asystent nie proponuje ocen cząstkowych ani wyniku oceny.</strong>
+      Zestawia, co wynika z Twoich notatek, i przygotowuje projekt tekstu do formularza. Każdy akapit ma odnośniki do notatek źródłowych — sprawdź je przed przeniesieniem.</p>
+  </div>
+
+  {% if ev.excluded %}
+    <div class="card t-errors" role="alert">
+      {% for x in ev.excluded %}
+        <p><a href="/asystent/teczka/{{ subject.id }}#{{ x.note.id }}">Notatka z {{ x.note.observed_on | pl_date }}</a>: {{ x.warning }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="card">
+    <h2>Materiał według kryteriów</h2>
+    <p class="muted small">
+      Punkty przypisane do kryteriów {% if ev.hints_used %}przez asystenta (podpowiedzi przy notatkach) albo{% endif %} z suwaków w notatkach.
+      Przypisanie to tylko pomoc — przy ocenie decydujesz Ty.
+    </p>
+    {% for c in ev.criteria %}
+      {% set items = by_criterion.get(c.code, []) %}
+      {% set s = stats.get(c.code) %}
+      <div class="t-crit">
+        <h3>{{ c.name }}
+          {% if s and s.n_ratings %}<span class="muted small">· suwaki: mediana {{ m.num(s.median) }}{% if s.median in point_labels %} ({{ point_labels[s.median | int] }}){% endif %}, n={{ s.n_ratings }}</span>{% endif %}
+        </h3>
+        {% if items %}
+          <ul class="t-points">
+            {% for i in items %}
+              <li class="{% if i.kind == 'strength' %}t-ev-plus{% elif i.kind == 'improvement' %}t-ev-minus{% endif %}">
+                {{ i.text }} {{ cite([i.note_id]) }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p><span class="badge warn">brak obserwacji</span></p>
+        {% endif %}
+      </div>
+    {% endfor %}
+    {% if unassigned %}
+      <details class="t-other">
+        <summary>Punkty bez przypisanego kryterium ({{ unassigned | length }})</summary>
+        <ul class="t-points">
+          {% for i in unassigned %}<li>{{ i.text }} {{ cite([i.note_id]) }}</li>{% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+  </section>
+
+  <section class="card" id="projekty">
+    <div class="t-head">
+      <h2>Projekty tekstów do formularza</h2>
+      {% if llm_available and ev.notes %}
+        <form method="post" action="/asystent/podsumowanie/{{ evaluation.id }}/generuj">
+          <button type="submit">{% if drafts.values() | map(attribute="generator") | select("ne", deterministic) | list %}Przygotuj ponownie z asystentem{% else %}Przygotuj projekt z asystentem{% endif %}</button>
+        </form>
+      {% endif %}
+    </div>
+    {% if error %}<p class="t-assist-msg t-assist-error" role="alert">{{ error }}</p>{% endif %}
+    {% if outdated %}<p class="t-assist-msg">Notatki lub oceny zmieniły się od ostatniego projektu asystenta — pokazujemy szkielet. Przygotuj projekt ponownie.</p>{% endif %}
+    <p class="muted small">Te same akapity zobaczysz w formularzu oceny przy odpowiednich polach.</p>
+
+    {% for field, d in drafts.items() %}
+      <h3>{{ d.title }}</h3>
+      <p class="small">
+        {% if d.generator == deterministic %}<span class="badge">szkielet bez AI</span>
+        {% else %}<span class="badge warn">projekt AI</span> <span class="muted">{{ d.generator }} · {{ d.created_at | pl_date }}</span>{% endif %}
+      </p>
+      {% for p in d.paragraphs %}
+        <div class="t-draft">
+          <p class="t-draft-text">{{ p.text }}</p>
+          <p class="small muted">Źródła: {{ cite(p.note_ids) }}</p>
+        </div>
+      {% else %}
+        <p class="muted">Brak materiału w notatkach.</p>
+      {% endfor %}
+    {% endfor %}
+
+    {% if rejected %}
+      <details class="t-other">
+        <summary>Akapity odrzucone przez walidator ({{ rejected | length }})</summary>
+        <p class="muted small">Asystent zaproponował je, ale nie przeszły kontroli cytowań — nie trafiają do formularza.</p>
+        {% for r in rejected %}
+          <div class="t-draft t-draft-rejected">
+            <p class="t-draft-text">{{ r.text }}</p>
+            <p class="small">Powód: {{ r.reasons | join("; ") }}</p>
+          </div>
+        {% endfor %}
+      </details>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,14 +1,29 @@
 # Warstwa LLM — agent B (docs/ARCHITEKTURA.md § 6.4). Zadanie usunięte z listy = funkcja ukryta w UI.
+# Bez klucza w zmiennej `api_key_env` aplikacja działa bez LLM (NullClient).
 llm:
-  provider: anthropic            # później: local | none
+  provider: anthropic            # anthropic | none (później: local)
   anthropic:
     api_key_env: ANTHROPIC_API_KEY
-    refusal_fallback: true
-  tasks:
+    refusal_fallback: true       # fallbacks="default" (beta server-side-fallback-2026-07-01)
+    timeout_s: 120
+    max_retries: 2               # SDK sam ponawia 429 i 5xx
+  tasks:                         # effort: low | medium | high | xhigh | max; opcjonalnie max_tokens
     split_note:        { model: claude-opus-5-5, effort: low }
     classify_note:     { model: claude-opus-5-5, effort: low }
     rewrite_feedback:  { model: claude-opus-5-5, effort: medium }
     procedure_qa:      { model: claude-opus-5-5, effort: medium }
     conversation_prep: { model: claude-opus-5-5, effort: medium }
-    roleplay:          { model: claude-opus-5-5, effort: medium }
+    roleplay:          { model: claude-opus-5-5, effort: low }
+    roleplay_feedback: { model: claude-opus-5-5, effort: medium }
     summarize_cycle:   { model: claude-opus-5-5, effort: high }
+
+# Notatki głosowe — transkrypcja lokalna, audio kasowane zaraz po niej (§ 6.3).
+# Wymaga: pip install faster-whisper (model pobiera się przy pierwszym użyciu). Bez pakietu przycisk jest ukryty.
+stt:
+  engine: faster-whisper         # faster-whisper | none
+  model: small                   # tiny | base | small | medium | large-v3 — większy = dokładniej, wolniej
+  device: cpu
+  compute_type: int8
+  language: pl
+  max_seconds: 300
+  max_upload_mb: 25
