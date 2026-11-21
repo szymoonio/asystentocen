@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from app.assistant.analysis.store import AnalysisStore
     from app.assistant.config import NudgesConfig
     from app.assistant.hr.boundaries import HrConfig
     from app.assistant.hr.knowledge import KnowledgeBase
@@ -38,6 +39,7 @@ class AssistantServices:
     knowledge: Callable[[], KnowledgeBase]  # leniwie — baza wiedzy ładowana przy pierwszym pytaniu
     stt_config: SttConfig
     stt: Transcriber  # w testach podmieniany na fake
+    analyses: AnalysisStore | None = None  # zakładka Analiza (zapis wyników LLM)
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

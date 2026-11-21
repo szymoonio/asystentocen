@@ -18,8 +18,15 @@
 {% endmacro %}
 
 {% block content %}
+  {% if picker %}
+  <p class="small"><a href="/asystent/teczka">← Teczka</a></p>
+  <h1>Nowa notatka</h1>
+  <p class="muted small">O kim?</p>
+  {{ m.picker(picker, subject.id) }}
+  {% else %}
   <p class="small"><a href="/asystent/teczka/{{ subject.id }}">← {{ subject.full_name }}</a></p>
   <h1>{% if editing %}Popraw notatkę{% else %}Nowa notatka{% endif %} · {{ subject.full_name }}</h1>
+  {% endif %}
   {% if editing %}
     <p class="muted small">Poprawka zapisze się jako wersja {{ editing.version + 1 }}. Poprzednia wersja zostaje w historii notatki.</p>
   {% endif %}
@@ -56,7 +63,7 @@
           <span id="rec-status" class="muted small" role="status" aria-live="polite"></span>
         </div>
       {% endif %}
-      <textarea id="body" name="body" rows="4" placeholder="Co się wydarzyło — fakty, bez ocen osoby.">{{ values.body }}</textarea>
+      <textarea id="body" name="body" rows="4" placeholder="Co się wydarzyło — fakty, bez ocen osoby."{% if picker %} autofocus{% endif %}>{{ values.body }}</textarea>
       {% if split_available %}
         <div class="t-assist">
           <button type="submit" name="akcja" value="podziel" class="secondary" formnovalidate>Podziel opis na zalety i obszary</button>

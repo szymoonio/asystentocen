@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/teczka">← Teczka</a></p>
+  <h1>Nowa notatka</h1>
+  <p class="muted">O kim? Wybierz osobę — formularz otworzy się poniżej.</p>
+  {{ m.picker(picker) }}
+{% endblock %}
