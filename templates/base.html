@@ -44,6 +44,7 @@
       {{ nav_link("/core/", "Pulpit", path in ["/", "/core/", "/core"]) }}
       {{ nav_link("/core/oceny", "Oceny", path.startswith("/core/oceny")) }}
       {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/teczka", "Teczka", path.startswith("/asystent/teczka") or path.startswith("/asystent/notatka")) }}{% endif %}
+      {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/analiza", "Analiza zespołu", path.startswith("/asystent/analiza")) }}{% endif %}
       {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/hr", "Asystent HR", path.startswith("/asystent/hr")) }}{% endif %}
       {% if user.has("KADRY") %}{{ nav_link("/core/kadry", "Kadry", path.startswith("/core/kadry")) }}{% endif %}
     </div>

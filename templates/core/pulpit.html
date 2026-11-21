@@ -47,13 +47,21 @@
           <span class="badge {{ 'warn' if not n.last or (today - n.last).days > 45 else '' }}">dodaj</span>
         </a>
       {% endfor %}
-      <p class="small"><a href="/asystent/teczka">Teczka</a></p>
     </section>
     {% endif %}
   </div>
 
   {% if own and not todo | selectattr("who", "equalto", "Twoja ocena") | list %}
-  <p class="small muted">Twoja ocena okresowa: {{ STATE_LABELS[own.state] | lower }}, termin {{ own.due_date | pl_date }} · <a href="/core/oceny/{{ own.id }}">szczegóły</a></p>
+  <section class="card own-eval" aria-labelledby="own-eval-title">
+    <h2 id="own-eval-title">Twoja ocena okresowa</h2>
+    <div class="own-eval-body">
+      <dl class="own-eval-facts">
+        <div><dt>Etap</dt><dd>{{ STATE_LABELS[own.state] }}</dd></div>
+        {% if own.due_date %}<div><dt>Termin oceny</dt><dd>{{ own.due_date | pl_date }} <span class="muted">({{ own_when }})</span></dd></div>{% endif %}
+      </dl>
+      <a class="button secondary" href="/core/oceny/{{ own.id }}">Szczegóły</a>
+    </div>
+  </section>
   {% endif %}
 
 {% endblock %}

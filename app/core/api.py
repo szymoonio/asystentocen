@@ -107,7 +107,8 @@ def pulpit(request: Request):
     own = c.evaluations.current_for(user.employee_id)
     return render(
         request, "core/pulpit.html", title="Pulpit", todo=evaluations[:3], todo_more=max(0, len(evaluations) - 3),
-        notes_todo=notes[:3], note_people=notes, own=own, **_ctx_common(),
+        notes_todo=notes[:3], note_people=notes, own=own,
+        own_when=guide.until(own.due_date, today) if own and own.due_date else "", **_ctx_common(),
     )
 
 

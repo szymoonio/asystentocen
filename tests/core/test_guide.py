@@ -113,3 +113,10 @@ def test_stylesheets_are_versioned_against_stale_cache(client):
     login(client, "E05")
     page = client.get("/core/").text
     assert '/static/base.css?v=' in page and '/static/core/core.css?v=' in page
+
+
+def test_dashboard_own_evaluation_box(client):
+    login(client, "E05")
+    page = client.get("/core/").text
+    assert "Twoja ocena okresowa" in page and "03.03.2027" in page and "Szczegóły" in page
+    assert '<p class="small"><a href="/asystent/teczka">Teczka</a></p>' not in page
