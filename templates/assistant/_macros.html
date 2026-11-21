@@ -1,4 +1,4 @@
-{% macro head() %}<link rel="stylesheet" href="/static/assistant/teczka.css">{% endmacro %}
+{% macro head() %}<link rel="stylesheet" href="{{ asset('/static/assistant/teczka.css') }}">{% endmacro %}
 
 {% macro num(x) %}{% if x is none %}—{% else %}{{ ("%.1f" | format(x)) | replace(".0", "") | replace(".", ",") }}{% endif %}{% endmacro %}
 

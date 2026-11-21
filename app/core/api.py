@@ -104,12 +104,10 @@ def pulpit(request: Request):
     today = c.clock.today()
     evaluations = guide.todo_evaluations(c, user, today)
     notes = guide.todo_notes(c, user, today) if user.has(Role.OCENIAJACY) else []
-    shown = {t.url.split("#")[0].split("/przygotowanie")[0] for t in evaluations}
-    inbox = [r for r in c.reminder_sink.inbox(user.employee_id) if (r.link or "").split("#")[0] not in shown]
     own = c.evaluations.current_for(user.employee_id)
     return render(
         request, "core/pulpit.html", title="Pulpit", todo=evaluations[:3], todo_more=max(0, len(evaluations) - 3),
-        notes_todo=notes[:3], note_people=notes, inbox=inbox, own=own, **_ctx_common(),
+        notes_todo=notes[:3], note_people=notes, own=own, **_ctx_common(),
     )
 
 

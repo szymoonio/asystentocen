@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
 {% block content %}
   <div class="pagehead">
     <h1>Dzień dobry, {{ me.first_name }}</h1>
@@ -56,21 +56,4 @@
   <p class="small muted">Twoja ocena okresowa: {{ STATE_LABELS[own.state] | lower }}, termin {{ own.due_date | pl_date }} · <a href="/core/oceny/{{ own.id }}">szczegóły</a></p>
   {% endif %}
 
-  {% if inbox %}
-  <details class="card">
-    <summary><b>Inne powiadomienia</b> <span class="muted small">({{ inbox | length }})</span></summary>
-    {% for r in inbox %}
-      <div class="reminder">
-        <div>
-          {% if r.link %}<a href="{{ r.link }}">{{ r.message }}</a>{% else %}{{ r.message }}{% endif %}
-          {% if r.due %}<span class="muted small"> · {{ r.due | pl_date }}</span>{% endif %}
-        </div>
-        <form method="post" action="/core/przypomnienia/przeczytane" class="inline-form">
-          <input type="hidden" name="key" value="{{ r.dedupe_key }}">
-          <button class="link" type="submit">odhacz</button>
-        </form>
-      </div>
-    {% endfor %}
-  </details>
-  {% endif %}
 {% endblock %}
