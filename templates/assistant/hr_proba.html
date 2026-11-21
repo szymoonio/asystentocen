@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a></p>
+  <h1>Próba rozmowy</h1>
+
+  <details class="card t-card" {% if not rp.messages %}open{% endif %}>
+    <summary><strong>Karta postaci</strong> <span class="muted small">· trudność: {{ difficulties.get(rp.card.difficulty, "średnia") }}</span></summary>
+    <p><strong>Kim jest:</strong> {{ rp.card.persona }}</p>
+    {% if rp.card.goal %}<p><strong>Czego chce:</strong> {{ rp.card.goal }}</p>{% endif %}
+    {% if rp.card.resistance %}<p><strong>Opór:</strong> {{ rp.card.resistance }}</p>{% endif %}
+    {% if rp.card.phrases %}<p><strong>Typowe zdania:</strong> {{ rp.card.phrases | join(" · ") }}</p>{% endif %}
+    <p class="muted small">To ćwiczenie — pracownika gra model językowy. Zacznij tak, jak zacząłbyś prawdziwą rozmowę.</p>
+  </details>
+
+  <section class="card" id="rozmowa">
+    <ol class="t-chat" id="chat">
+      {% for msg in rp.messages %}
+        <li class="t-msg {{ 't-msg-me' if msg.role == 'user' else 't-msg-them' }}">
+          <span class="t-msg-who">{{ "Ty" if msg.role == "user" else "Pracownik" }}</span>
+          <span class="t-msg-text">{{ msg.display or msg.content }}</span>
+        </li>
+      {% endfor %}
+    </ol>
+    {% if error %}<p class="t-assist-msg t-assist-error" role="alert" id="blad">{{ error }}</p>{% endif %}
+
+    {% if rp.feedback is none %}
+      <p class="small muted" id="licznik">Wypowiedzi: <span id="tury">{{ rp.turns }}</span> z {{ max_turns }}</p>
+      {% if rp.turns < max_turns %}
+        <form method="post" action="/asystent/hr/proba/{{ rp.id }}/wiadomosc" id="form-wiadomosc" class="t-chat-form">
+          <label for="tekst" class="t-sr">Twoja wypowiedź</label>
+          <textarea id="tekst" name="tekst" rows="2" placeholder="Co mówisz pracownikowi?" required></textarea>
+          <button type="submit">Powiedz</button>
+        </form>
+      {% endif %}
+      {% if rp.messages %}
+        <form method="post" action="/asystent/hr/proba/{{ rp.id }}/koniec" class="t-inline">
+          <button type="submit" class="secondary">Zakończ i poproś o informację zwrotną</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  {% if rp.feedback %}
+    <section class="card t-plan" id="informacja-zwrotna">
+      <h2>Informacja zwrotna <span class="badge warn">projekt AI</span></h2>
+      <div class="t-draft-text">{{ rp.feedback }}</div>
+      <p><a class="button secondary" href="/asystent/hr/proba/nowa">Nowa próba</a></p>
+    </section>
+  {% endif %}
+
+  <script>
+  (function () {
+    const form = document.getElementById("form-wiadomosc");
+    if (!form || !window.fetch || !window.ReadableStream) return;  // bez JS formularz działa zwykłym POST-em
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("tekst");
+    const button = form.querySelector("button");
+    const tury = document.getElementById("tury");
+    function bubble(cls, who, text) {
+      const li = document.createElement("li");
+      li.className = "t-msg " + cls;
+      li.innerHTML = '<span class="t-msg-who"></span><span class="t-msg-text"></span>';
+      li.children[0].textContent = who;
+      li.children[1].textContent = text;
+      chat.appendChild(li);
+      li.scrollIntoView({block: "end", behavior: "smooth"});
+      return li.children[1];
+    }
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+    });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      button.disabled = true; input.disabled = true;
+      bubble("t-msg-me", "Ty", text);
+      const out = bubble("t-msg-them t-typing", "Pracownik", "…");
+      try {
+        const res = await fetch(form.action, {
+          method: "POST", headers: {"X-Stream": "1"}, body: new URLSearchParams({tekst: text}),
+        });
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let first = true;
+        for (;;) {
+          const {value, done} = await reader.read();
+          if (done) break;
+          if (first) { out.textContent = ""; first = false; }
+          out.textContent += decoder.decode(value, {stream: true});
+        }
+        out.parentElement.classList.remove("t-typing");
+        if (res.ok) {
+          input.value = "";
+          if (tury) tury.textContent = String(Number(tury.textContent) + 1);
+          if (tury && Number(tury.textContent) >= {{ max_turns }}) { window.location.reload(); return; }
+        } else {
+          out.parentElement.classList.add("t-msg-error");
+        }
+      } catch (err) {
+        out.textContent = "[Brak połączenia z asystentem. Spróbuj ponownie.]";
+      } finally {
+        button.disabled = false; input.disabled = false; input.focus();
+        if (!document.querySelector('form[action$="/koniec"]')) window.location.reload();
+      }
+    });
+  })();
+  </script>
+{% endblock %}

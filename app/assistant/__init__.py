@@ -22,6 +22,9 @@ __all__ = ["register", "router"]
 
 def register(c: Container) -> None:
     from app.assistant.config import NudgesConfig
+    from app.assistant.hr.boundaries import HrConfig
+    from app.assistant.hr.knowledge import default_knowledge
+    from app.assistant.hr.roleplay import RoleplayRow, RoleplayStore
     from app.assistant.llm import LLMConfig, build_client
     from app.assistant.notes import models
     from app.assistant.notes.reader import DbNotesReader
@@ -36,7 +39,8 @@ def register(c: Container) -> None:
 
     # Tabele asst_* zakładamy od razu (create_all w kontenerze jest dopiero po register),
     # bo przy pustej bazie importujemy notatki z seedu.
-    tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__, DraftRow.__table__]
+    tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__, DraftRow.__table__,
+              RoleplayRow.__table__]
     models.Base.metadata.create_all(c.engine, tables=tables)
     repo = NotesRepository(c.session_factory)
     import_seed_if_empty(repo, c.seed.notes)
@@ -69,6 +73,9 @@ def register(c: Container) -> None:
             llm=build_client(llm_config),
             pseudonymizer=lambda: Pseudonymizer(c.employees.all()),
             drafts=drafts,
+            hr=HrConfig.load(),
+            roleplays=RoleplayStore(c.session_factory),
+            knowledge=default_knowledge,
         ),
     )
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)

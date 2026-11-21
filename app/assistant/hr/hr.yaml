@@ -1,0 +1,31 @@
+# Asystent HR (docs/ARCHITEKTURA.md § 7) — konfiguracja urzędu.
+# Granice odpowiedzialności (§ 7.5) są sprawdzane w kodzie PRZED wywołaniem LLM, nie w prompcie.
+
+roleplay_max_turns: 12          # limit wypowiedzi kierownika w próbie rozmowy
+
+# Kontakty pokazywane przy temacie poza granicami. Wydział Kadr dopisywany automatycznie
+# (osoby z rolą KADRY w katalogu pracowników).
+contacts:
+  - {label: "Inspektor Ochrony Danych", value: "iod@przyklady.example"}
+  - {label: "Wsparcie psychologiczne dla pracowników (jeśli urząd zapewnia)", value: "wsparcie@przyklady.example"}
+
+crisis_contacts:                # dodatkowo przy temacie „kryzys / zagrożenie życia”
+  - {label: "Numer alarmowy", value: "112"}
+  - {label: "Telefon zaufania dla dorosłych", value: "116 123"}
+
+# Tematy, w których asystent nie doradza. Wzorce to początki słów, bez wielkości liter.
+topics:
+  MOBBING_DYSKRYMINACJA:
+    label: "mobbing, dyskryminacja lub molestowanie"
+    patterns: ["mobbing", "mobbuj", "nękan", "nęka ", "dyskrymin", "molestow", "szykan", "poniża", "zastrasz"]
+  KRYZYS:
+    label: "kryzys psychiczny lub zagrożenie życia"
+    patterns: ["samobój", "odebrać sobie życie", "odebrał\\w* sobie życie", "nie chce\\w* (\\w+ )?(się )?żyć", "zrobić sobie krzywdę",
+               "zrobi sobie krzywdę", "samookalecz", "zagrożeni\\w* życia", "kryzys\\w* psychiczn", "załamani\\w* nerwow"]
+  DYSCYPLINARNE_PRAWNE:
+    label: "sprawy dyscyplinarne i spory prawne"
+    patterns: ["dyscyplinarn", "kar\\w* porządkow", "kar\\w* upomnienia", "kar\\w* nagany", "nagan", "sąd\\w* pracy", "pozew", "pozw",
+               "adwokat", "wypowiedzeni\\w* umowy", "rozwiązani\\w* umowy", "zwolni\\w* z pracy", "zwolnienie dyscyplinarne"]
+  ZDROWIE:
+    label: "zdrowie pracownika"
+    use_sensitive_categories: [ZDROWIE, CIAZA_RODZICIELSTWO]

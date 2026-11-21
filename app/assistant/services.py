@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.assistant.config import NudgesConfig
+    from app.assistant.hr.boundaries import HrConfig
+    from app.assistant.hr.knowledge import KnowledgeBase
+    from app.assistant.hr.roleplay import RoleplayStore
     from app.assistant.llm import LLMClient, LLMConfig
     from app.assistant.notes.repository import NotesRepository
     from app.assistant.nudges.provider import NoteNudges
@@ -29,6 +32,9 @@ class AssistantServices:
     llm: LLMClient  # w testach podmieniany na fake — testy nie wołają sieci
     pseudonymizer: Callable[[], Pseudonymizer]  # budowany na bieżąco z c.employees.all()
     drafts: AssistantDraftProvider
+    hr: HrConfig
+    roleplays: RoleplayStore
+    knowledge: Callable[[], KnowledgeBase]  # leniwie — baza wiedzy ładowana przy pierwszym pytaniu
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

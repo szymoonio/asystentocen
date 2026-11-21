@@ -8,3 +8,15 @@
   {%- elif days == 1 -%}wczoraj
   {%- else -%}{{ days }} dni temu{%- endif -%}
 {%- endmacro %}
+
+{% macro boundary(hit) %}
+  <div class="card t-boundary" role="alert">
+    <p><strong>{{ hit.message }}</strong></p>
+    <ul>{% for c in hit.contacts %}<li>{{ c.label }}: <strong>{{ c.value }}</strong></li>{% endfor %}</ul>
+    <p class="small muted">Asystent nie przekazał tej treści do modelu językowego.</p>
+  </div>
+{% endmacro %}
+
+{% macro llm_off(what) %}
+  <p class="t-assist-msg t-assist-error">{{ what }} wymaga asystenta LLM, który jest teraz wyłączony (brak klucza API lub zadanie wyłączone w konfiguracji).</p>
+{% endmacro %}

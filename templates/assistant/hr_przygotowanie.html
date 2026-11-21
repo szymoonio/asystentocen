@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a></p>
+  <h1>Przygotowanie do rozmowy</h1>
+
+  <form method="post" action="/asystent/hr/przygotowanie" class="card t-form">
+    <div class="t-two">
+      <div>
+        <label for="rodzaj">Rodzaj rozmowy</label>
+        <select id="rodzaj" name="rodzaj">
+          {% for key, label in kinds.items() %}<option value="{{ key }}" {% if values.rodzaj == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="osoba">Z kim (opcjonalnie)</label>
+        <select id="osoba" name="osoba">
+          <option value="">— nie wskazuję osoby —</option>
+          {% for e in subordinates %}<option value="{{ e.id }}" {% if values.osoba == e.id %}selected{% endif %}>{{ e.full_name }}</option>{% endfor %}
+        </select>
+        <label class="t-check small"><input type="checkbox" name="teczka" value="1" {% if values.teczka %}checked{% endif %}>
+          dołącz punkty z teczki (bez notatek z danymi wrażliwymi, po zamianie nazwisk na etykiety)</label>
+      </div>
+    </div>
+    <label for="opis">Opisz sytuację</label>
+    <textarea id="opis" name="opis" rows="5" placeholder="Co się dzieje, co chcesz osiągnąć w rozmowie. Wystarczy ogólny opis — nie musisz podawać nazwisk.">{{ values.opis }}</textarea>
+    {% if llm_available %}
+      <p><button type="submit">Przygotuj rozmowę</button></p>
+    {% else %}
+      {{ m.llm_off("Plan rozmowy") }}
+    {% endif %}
+  </form>
+
+  {% if checklist %}
+    <section class="card">
+      <h2>{{ checklist[0] }}</h2>
+      <ul class="t-checklist">{% for item in checklist[1] %}<li>{{ item }}</li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+
+  {% if outcome %}
+    {% if outcome.boundary %}{{ m.boundary(outcome.boundary) }}{% endif %}
+    {% if outcome.error %}<p class="t-assist-msg t-assist-error" role="alert">{{ outcome.error }}</p>{% endif %}
+    {% if outcome.excluded_notes %}<p class="t-assist-msg">Pominięto notatki z danymi wrażliwymi: {{ outcome.excluded_notes }}.</p>{% endif %}
+    {% if outcome.plan %}
+      {% set p = outcome.plan %}
+      <section class="card t-plan">
+        <h2>Plan rozmowy <span class="badge warn">projekt AI</span></h2>
+        <h3>Cel</h3><p>{{ p.goal }}</p>
+        <h3>Zdanie otwierające (FUKO)</h3><blockquote>{{ p.opening }}</blockquote>
+        <h3>Pytania otwarte</h3><ul>{% for q in p.questions %}<li>{{ q }}</li>{% endfor %}</ul>
+        <h3>Prawdopodobne reakcje</h3>
+        <dl class="t-reactions">
+          {% for r in p.reactions %}<dt>{{ r.reaction }}</dt><dd>{{ r.response }}</dd>{% endfor %}
+        </dl>
+        <h3>Czego unikać</h3><ul>{% for a in p.avoid %}<li>{{ a }}</li>{% endfor %}</ul>
+      </section>
+      {% if roleplay_available %}
+        <form method="post" action="/asystent/hr/proba" class="card">
+          <h2>Przećwicz tę rozmowę</h2>
+          <p class="muted small">Asystent zagra pracownika według tej karty. Możesz ją poprawić.</p>
+          <label for="persona">Kim jest pracownik</label><input id="persona" name="persona" value="{{ p.roleplay.persona }}">
+          <label for="goal">Czego chce</label><input id="goal" name="goal" value="{{ p.roleplay.goal }}">
+          <label for="resistance">Na czym polega opór</label><input id="resistance" name="resistance" value="{{ p.roleplay.resistance }}">
+          <label for="phrases">Typowe zdania (jedno w linii)</label><textarea id="phrases" name="phrases" rows="3">{{ p.roleplay.phrases | join("\n") }}</textarea>
+          <label for="difficulty">Trudność</label>
+          <select id="difficulty" name="difficulty"><option value="latwa">łatwa</option><option value="srednia" selected>średnia</option><option value="trudna">trudna</option></select>
+          <p><button type="submit">Rozpocznij próbę rozmowy</button></p>
+        </form>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}

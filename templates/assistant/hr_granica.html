@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a></p>
+  <h1>{{ title }}</h1>
+  {{ m.boundary(boundary) }}
+{% endblock %}

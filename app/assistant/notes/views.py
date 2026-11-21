@@ -236,6 +236,7 @@ def teczka_osoby(
         points=PARTIAL_POINTS,
         notice=request.query_params.get("zapisano"),
         hints=hints,
+        fuko_available=svc.llm.available("rewrite_feedback"),
     )
 
 

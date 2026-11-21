@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a>{% if note %} · <a href="/asystent/teczka/{{ note.subject_id }}#{{ note.id }}">← notatka z {{ note.observed_on | pl_date }}</a>{% endif %}</p>
+  <h1>Notatka → informacja zwrotna</h1>
+  <p class="muted">Asystent zamieni notatkę w informację zwrotną w modelu FUKO: <strong>F</strong>akty, <strong>U</strong>czucia (Twoje odczucia), <strong>K</strong>onsekwencje, <strong>O</strong>czekiwania.</p>
+
+  <form method="post" action="/asystent/hr/fuko" class="card t-form">
+    <input type="hidden" name="notatka" value="{{ values.notatka or '' }}">
+    <label for="tekst">Treść notatki</label>
+    <textarea id="tekst" name="tekst" rows="5" placeholder="np. Nie da się na nim polegać — znowu oddał tłumaczenie po terminie.">{{ values.tekst }}</textarea>
+    {% if llm_available %}<p><button type="submit">Przeredaguj na informację zwrotną</button></p>{% else %}{{ m.llm_off("Przeredagowanie notatki") }}{% endif %}
+  </form>
+
+  {% if outcome %}
+    {% if outcome.boundary %}{{ m.boundary(outcome.boundary) }}{% endif %}
+    {% if outcome.error %}<p class="t-assist-msg t-assist-error" role="alert">{{ outcome.error }}</p>{% endif %}
+    {% if outcome.fuko %}
+      {% set f = outcome.fuko %}
+      <section class="card t-plan">
+        <h2>Gotowe do powiedzenia <span class="badge warn">projekt AI</span></h2>
+        <blockquote>{{ f.ready_text }}</blockquote>
+        <dl class="t-fuko">
+          <dt>Fakty</dt><dd>{{ f.facts }}</dd>
+          <dt>Uczucia</dt><dd>{{ f.feelings }}</dd>
+          <dt>Konsekwencje</dt><dd>{{ f.consequences }}</dd>
+          <dt>Oczekiwania</dt><dd>{{ f.expectations }}</dd>
+        </dl>
+      </section>
+      {% if f.opinions %}
+        <section class="card">
+          <h2>Opinie zamiast faktów</h2>
+          <p class="muted small">Notatkę może kiedyś przeczytać pracownik (art. 15 RODO), a ocena musi opierać się na faktach. Tak można to zapisać rzeczowo:</p>
+          <table class="table">
+            <thead><tr><th>W notatce</th><th>Rzeczowo</th></tr></thead>
+            <tbody>{% for o in f.opinions %}<tr><td>„{{ o.opinion }}”</td><td>{{ o.fact_based }}</td></tr>{% endfor %}</tbody>
+          </table>
+        </section>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endblock %}

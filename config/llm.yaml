@@ -13,5 +13,6 @@ llm:
     rewrite_feedback:  { model: claude-opus-5-5, effort: medium }
     procedure_qa:      { model: claude-opus-5-5, effort: medium }
     conversation_prep: { model: claude-opus-5-5, effort: medium }
-    roleplay:          { model: claude-opus-5-5, effort: medium }
+    roleplay:          { model: claude-opus-5-5, effort: low }
+    roleplay_feedback: { model: claude-opus-5-5, effort: medium }
     summarize_cycle:   { model: claude-opus-5-5, effort: high }

@@ -129,7 +129,10 @@
             {% if n.source == "VOICE" %}<span class="badge">głosowa</span>{% endif %}
             {% if n.version > 1 %}<span class="badge">wersja {{ n.version }}</span>{% endif %}
             {% if evaluation and n.evaluation_id and n.evaluation_id != evaluation.id %}<span class="badge secondary-badge">poprzedni cykl</span>{% endif %}
-            <a class="small t-edit" href="/asystent/teczka/{{ subject.id }}/notatka/{{ n.id }}/edytuj">Popraw</a>
+            <span class="t-edit small">
+              {% if fuko_available %}<a href="/asystent/hr/fuko?notatka={{ n.id }}">→ informacja zwrotna</a> · {% endif %}
+              <a href="/asystent/teczka/{{ subject.id }}/notatka/{{ n.id }}/edytuj">Popraw</a>
+            </span>
           </div>
           {% if n.body %}<p class="t-body">{{ n.body }}</p>{% endif %}
           {% if n.strengths %}

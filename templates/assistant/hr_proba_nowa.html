@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+{% block content %}
+  <p class="small"><a href="/asystent/hr">← Asystent HR</a></p>
+  <h1>Nowa próba rozmowy</h1>
+  <p class="muted">Opisz pracownika ogólnie, bez imienia i danych osobowych. Najwygodniej zacząć od <a href="/asystent/hr/przygotowanie">przygotowania rozmowy</a> — karta wypełni się sama.</p>
+  {% if not llm_available %}{{ m.llm_off("Próba rozmowy") }}{% endif %}
+  <form method="post" action="/asystent/hr/proba" class="card t-form">
+    <label for="persona">Kim jest pracownik</label>
+    <input id="persona" name="persona" placeholder="np. doświadczony specjalista, od lat na tym samym stanowisku">
+    <label for="goal">Czego chce w tej rozmowie</label>
+    <input id="goal" name="goal" placeholder="np. udowodnić, że opóźnienia nie są jego winą">
+    <label for="resistance">Na czym polega opór</label>
+    <input id="resistance" name="resistance" placeholder="np. zrzuca winę na inne wydziały, bagatelizuje skutki">
+    <label for="phrases">Typowe zdania (jedno w linii)</label>
+    <textarea id="phrases" name="phrases" rows="3" placeholder="Zawsze tak robiliśmy.&#10;To nie mój zakres."></textarea>
+    <label for="difficulty">Trudność</label>
+    <select id="difficulty" name="difficulty">
+      {% for key, label in difficulties.items() %}<option value="{{ key }}" {% if key == "srednia" %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    {% if llm_available %}<p><button type="submit">Rozpocznij</button></p>{% endif %}
+  </form>
+{% endblock %}
