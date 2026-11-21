@@ -31,55 +31,39 @@
 
   {% if evaluation %}
     <section class="card">
-      <h2>Zestawienie suwaków w bieżącym cyklu</h2>
-      <p class="muted small">
-        Liczone z suwaków w notatkach. Mediana jest główną miarą (skala porządkowa, odporna na jedną skrajną sytuację).
-        Trend: średnia z pierwszej i drugiej połowy okresu oceny. Zestawienie <strong>nie wypełnia</strong> arkusza — ocenę wystawiasz Ty.
-      </p>
-      <div class="t-stats-wrap">
-      <table class="table t-stats">
-        <thead>
-          <tr>
-            <th>Kryterium</th>
-            {% for p in points %}<th class="t-pt" title="{{ point_labels[p] }}">{{ p }}</th>{% endfor %}
-            <th>Mediana</th><th>Trend</th><th>Ostatnio</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for s in stats %}
-          <tr class="{% if s.n_ratings == 0 %}t-uncovered{% endif %}">
-            <td>
-              <a href="?kryterium={{ s.criterion_code }}&cykl={{ filters.cykl }}">{{ criterion_name(s.criterion_code) }}</a>
-              {% if s.criterion_code not in current_codes %}<br><span class="muted small">poza kryteriami bieżącej oceny</span>{% endif %}
-            </td>
-            {% for p in points %}
-              {% set n = s.distribution.get(p, 0) %}
-              <td class="t-pt"><span class="t-cell t-cell-{{ [n, 3] | min }}">{{ n or "" }}</span></td>
-            {% endfor %}
-            {% if s.n_ratings %}
-              <td><strong>{{ m.num(s.median) }}</strong> <span class="muted small">(n={{ s.n_ratings }})</span></td>
-              <td class="small">
-                {% if s.first_half_mean is not none %}
-                  {{ m.num(s.first_half_mean) }} → {{ m.num(s.second_half_mean) }}
-                  {% if s.second_half_mean > s.first_half_mean %}<span class="t-up" aria-label="poprawa">▲</span>
-                  {% elif s.second_half_mean < s.first_half_mean %}<span class="t-down" aria-label="spadek">▼</span>{% endif %}
-                {% else %}
-                  <span class="muted">— → {{ m.num(s.second_half_mean) }}</span>
-                {% endif %}
-              </td>
-              <td class="small">{{ s.last_rated_on | pl_date }}</td>
+      <div class="t-section-head">
+        <h2>Bieżący okres oceny</h2>
+        <span class="muted small">ostatnia notatka: {{ last_note }}</span>
+      </div>
+      <p class="muted small">Średnia z suwaków w notatkach tego okresu. Kolor = poziom z § 11. Ocenę i tak wystawiasz Ty.</p>
+      <div class="t-means">
+        {% for cr in criteria_view %}
+          <a class="t-mean{% if filters.kryterium == cr.code %} t-mean-on{% endif %}" href="?kryterium={{ cr.code }}&cykl={{ filters.cykl }}#os-czasu"
+             title="{% if cr.mean %}{{ cr.mean.label }}{% else %}brak obserwacji{% endif %} — pokaż notatki">
+            <span class="t-mean-name">{{ cr.name }}{% if not cr.in_current %} <span class="muted small">(poza oceną)</span>{% endif %}</span>
+            {% if cr.mean %}
+              <span class="t-score {{ cr.mean.tone }}">{{ cr.mean.text }}{% if cr.trend == "up" %}<span class="t-trend" aria-label="rośnie">↗</span>{% elif cr.trend == "down" %}<span class="t-trend" aria-label="spada">↘</span>{% endif %}</span>
+              <span class="t-mean-n">{{ cr.mean.count }}</span>
             {% else %}
-              <td colspan="3"><span class="badge warn">brak obserwacji</span></td>
+              <span class="t-score none">—</span><span class="t-mean-n">brak obserwacji</span>
             {% endif %}
-          </tr>
+          </a>
         {% endfor %}
-        </tbody>
-      </table>
       </div>
     </section>
   {% endif %}
 
-  <section class="card">
+  {% if chart.series[""] %}
+    <section class="card t-chart" data-chart='{{ chart | tojson }}' data-selected="{{ filters.kryterium }}" data-link="?cykl=">
+      <h2>Oceny w czasie</h2>
+      <div class="t-chart-pick" role="group" aria-label="Wybierz kryterium"></div>
+      <div class="t-chart-area"></div>
+      <p class="muted small">Każda kropka to notatka — kliknij, żeby ją zobaczyć. Wszystkie okresy oceny.</p>
+    </section>
+    <script src="/static/assistant/charts.js" defer></script>
+  {% endif %}
+
+  <section class="card" id="os-czasu">
     <h2>Oś czasu</h2>
     <form class="t-filters" method="get">
       <div>

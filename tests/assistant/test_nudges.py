@@ -185,20 +185,13 @@ def test_snooze_hides_person_for_two_weeks(container, nudges):
 # --- strony ----------------------------------------------------------------------------
 
 
-def test_list_page_shows_reminders(client):
-    page = client.get("/asystent/teczka").text
-    assert "Przypomnienia w tym tygodniu" in page
-    assert "Brak notatki od 220 dni" in page
-
-
-def test_snooze_and_restore_from_page(client):
+def test_snooze_and_restore_routes(client, container):
     response = client.post("/asystent/teczka/E07/odloz", follow_redirects=False)
     assert response.status_code == 303
-    page = client.get("/asystent/teczka").text
-    assert "Brak notatki od 220 dni" not in page
-    assert "Ewa Rzetelna do 05.12.2026" in page
+    digest = services(container).note_nudges.digest_for("E05", TODAY)
+    assert "E07" in digest.snoozed
     client.post("/asystent/teczka/E07/przywroc")
-    assert "Brak notatki od 220 dni" in client.get("/asystent/teczka").text
+    assert "E07" not in services(container).note_nudges.digest_for("E05", TODAY).snoozed
 
 
 def test_cannot_snooze_someone_elses_subordinate(client):

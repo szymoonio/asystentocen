@@ -12,10 +12,10 @@ from fastapi import APIRouter, BackgroundTasks, File, Request, UploadFile
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
+from app.assistant.display import ago, chart_series, mean_of, ratings_by_criterion, trend
 from app.assistant.notes.assist import CLASSIFY_TASK, SPLIT_TASK, classify_note, split_note
 from app.assistant.notes.criteria import criteria_for
 from app.assistant.notes.repository import NoteAlreadyRevised, NoteInput, NoteNotFound
-from app.assistant.notes.stats import compute_stats
 from app.assistant.pages import PageError, html_errors
 from app.assistant.services import services
 from app.assistant.stt import TranscriptionError
@@ -88,23 +88,38 @@ class TeczkaRow:
     evaluation: EvaluationSummary | None
     n_notes: int
     last_note_on: date | None
-    days_since: int | None
+    when: str
     stale: bool
 
 
-@router.get("/teczka")
-@html_errors
-def teczka(request: Request):
-    c = get_container(request)
-    user = get_current_user(request)
+SORTS = {
+    "nazwisko": "alfabetycznie",
+    "najdawniej": "najdawniej notatka",
+    "najnowsze": "najnowsza notatka",
+    "termin": "termin oceny",
+}
+
+
+def _sort_rows(rows: list[TeczkaRow], sort: str) -> list[TeczkaRow]:
+    by_name = lambda r: (r.employee.last_name, r.employee.first_name)  # noqa: E731
+    if sort == "najdawniej":
+        return sorted(rows, key=lambda r: (r.last_note_on is not None, r.last_note_on or date.min, by_name(r)))
+    if sort == "najnowsze":
+        return sorted(rows, key=lambda r: (r.last_note_on is None, -(r.last_note_on or date.min).toordinal(), by_name(r)))
+    if sort == "termin":
+        return sorted(rows, key=lambda r: (r.evaluation is None or r.evaluation.due_date is None,
+                                           r.evaluation.due_date if r.evaluation and r.evaluation.due_date else date.max,
+                                           by_name(r)))  # fmt: skip
+    return sorted(rows, key=by_name)
+
+
+def teczka_rows(c: Container, user: UserContext) -> list[TeczkaRow]:
     svc = services(c)
     today = c.clock.today()
     rows = []
     for employee in c.employees.subordinates(user.employee_id):
         evaluation = c.evaluations.current_for(employee.id)
         notes = svc.notes_repo.current(user.employee_id, employee.id)
-        if evaluation:
-            notes = [n for n in notes if n.evaluation_id == evaluation.id]
         last = max((n.observed_on for n in notes), default=None)
         days = (today - last).days if last else None
         rows.append(
@@ -113,21 +128,34 @@ def teczka(request: Request):
                 evaluation=evaluation,
                 n_notes=len(notes),
                 last_note_on=last,
-                days_since=days,
+                when=ago(last, today),
                 stale=evaluation is not None and (days is None or days > svc.nudges.no_note_after_days),
             )
         )
-    digest = svc.note_nudges.digest_for(user.employee_id, today)
-    names = {e.id: e.full_name for e in c.employees.subordinates(user.employee_id)}
+    return rows
+
+
+@router.get("/teczka")
+@html_errors
+def teczka(request: Request, q: str = "", sort: str = "nazwisko"):
+    c = get_container(request)
+    user = get_current_user(request)
+    sort = sort if sort in SORTS else "nazwisko"
+    rows = teczka_rows(c, user)
+    total = len(rows)
+    needle = q.strip().casefold()
+    if needle:
+        rows = [r for r in rows if needle in f"{r.employee.full_name} {r.employee.position.title}".casefold()]
     return render(
         request,
         "assistant/teczka_lista.html",
         title="Teczka",
-        rows=rows,
-        digest=digest,
-        snoozed=[(sid, names.get(sid, sid), until) for sid, until in digest.snoozed.items()],
-        snooze_days=svc.nudges.snooze_days,
-        threshold=svc.nudges.no_note_after_days,
+        rows=_sort_rows(rows, sort),
+        total=total,
+        q=q,
+        sort=sort,
+        sorts=SORTS,
+        threshold=services(c).nudges.no_note_after_days,
         state_labels=STATE_LABELS,
     )
 
@@ -188,15 +216,19 @@ def teczka_osoby(
     evaluation = c.evaluations.current_for(subject_id)
     choice = criteria_for(evaluation, c.catalog)
     current_codes = set(choice.current_codes)
-    stats = []
+    scale = load_scale(c.settings.regulation_dir)
+    criteria_view = []
     if evaluation:
         cycle_notes = [n for n in all_notes if n.evaluation_id == evaluation.id]
-        stats = compute_stats(
-            cycle_notes,
-            criteria_codes=choice.current_codes,
-            period_from=evaluation.period_from,
-            due_date=evaluation.due_date,
-        )
+        by_code = ratings_by_criterion(cycle_notes)
+        codes = list(choice.current_codes) + sorted(code for code in by_code if code not in current_codes)
+        for code in codes:
+            items = by_code.get(code, [])
+            criteria_view.append({
+                "code": code, "name": _criterion_name(c, code), "in_current": code in current_codes,
+                "mean": mean_of([v for _, v, _ in items], scale), "trend": trend(items),
+            })
+    chart = chart_series(all_notes, {code: _criterion_name(c, code) for code in choice.current_codes})
 
     # domyślnie bieżący cykl; „wszystkie” = pusty parametr
     cycle = (evaluation.id if evaluation else "") if cykl is None else cykl
@@ -229,7 +261,9 @@ def teczka_osoby(
         evaluation=evaluation,
         evaluations=_evaluations_of(c, subject_id),
         state_labels=STATE_LABELS,
-        stats=stats,
+        criteria_view=criteria_view,
+        chart=chart,
+        last_note=ago(max((n.observed_on for n in all_notes), default=None), c.clock.today()),
         groups=groups,
         n_total=len(all_notes),
         n_shown=len(notes),
@@ -295,6 +329,7 @@ def _form_page(
     status_code: int = 200,
     assistant_notice: str | None = None,
     assistant_error: str | None = None,
+    picker: list[TeczkaRow] | None = None,
 ):
     evaluation = c.evaluations.current_for(subject.id)
     if editing and editing.evaluation_id:
@@ -328,6 +363,7 @@ def _form_page(
         voice_max_seconds=services(c).stt_config.max_seconds,
         assistant_notice=assistant_notice,
         assistant_error=assistant_error,
+        picker=picker,
     )
     response.status_code = status_code
     return response
@@ -387,6 +423,25 @@ def _values_from_raw(raw: dict[str, str]) -> dict:
             k.removeprefix("rating_"): int(v) for k, v in raw.items() if k.startswith("rating_") and v.isdigit()
         },
     }
+
+
+@router.get("/notatka/nowa")
+@html_errors
+def szybka_notatka(request: Request, osoba: str = ""):
+    """„Dodaj notatkę” z pulpitu i teczki: wybór osoby i formularz na jednej stronie."""
+    c = get_container(request)
+    user = get_current_user(request)
+    rows = _sort_rows(teczka_rows(c, user), "nazwisko")
+    if not rows:
+        raise PageError(403, "Notatki dodaje się o bezpośrednich podwładnych — nie masz ich w systemie.")
+    if not osoba and len(rows) == 1:
+        osoba = rows[0].employee.id
+    if not osoba:
+        return render(request, "assistant/notatka_wybor.html", title="Nowa notatka", picker=rows)
+    subject = _require_subordinate(c, user, osoba)
+    values = {"observed_on": c.clock.today().isoformat(), "ratings": {}}
+    return _form_page(request, c, subject, values=values, errors=[],
+                      action=f"/asystent/teczka/{subject.id}/nowa", picker=rows)
 
 
 @router.get("/teczka/{subject_id}/nowa")

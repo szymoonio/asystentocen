@@ -21,6 +21,7 @@ __all__ = ["register", "router"]
 
 
 def register(c: Container) -> None:
+    from app.assistant.analysis.store import AnalysisRow, AnalysisStore
     from app.assistant.config import NudgesConfig
     from app.assistant.hr.boundaries import HrConfig
     from app.assistant.hr.knowledge import default_knowledge
@@ -41,7 +42,7 @@ def register(c: Container) -> None:
     # Tabele asst_* zakładamy od razu (create_all w kontenerze jest dopiero po register),
     # bo przy pustej bazie importujemy notatki z seedu.
     tables = [models.NoteRow.__table__, models.CriteriaHintRow.__table__, SnoozeRow.__table__, DraftRow.__table__,
-              RoleplayRow.__table__]
+              RoleplayRow.__table__, AnalysisRow.__table__]
     models.Base.metadata.create_all(c.engine, tables=tables)
     repo = NotesRepository(c.session_factory)
     import_seed_if_empty(repo, c.seed.notes)
@@ -80,6 +81,7 @@ def register(c: Container) -> None:
             knowledge=default_knowledge,
             stt_config=stt_config,
             stt=build_transcriber(stt_config),
+            analyses=AnalysisStore(c.session_factory),
         ),
     )
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)

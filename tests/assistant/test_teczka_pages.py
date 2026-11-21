@@ -5,29 +5,52 @@ from __future__ import annotations
 from app.assistant.services import services
 
 
-def test_list_shows_subordinates_and_stale_flags(client):
+def test_list_shows_subordinates_with_verbal_last_note(client):
     page = client.get("/asystent/teczka").text
     for name in ["Grzegorz Wzór", "Ewa Rzetelna", "Zofia Nowicka", "Tomasz Młodszy"]:
         assert name in page
-    assert "15.04.2026" in page  # ostatnia notatka Ewy
-    assert "dawno bez notatki" in page  # Ewa: > 45 dni
-    assert "zacznij teczkę" in page  # Zofia: brak notatek
-    assert "nie podlega ocenie okresowej" in page  # Tomasz
+    assert "7 miesięcy temu" in page  # Ewa: ostatnia notatka 15.04.2026
+    assert "brak notatek" in page  # Zofia
+    assert "nie podlega ocenie" in page  # Tomasz
+    assert "Przypomnienia w tym tygodniu" not in page  # przypomnienia są na pulpicie, nie w teczce
+    assert 'class="t-row t-stale"' in page and "/asystent/notatka/nowa?osoba=E07" in page
 
 
-def test_timeline_and_stats(client):
+def _names_in_order(page, names):
+    rows = page[page.index('id="t-rows"'):]  # pomijamy menu użytkowników demo w nagłówku
+    return sorted(names, key=rows.index)
+
+
+def test_list_search_and_sort(client):
+    names = ["Grzegorz Wzór", "Ewa Rzetelna", "Zofia Nowicka", "Tomasz Młodszy"]
+    alpha = client.get("/asystent/teczka").text
+    assert _names_in_order(alpha, names) == ["Tomasz Młodszy", "Zofia Nowicka", "Ewa Rzetelna", "Grzegorz Wzór"]
+    oldest = client.get("/asystent/teczka?sort=najdawniej").text
+    first_two = _names_in_order(oldest, names)[:2]
+    assert set(first_two) == {"Tomasz Młodszy", "Zofia Nowicka"}  # bez notatek najpierw
+    newest = client.get("/asystent/teczka?sort=najnowsze").text
+    assert _names_in_order(newest, names)[0] == "Grzegorz Wzór"
+    found = client.get("/asystent/teczka?q=rzetel").text
+    rows = found[found.index('id="t-rows"'):]
+    assert "Ewa Rzetelna" in rows and "Zofia Nowicka" not in rows
+
+
+def test_timeline_and_means(client):
     page = client.get("/asystent/teczka/E06").text
     assert "Pokazano 5 z 5 notatek" in page
-    assert "Zestawienie suwaków" in page
+    assert "Bieżący okres oceny" in page and 'class="t-score l' in page
     assert "brak obserwacji" in page  # Organizacja pracy bez suwaka
+    assert "Oceny w czasie" in page and "charts.js" in page
     assert "głosowa" in page  # N003
 
 
-def test_timeline_filters(client):
-    assert "Pokazano 2 z 5" in client.get("/asystent/teczka/E06?rodzaj=obszary").text
-    assert "Pokazano 2 z 5" in client.get("/asystent/teczka/E06?kryterium=KOMUNIKACJA").text
-    assert "Pokazano 1 z 5" in client.get("/asystent/teczka/E06?q=szablon").text
-    assert "Pokazano 0 z 5" in client.get("/asystent/teczka/E06?cykl=EV-E06-2024").text
+def test_quick_note_picker_then_form(client):
+    page = client.get("/asystent/notatka/nowa").text
+    assert "O kim?" in page and "/asystent/notatka/nowa?osoba=E07" in page
+    assert 'name="body"' not in page  # formularz dopiero po wyborze osoby
+    form = client.get("/asystent/notatka/nowa?osoba=E07").text
+    assert 'action="/asystent/teczka/E07/nowa"' in form and 'aria-current="true"' in form
+    assert client.get("/asystent/notatka/nowa?osoba=E10").status_code == 403  # nie podwładny
 
 
 def test_form_shows_current_criteria_and_unset_sliders(client):

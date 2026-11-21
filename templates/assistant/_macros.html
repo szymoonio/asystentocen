@@ -20,3 +20,15 @@
 {% macro llm_off(what) %}
   <p class="t-assist-msg t-assist-error">{{ what }} wymaga asystenta LLM, który jest teraz wyłączony (brak klucza API lub zadanie wyłączone w konfiguracji).</p>
 {% endmacro %}
+
+{% macro picker(rows, selected="") %}
+  <div class="t-picker" role="list" aria-label="O kim jest notatka?">
+    {% for r in rows %}
+      <a role="listitem" class="t-person{% if r.employee.id == selected %} t-person-on{% endif %}"
+         href="/asystent/notatka/nowa?osoba={{ r.employee.id }}" {% if r.employee.id == selected %}aria-current="true"{% endif %}>
+        <strong>{{ r.employee.full_name }}</strong>
+        <span class="small {% if r.stale %}t-when-stale{% else %}muted{% endif %}">ostatnia: {{ r.when }}</span>
+      </a>
+    {% endfor %}
+  </div>
+{% endmacro %}

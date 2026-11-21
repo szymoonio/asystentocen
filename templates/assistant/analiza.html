@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% import "assistant/_macros.html" as m %}
+{% block head %}{{ m.head() }}{% endblock %}
+
+{% macro bars(rows) %}
+  <div class="a-bars">
+    {% for r in rows %}
+      <div class="a-bar-row">
+        <span class="a-bar-name">{{ r.name }}</span>
+        <span class="a-bar-track">
+          {% if r.mean %}<span class="a-bar {{ r.mean.tone }}" style="width: {{ ((r.mean.value | float) / 9 * 100) | round(1) }}%"></span>{% endif %}
+          <span class="a-bar-mid" title="5 = na poziomie oczekiwań"></span>
+        </span>
+        <span class="a-bar-val">{% if r.mean %}<b>{{ r.mean.text }}</b> <span class="muted small">{{ r.mean.count }}</span>{% else %}<span class="muted small">brak ocen</span>{% endif %}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro columns(items, max) %}
+  <div class="a-cols" role="img" aria-label="Liczba notatek w miesiącach">
+    {% for label, n, hint in items %}
+      <div class="a-col" title="{{ hint }}: {{ n }}">
+        <span class="a-col-n">{{ n or "" }}</span>
+        <span class="a-col-bar" style="height: {{ (n / max * 100) | round(0) if n else 0 }}%"></span>
+        <span class="a-col-label">{{ label }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro point_list(items) %}
+  <ul class="a-points">
+    {% for p in items %}
+      <li>{{ p.text }}
+        {% for r in p.refs %}<a class="a-ref" href="/asystent/teczka/{{ r.subject_id }}?cykl=#{{ r.note_id }}" title="Notatka{% if widok == 'zespol' %} o: {{ names.get(r.subject_id, '') }}{% endif %}">{{ r.alias }}</a>{% endfor %}
+      </li>
+    {% else %}
+      <li class="muted">—</li>
+    {% endfor %}
+  </ul>
+{% endmacro %}
+
+{% block content %}
+  <div class="t-head">
+    <div>
+      <h1>Analiza</h1>
+      <p class="muted">Na podstawie Twoich notatek. Widzisz ją tylko Ty.</p>
+    </div>
+    <nav class="a-switch" aria-label="Rodzaj analizy">
+      <a href="/asystent/analiza?widok=zespol" {% if widok == "zespol" %}aria-current="page"{% endif %}>Zespół</a>
+      <a href="/asystent/analiza?widok=osoba{% if osoba %}&osoba={{ osoba }}{% endif %}" {% if widok == "osoba" %}aria-current="page"{% endif %}>Osoba</a>
+    </nav>
+  </div>
+
+  {% if widok == "osoba" %}
+    <form method="get" class="t-toolbar">
+      <input type="hidden" name="widok" value="osoba">
+      <label for="a-osoba" class="sr-only">Osoba</label>
+      <select id="a-osoba" name="osoba" onchange="this.form.submit()">
+        {% for e in people %}<option value="{{ e.id }}" {% if e.id == osoba %}selected{% endif %}>{{ e.full_name }}</option>{% endfor %}
+      </select>
+      <noscript><button type="submit" class="secondary">Pokaż</button></noscript>
+      <a class="small" href="{{ teczka }}">Otwórz teczkę</a>
+    </form>
+  {% endif %}
+
+  {% if error %}<div class="card t-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+
+  {# ------------------------------------------------ podsumowanie od Claude #}
+  <section class="card a-claude" id="claude">
+    <div class="t-section-head">
+      <h2>Podsumowanie asystenta</h2>
+      {% if stored %}
+        <span class="muted small">
+          {{ stored.created_at.strftime("%d.%m.%Y %H:%M") }} · na podstawie {{ stored.result.used_notes }} notatek
+          {% if outdated %}<span class="badge warn">od tego czasu zmieniły się notatki</span>{% endif %}
+        </span>
+      {% endif %}
+    </div>
+    {% if stored %}
+      <p class="a-summary">{{ stored.result.summary }}</p>
+      <div class="a-three">
+        <div><h3 class="a-plus">Mocne strony</h3>{{ point_list(stored.result.strengths) }}</div>
+        <div><h3 class="a-minus">Słabe strony</h3>{{ point_list(stored.result.weaknesses) }}</div>
+        <div><h3>Co możesz zrobić</h3>{{ point_list(stored.result.recommendations) }}</div>
+      </div>
+      <p class="muted small">
+        Projekt asystenta AI — sprawdź go z notatkami (odnośniki N…). Nie jest oceną.
+        {% if stored.result.excluded_notes %}Pominięto {{ stored.result.excluded_notes }} notatki z danymi wrażliwymi.{% endif %}
+        {% if stored.result.dropped %}Odrzucono {{ stored.result.dropped }} punkty bez oparcia w notatkach.{% endif %}
+        Imiona i nazwiska są zastępowane przed wysłaniem.
+      </p>
+    {% elif llm_available %}
+      <p class="muted">Asystent przeczyta Twoje notatki{% if widok == "zespol" %} o całym zespole{% endif %} i przygotuje słowne podsumowanie: mocne i słabe strony oraz propozycje działań. Imiona i nazwiska są zastępowane przed wysłaniem.</p>
+    {% else %}
+      {{ m.llm_off("Słowne podsumowanie") }}
+    {% endif %}
+    {% if llm_available %}
+      <form method="post" action="/asystent/analiza/generuj" class="a-generate">
+        <input type="hidden" name="widok" value="{{ widok }}">
+        <input type="hidden" name="osoba" value="{{ osoba }}">
+        <button type="submit" class="{{ 'secondary' if stored and not outdated else '' }}">{{ "Odśwież analizę" if stored else "Wygeneruj analizę" }}</button>
+        <span class="muted small a-wait" hidden>Asystent czyta notatki — to może potrwać do minuty…</span>
+      </form>
+    {% endif %}
+  </section>
+
+  {% if widok == "zespol" %}
+    {# ------------------------------------------------ zespół #}
+    <div class="a-kpis">
+      <div class="card a-kpi"><span class="muted small">Osoby w zespole</span><b>{{ team.people | length }}</b></div>
+      <div class="card a-kpi"><span class="muted small">Notatki w bieżących okresach</span><b>{{ team.notes_count }}</b></div>
+      <div class="card a-kpi {{ 'a-kpi-warn' if team.stale }}"><span class="muted small">Dawno bez notatki</span><b>{{ team.stale | length }}</b>
+        {% if team.stale %}<span class="small">{% for p in team.stale %}<a href="/asystent/notatka/nowa?osoba={{ p.employee.id }}">{{ p.employee.first_name }}</a>{{ ", " if not loop.last }}{% endfor %}</span>{% endif %}
+      </div>
+    </div>
+
+    <section class="card">
+      <h2>Kryteria — średnia zespołu</h2>
+      <p class="muted small">Z suwaków we wszystkich notatkach bieżących okresów. Kreska = 5 (na poziomie oczekiwań).</p>
+      {{ bars(team.criteria) }}
+    </section>
+
+    <section class="card">
+      <h2>Osoby × kryteria</h2>
+      <div class="a-heat-wrap">
+        <table class="a-heat">
+          <thead><tr><th>Osoba</th>{% for cr in team.criteria %}<th title="{{ cr.name }}"><span>{{ cr.name }}</span></th>{% endfor %}<th>Ostatnia notatka</th></tr></thead>
+          <tbody>
+          {% for p in team.people %}
+            <tr>
+              <td><a href="/asystent/analiza?widok=osoba&osoba={{ p.employee.id }}">{{ p.employee.full_name }}</a></td>
+              {% for cr in team.criteria %}
+                {% set row = p.by_code.get(cr.code) %}
+                {% if row is none %}<td class="a-na" title="kryterium spoza oceny tej osoby">·</td>
+                {% elif row.mean %}<td><span class="t-score {{ row.mean.tone }}" title="{{ row.mean.count }}">{{ row.mean.text }}</span></td>
+                {% else %}<td class="a-empty" title="brak ocen">—</td>{% endif %}
+              {% endfor %}
+              <td class="small {{ 't-when-stale' if p in team.stale else 'muted' }}">{{ p.when }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">„·” — kryterium nie należy do oceny tej osoby; „—” — brak ocen z suwaków.</p>
+    </section>
+
+    <section class="card">
+      <h2>Notatki w czasie</h2>
+      {{ columns(team.activity, team.max_activity) }}
+    </section>
+
+  {% else %}
+    {# ------------------------------------------------ osoba #}
+    <div class="a-kpis">
+      <div class="card a-kpi"><span class="muted small">Średnia z suwaków</span>
+        {% if person.overall %}<b><span class="t-score {{ person.overall.tone }}">{{ person.overall.text }}</span></b><span class="small muted">{{ person.overall.label }}</span>{% else %}<b>—</b>{% endif %}
+      </div>
+      <div class="card a-kpi"><span class="muted small">Notatki — {{ person.scope }}</span><b>{{ person.notes | length }}</b></div>
+      <div class="card a-kpi"><span class="muted small">Ostatnia notatka</span><b class="a-kpi-text">{{ person.when }}</b>
+        <a class="small" href="/asystent/notatka/nowa?osoba={{ person.employee.id }}">+ dodaj</a></div>
+    </div>
+
+    <section class="card">
+      <h2>Kryteria</h2>
+      {{ bars(person.criteria) }}
+    </section>
+
+    {% if chart.series[""] %}
+      <section class="card t-chart" data-chart='{{ chart | tojson }}' data-link="{{ teczka }}?cykl=">
+        <h2>Oceny w czasie</h2>
+        <div class="t-chart-pick" role="group" aria-label="Wybierz kryterium"></div>
+        <div class="t-chart-area"></div>
+      </section>
+      <script src="/static/assistant/charts.js" defer></script>
+    {% endif %}
+
+    <div class="a-two">
+      <section class="card">
+        <h2 class="a-plus">Zalety z notatek</h2>
+        {% for d, t, nid in person.strengths[:8] %}<p class="a-line"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
+        {% else %}<p class="muted small">Brak wpisów.</p>{% endfor %}
+      </section>
+      <section class="card">
+        <h2 class="a-minus">Obszary do poprawy z notatek</h2>
+        {% for d, t, nid in person.improvements[:8] %}<p class="a-line"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
+        {% else %}<p class="muted small">Brak wpisów.</p>{% endfor %}
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Notatki w czasie</h2>
+      {{ columns(person_activity, (person_activity | map(attribute=1) | max) or 1) }}
+    </section>
+  {% endif %}
+
+  <script>
+  document.querySelectorAll(".a-generate").forEach((f) => f.addEventListener("submit", () => {
+    f.querySelector("button").disabled = true; f.querySelector(".a-wait").hidden = false;
+  }));
+  </script>
+{% endblock %}

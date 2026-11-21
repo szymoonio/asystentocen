@@ -16,6 +16,8 @@ llm:
     roleplay:          { model: claude-opus-5-5, effort: low }
     roleplay_feedback: { model: claude-opus-5-5, effort: medium }
     summarize_cycle:   { model: claude-opus-5-5, effort: high }
+    analyze_person:    { model: claude-opus-5-5, effort: medium }
+    analyze_team:      { model: claude-opus-5-5, effort: medium }
 
 # Notatki głosowe — transkrypcja lokalna, audio kasowane zaraz po niej (§ 6.3).
 # Wymaga: pip install faster-whisper (model pobiera się przy pierwszym użyciu). Bez pakietu przycisk jest ukryty.
