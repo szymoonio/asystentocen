@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.assistant.config import NudgesConfig
+    from app.assistant.llm import LLMClient, LLMConfig
     from app.assistant.notes.repository import NotesRepository
     from app.assistant.nudges.provider import NoteNudges
     from app.assistant.nudges.snooze import SnoozeRepository
+    from app.assistant.privacy import Pseudonymizer
     from app.container import Container
 
 _ATTR = "_assistant_services"
@@ -21,6 +24,9 @@ class AssistantServices:
     nudges: NudgesConfig
     snoozes: SnoozeRepository
     note_nudges: NoteNudges
+    llm_config: LLMConfig
+    llm: LLMClient  # w testach podmieniany na fake — testy nie wołają sieci
+    pseudonymizer: Callable[[], Pseudonymizer]  # budowany na bieżąco z c.employees.all()
 
 
 def attach(c: Container, svc: AssistantServices) -> None:

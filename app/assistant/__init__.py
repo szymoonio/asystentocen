@@ -22,11 +22,13 @@ __all__ = ["register", "router"]
 
 def register(c: Container) -> None:
     from app.assistant.config import NudgesConfig
+    from app.assistant.llm import LLMConfig, build_client
     from app.assistant.notes import models
     from app.assistant.notes.reader import DbNotesReader
     from app.assistant.notes.repository import NotesRepository, import_seed_if_empty
     from app.assistant.nudges.provider import NoteNudges
     from app.assistant.nudges.snooze import SnoozeRepository, SnoozeRow
+    from app.assistant.privacy import Pseudonymizer
     from app.assistant.services import AssistantServices, attach
 
     # Tabele asst_* zakładamy od razu (create_all w kontenerze jest dopiero po register),
@@ -46,7 +48,19 @@ def register(c: Container) -> None:
         snoozes=snoozes,
         config=config,
     )
-    attach(c, AssistantServices(notes_repo=repo, nudges=config, snoozes=snoozes, note_nudges=nudges))
+    llm_config = LLMConfig.load(c.settings.config_dir)
+    attach(
+        c,
+        AssistantServices(
+            notes_repo=repo,
+            nudges=config,
+            snoozes=snoozes,
+            note_nudges=nudges,
+            llm_config=llm_config,
+            llm=build_client(llm_config),
+            pseudonymizer=lambda: Pseudonymizer(c.employees.all()),
+        ),
+    )
     c.notes = DbNotesReader(repo, lambda: c.evaluations, c.catalog)
     c.reminder_providers.append(nudges)
     # Kolejny krok (docs/AGENT_B.md): c.drafts = AssistantDraftProvider(c)

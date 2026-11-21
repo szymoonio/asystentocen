@@ -1,10 +1,13 @@
 # Warstwa LLM — agent B (docs/ARCHITEKTURA.md § 6.4). Zadanie usunięte z listy = funkcja ukryta w UI.
+# Bez klucza w zmiennej `api_key_env` aplikacja działa bez LLM (NullClient).
 llm:
-  provider: anthropic            # później: local | none
+  provider: anthropic            # anthropic | none (później: local)
   anthropic:
     api_key_env: ANTHROPIC_API_KEY
-    refusal_fallback: true
-  tasks:
+    refusal_fallback: true       # fallbacks="default" (beta server-side-fallback-2026-07-01)
+    timeout_s: 120
+    max_retries: 2               # SDK sam ponawia 429 i 5xx
+  tasks:                         # effort: low | medium | high | xhigh | max; opcjonalnie max_tokens
     split_note:        { model: claude-opus-5-5, effort: low }
     classify_note:     { model: claude-opus-5-5, effort: low }
     rewrite_feedback:  { model: claude-opus-5-5, effort: medium }
