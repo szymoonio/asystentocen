@@ -2,63 +2,75 @@
 {% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
 {% block content %}
   <div class="pagehead">
-    <h1>Pulpit</h1>
+    <h1>Dzień dobry, {{ me.first_name }}</h1>
     <form method="post" action="/core/scheduler/run" class="inline-form">
-      <button class="secondary" type="submit">Uruchom przypomnienia</button>
+      <button class="link" type="submit" title="Demo: przelicza terminy i przypomnienia na dziś">odśwież przypomnienia</button>
     </form>
   </div>
   {% if request.query_params.get("ok") %}<div class="alert ok">{{ request.query_params.get("ok") }}</div>{% endif %}
 
-  <section class="card">
-    <h2>Przypomnienia</h2>
+  {% if note_people %}
+  <details class="quicknote" id="nowa-notatka">
+    <summary class="bigbutton"><span aria-hidden="true">＋</span> Dodaj notatkę</summary>
+    <div class="card quicknote-pick">
+      <p class="small muted">O kim?</p>
+      <div class="people">
+        {% for p in note_people | sort(attribute="who") %}
+          <a class="person" href="{{ p.url }}"><b>{{ p.who }}</b><span class="muted small">ostatnia: {{ p.when }}</span></a>
+        {% endfor %}
+      </div>
+    </div>
+  </details>
+  {% endif %}
+
+  <h2 class="section-title">Do zrobienia</h2>
+  <div class="todo-grid">
+    <section class="card todo">
+      <h3>Oceny okresowe</h3>
+      {% for t in todo %}
+        <a class="todo-item" href="{{ t.url }}">
+          <span><b>{{ t.who }}</b> · {{ t.what }}</span>
+          <span class="badge {{ t.tone }}">{{ t.when }}</span>
+        </a>
+      {% else %}
+        <p class="muted small">Nic pilnego.</p>
+      {% endfor %}
+      {% if todo_more %}<p class="small"><a href="/core/oceny">+ {{ todo_more }} więcej</a></p>{% endif %}
+    </section>
+
+    {% if notes_todo %}
+    <section class="card todo">
+      <h3>Notatki</h3>
+      {% for n in notes_todo %}
+        <a class="todo-item" href="{{ n.url }}">
+          <span><b>{{ n.who }}</b> · {{ "pierwsza notatka" if not n.last else "ostatnia " + n.when }}</span>
+          <span class="badge {{ 'warn' if not n.last or (today - n.last).days > 45 else '' }}">dodaj</span>
+        </a>
+      {% endfor %}
+      <p class="small"><a href="/asystent/teczka">Teczka</a></p>
+    </section>
+    {% endif %}
+  </div>
+
+  {% if own and not todo | selectattr("who", "equalto", "Twoja ocena") | list %}
+  <p class="small muted">Twoja ocena okresowa: {{ STATE_LABELS[own.state] | lower }}, termin {{ own.due_date | pl_date }} · <a href="/core/oceny/{{ own.id }}">szczegóły</a></p>
+  {% endif %}
+
+  {% if inbox %}
+  <details class="card">
+    <summary><b>Inne powiadomienia</b> <span class="muted small">({{ inbox | length }})</span></summary>
     {% for r in inbox %}
       <div class="reminder">
         <div>
           {% if r.link %}<a href="{{ r.link }}">{{ r.message }}</a>{% else %}{{ r.message }}{% endif %}
-          {% if r.due %}<div class="muted small">termin: {{ r.due | pl_date }}</div>{% endif %}
+          {% if r.due %}<span class="muted small"> · {{ r.due | pl_date }}</span>{% endif %}
         </div>
         <form method="post" action="/core/przypomnienia/przeczytane" class="inline-form">
           <input type="hidden" name="key" value="{{ r.dedupe_key }}">
           <button class="link" type="submit">odhacz</button>
         </form>
       </div>
-    {% else %}
-      <p class="muted">Brak przypomnień.</p>
     {% endfor %}
-  </section>
-
-  {% if rows %}
-  <section class="card">
-    <h2>Twoi podwładni</h2>
-    <table class="table">
-      <thead><tr><th>Osoba</th><th>Arkusz</th><th>Etap</th><th>Najbliższy termin</th><th></th></tr></thead>
-      <tbody>
-      {% for employee, ev, next_due, flag in rows %}
-        <tr>
-          <td>{{ employee.full_name }}<br><span class="muted small">{{ employee.position.title }}</span></td>
-          {% if ev %}
-            <td>{{ ev.sheet }}</td>
-            <td>{{ STATE_LABELS[ev.state] }}{% if ev.after_negative %}<br><span class="badge warn">po ocenie negatywnej</span>{% endif %}</td>
-            <td>
-              {% if next_due %}<span class="badge {{ flag }}">{{ next_due | pl_date }}</span>
-              <div class="muted small">{{ "kryteria" if ev.state == "CYCLE_OPEN" else "ocena" }}</div>{% endif %}
-            </td>
-            <td><a href="/core/oceny/{{ ev.id }}">Otwórz</a></td>
-          {% else %}
-            <td colspan="4" class="muted">nie podlega ocenie okresowej</td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </section>
-  {% endif %}
-
-  {% if own %}
-  <section class="card">
-    <h2>Twoja ocena okresowa</h2>
-    <p>{{ STATE_LABELS[own.state] }} · termin oceny {{ own.due_date | pl_date }}
-      · <a href="/core/oceny/{{ own.id }}">szczegóły</a></p>
-  </section>
+  </details>
   {% endif %}
 {% endblock %}

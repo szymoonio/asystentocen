@@ -14,7 +14,7 @@
     <span class="badge">Arkusz {{ sheet }}</span>
     <span class="badge {{ 'ok' if state == 'FINAL' else '' }}">{{ STATE_LABELS[state] }}</span>
     {% if ev.after_negative %}<span class="badge warn">ponowna ocena po negatywnej</span>{% endif %}
-    · <a href="/core/oceny/{{ row.id }}/druk">Wydruk</a>
+    <a class="button secondary printbtn" href="/core/oceny/{{ row.id }}/druk"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M7 3h10v4H7zM5 8h14a2 2 0 0 1 2 2v6h-4v4H7v-4H3v-6a2 2 0 0 1 2-2zm4 7v3h6v-3z"/></svg> Drukuj arkusz</a>
   </div>
 </div>
 <div class="meta">
@@ -39,8 +39,20 @@
 <div class="layout">
 <div class="main">
 
+{% if tips %}
+<section class="card coach" aria-label="Asystent HR podpowiada">
+  <div class="coach-head"><span class="coach-badge">Asystent HR</span><b>{{ tips.headline }}</b></div>
+  {% if tips.tips %}<ul>{% for t in tips.tips %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+  {% if tips.actions %}
+    <div class="actions">
+      {% for label, url, primary in tips.actions %}<a class="button {{ '' if primary else 'secondary' }}" href="{{ url }}">{{ label }}</a>{% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
 {# ============================ CZĘŚĆ I ============================ #}
-<section class="card">
+<section class="card" id="czesc-1">
   <div class="part-title"><h2>Część I</h2><span class="muted small">dane i kryteria oceny</span></div>
   <dl class="kv">
     <dt>Nazwa urzędu</dt><dd>{{ office.name }}</dd>
@@ -113,7 +125,7 @@
 
 {# ============================ CZĘŚĆ II ============================ #}
 {% if after_obs %}
-<section class="card">
+<section class="card" id="czesc-2">
   <div class="part-title"><h2>Część II</h2><span class="muted small">rozmowa oceniająca i ocena</span></div>
 
   {% if state == "OBSERVATION" %}
@@ -342,22 +354,21 @@
   {% if role == EVALUATOR and state in ["OBSERVATION", "INTERVIEW_HELD"] %}
   <section class="card obs">
     <h2>Twoje obserwacje</h2>
-    <p class="small muted">Z suwaków w Twoich notatkach. Tylko do wglądu — oceny nie są wypełniane automatycznie.</p>
+    <p class="small muted">Średnia z suwaków w notatkach. Tylko do wglądu.</p>
+    <ul class="obs-list">
     {% for cr in criteria %}
       {% set view = obs.views.get(cr.code) %}
-      <h3>{{ cr.name }}</h3>
-      {% if view %}
-        <div class="dist" aria-label="rozkład ocen">
-          {% for p, n, height in view.bars %}
-            <span class="{{ 'on' if n }}" style="height: {{ height }}%" title="{{ p }} pkt: {{ n }}"></span>
-          {% endfor %}
-        </div>
-        <div class="distlabels">{% for p, n, height in view.bars %}<span>{{ p }}</span>{% endfor %}</div>
-        <div class="small">{{ view.summary }}</div>
-      {% else %}
-        <div class="small muted">brak obserwacji</div>
-      {% endif %}
+      <li>
+        <span class="obs-name">{{ cr.name }}{% if cr.code in obs.warnings %} <span class="warnmark" title="{{ obs.warnings[cr.code] }}">⚠</span>{% endif %}</span>
+        {% if view %}
+          <span class="score {{ view.tone }}">{{ view.mean }}{% if view.trend == "up" %}<span class="trend" title="rośnie w 2. połowie okresu">↗</span>{% elif view.trend == "down" %}<span class="trend" title="spada w 2. połowie okresu">↘</span>{% endif %}</span>
+          <span class="obs-count">{{ view.count }}</span>
+        {% else %}
+          <span class="score none">—</span><span class="obs-count">brak ocen</span>
+        {% endif %}
+      </li>
     {% endfor %}
+    </ul>
     {% if obs.url %}<p class="small"><a href="{{ obs.url }}">Otwórz teczkę</a></p>{% endif %}
   </section>
   {% endif %}
