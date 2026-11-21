@@ -269,3 +269,8 @@
 .t-person { min-height: 44px; border-color: var(--border-input); }
 .t-person strong { color: var(--primary); }
 .t-mean { border-color: var(--border-input); }
+
+/* --- formularz notatki: objaśnienie „brak” --- */
+.t-none-hint { display: flex; gap: 8px; align-items: center; color: var(--text-muted); margin: 0 0 6px; }
+.t-seg-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 1px 10px; border: 1px solid var(--border-input);
+  background: var(--info-bg); color: var(--primary); font-size: 13px; font-weight: 600; }

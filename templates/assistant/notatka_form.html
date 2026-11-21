@@ -8,7 +8,7 @@
     <legend>{{ c.name }}</legend>
     <div class="t-seg" role="radiogroup" aria-label="{{ c.name }}">
       <input type="radio" id="r-{{ c.code }}-0" name="rating_{{ c.code }}" value="" {% if current is none %}checked{% endif %}>
-      <label for="r-{{ c.code }}-0" class="t-seg-none" title="brak danych">—</label>
+      <label for="r-{{ c.code }}-0" class="t-seg-none" title="brak danych — nie wlicza się do zestawienia">brak</label>
       {% for p in points %}
         <input type="radio" id="r-{{ c.code }}-{{ p }}" name="rating_{{ c.code }}" value="{{ p }}" {% if current == p %}checked{% endif %}>
         <label for="r-{{ c.code }}-{{ p }}" title="{{ point_labels[p] }}">{{ p }}</label>
@@ -86,11 +86,12 @@
       <p class="muted small">Wystarczy jedno z trzech pól. Punktów nie trzeba przypisywać do kryteriów.</p>
     </section>
 
+    {# Inne kryteria z katalogu pokazujemy tylko wtedy, gdy poprawiana notatka już je ma — żeby poprawka ich nie skasowała. #}
+    {% set kept_other = criteria_other | selectattr("code", "in", ratings) | list %}
+    {% if criteria_current or kept_other %}
     <section class="card">
-      <h2>Jak w tej sytuacji wypadło… <span class="muted small">(opcjonalnie)</span></h2>
-      <p class="muted small">
-        Oceniasz tę jedną sytuację, nie całą pracę osoby. „—” oznacza brak danych i nie wlicza się do zestawienia.
-      </p>
+      <h2>Punktowa ocena kryteriów <span class="muted small">(opcjonalnie)</span></h2>
+      <p class="t-none-hint small"><span class="t-seg-chip" aria-hidden="true">brak</span> brak danych — nie wlicza się do zestawienia</p>
       <p class="t-scale small">
         {% for p in points %}<span><strong>{{ p }}</strong> {{ point_labels[p] }}</span>{% endfor %}
       </p>
@@ -98,13 +99,9 @@
         <p class="small"><span class="badge warn">Kryteria nie są jeszcze ustalone</span> — pokazujemy kryteria obowiązkowe arkusza {{ evaluation.sheet }}.</p>
       {% endif %}
       {% for c in criteria_current %}{{ rating_row(c) }}{% endfor %}
-
-      <details class="t-other" {% if other_open or not criteria_current %}open{% endif %}>
-        <summary>Inne kryteria z katalogu ({{ criteria_other | length }})</summary>
-        <p class="muted small">Nie należą do bieżącej oceny. Mogą pomóc w wyborze kryteriów dodatkowych na następny cykl.</p>
-        {% for c in criteria_other %}{{ rating_row(c) }}{% endfor %}
-      </details>
+      {% for c in kept_other %}{{ rating_row(c) }}{% endfor %}
     </section>
+    {% endif %}
 
     <div class="t-submit">
       <button type="submit" name="akcja" value="zapisz">{% if editing %}Zapisz poprawkę{% else %}Zapisz notatkę{% endif %}</button>

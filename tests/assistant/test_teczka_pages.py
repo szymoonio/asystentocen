@@ -56,14 +56,16 @@ def test_quick_note_picker_then_form(client):
 def test_form_shows_current_criteria_and_unset_sliders(client):
     page = client.get("/asystent/teczka/E06/nowa").text
     assert "Orientacja na klienta/interesanta" in page  # kryterium dodatkowe tej oceny
-    assert 'name="rating_KOMUNIKACJA" value="" checked' in page  # domyślnie „—”
-    assert "Inne kryteria z katalogu (7)" in page
+    assert 'name="rating_KOMUNIKACJA" value="" checked' in page  # domyślnie „brak”
+    assert "Punktowa ocena kryteriów" in page and "brak danych — nie wlicza się do zestawienia" in page
+    assert "Inne kryteria z katalogu" not in page and 'name="rating_KREATYWNOSC"' in page  # dodatkowe tej oceny
+    assert 'name="rating_NEGOCJOWANIE"' not in page  # spoza oceny — bez suwaka
 
 
 def test_form_before_criteria_set_shows_mandatory_only(client):
     page = client.get("/asystent/teczka/E09/nowa").text
     assert "Kryteria nie są jeszcze ustalone" in page
-    assert "Inne kryteria z katalogu (9)" in page
+    assert "Inne kryteria z katalogu" not in page
 
 
 def test_create_note_flow(client, container):
@@ -131,3 +133,13 @@ def test_unknown_person_is_404(client):
     response = client.get("/asystent/teczka/E99")
     assert response.status_code == 404
     assert "Nie ma takiej osoby" in response.text
+
+
+def test_edit_keeps_rating_on_criterion_outside_evaluation(client, container):
+    """Starsza notatka może mieć suwak spoza bieżącej oceny — poprawka nie może go skasować."""
+    client.post("/asystent/teczka/E06/nowa", data={"observed_on": "2026-11-20", "body": "Rozmowa z kontrahentem.",
+                                                   "rating_NEGOCJOWANIE": "7"})
+    note = next(n for n in container.notes.notes_for("E05", "E06") if n.body == "Rozmowa z kontrahentem.")
+    form = client.get(f"/asystent/teczka/E06/notatka/{note.id}/edytuj").text
+    assert 'name="rating_NEGOCJOWANIE" value="7" checked' in form
+    assert 'name="rating_ZARZADZANIE_LUDZMI"' not in form
