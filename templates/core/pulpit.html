@@ -1,0 +1,40 @@
+{# Agent A — rozwija dowolnie. Stub z kroku 0 pokazuje dane z fake'ów. #}
+{% extends "base.html" %}
+{% block content %}
+  <h1>Pulpit</h1>
+
+  <section class="card">
+    <h2>Twoi podwładni</h2>
+    {% if rows %}
+      <table class="table">
+        <thead><tr><th>Osoba</th><th>Arkusz</th><th>Etap</th><th>Kryteria do</th><th>Termin oceny</th></tr></thead>
+        <tbody>
+        {% for employee, ev in rows %}
+          <tr>
+            <td>{{ employee.full_name }}<br><span class="muted small">{{ employee.position.title }}</span></td>
+            {% if ev %}
+              <td>{{ ev.sheet }}</td>
+              <td><span class="badge">{{ ev.state }}</span></td>
+              <td>{{ ev.criteria_due_date | pl_date }}</td>
+              <td>{{ ev.due_date | pl_date }}</td>
+            {% else %}
+              <td colspan="4" class="muted">nie podlega ocenie okresowej</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">Nie oceniasz nikogo.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Przypomnienia</h2>
+    {% for r in inbox %}
+      <p>{{ r.message }}</p>
+    {% else %}
+      <p class="muted">Brak przypomnień.</p>
+    {% endfor %}
+  </section>
+{% endblock %}

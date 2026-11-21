@@ -1,0 +1,41 @@
+{# ZAMROŻONE (krok 0). Szablony modułów: {% extends "base.html" %} + {% block content %}. #}
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Asystent Ocen</title>
+  <link rel="stylesheet" href="/static/base.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>Asystent Ocen</strong>
+      <span class="muted">{{ office.name }}</span>
+    </div>
+    <nav class="nav">
+      <a href="/core/">Pulpit</a>
+      <a href="/core/oceny">Oceny</a>
+      {% if user.has("OCENIAJACY") %}<a href="/asystent/teczka">Teczka</a>{% endif %}
+      {% if user.has("OCENIAJACY") %}<a href="/asystent/hr">Asystent HR</a>{% endif %}
+      {% if user.has("KADRY") %}<a href="/core/kadry">Kadry</a>{% endif %}
+    </nav>
+    <details class="userswitch">
+      <summary>{{ me.full_name }} <span class="muted">· {{ me.position.title }}</span></summary>
+      <div class="menu">
+        <p class="muted small">Demo: zaloguj jako</p>
+        {% for u in demo_users %}
+          <a href="/login/{{ u.id }}" {% if u.id == me.id %}aria-current="true"{% endif %}>
+            {{ u.full_name }} <span class="muted small">{{ u.position.title }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </details>
+  </header>
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer muted small">Dziś: {{ today | pl_date }} · prototyp, dane fikcyjne</footer>
+</body>
+</html>

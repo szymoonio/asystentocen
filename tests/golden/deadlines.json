@@ -1,0 +1,58 @@
+{
+  "source": "context/6. Materiały dodatkowe/liczenie terminów.docx + art. 81 ustawy + § 7 rozporządzenia; przypadki 'seed' odpowiadają seed/office.yaml",
+  "holidays": {
+    "2026": ["2026-01-01", "2026-01-06", "2026-04-05", "2026-04-06", "2026-05-01", "2026-05-03", "2026-05-24", "2026-06-04", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-24", "2026-12-25", "2026-12-26"]
+  },
+  "is_working_day": [
+    {"date": "2024-12-24", "expected": true, "why": "24.12 jest dniem wolnym dopiero od 2025 r."},
+    {"date": "2025-12-24", "expected": false, "why": "Wigilia — dzień wolny od 2025 r."},
+    {"date": "2026-11-21", "expected": false, "why": "sobota"},
+    {"date": "2026-11-23", "expected": true, "why": "poniedziałek"}
+  ],
+  "add_months": [
+    {"start": "2024-03-16", "months": 24, "expected": "2026-03-16", "why": "przykład z „liczenie terminów”"},
+    {"start": "2024-01-31", "months": 13, "expected": "2025-02-28", "why": "brak 31 lutego → ostatni dzień miesiąca"},
+    {"start": "2024-01-31", "months": 1, "expected": "2024-02-29", "why": "rok przestępny"},
+    {"start": "2024-11-29", "months": 24, "expected": "2026-11-29", "why": "bez przesunięcia (to robi shift_to_working_day)"}
+  ],
+  "shift_to_working_day": [
+    {"date": "2026-03-16", "expected": "2026-03-16", "why": "poniedziałek — bez zmian"},
+    {"date": "2026-11-07", "expected": "2026-11-09", "why": "sobota → poniedziałek"},
+    {"date": "2026-11-29", "expected": "2026-11-30", "why": "niedziela → poniedziałek"},
+    {"date": "2026-11-11", "expected": "2026-11-12", "why": "Święto Niepodległości"},
+    {"date": "2026-01-06", "expected": "2026-01-07", "why": "Trzech Króli"},
+    {"date": "2026-04-06", "expected": "2026-04-07", "why": "Poniedziałek Wielkanocny"},
+    {"date": "2026-06-04", "expected": "2026-06-05", "why": "Boże Ciało"},
+    {"date": "2026-12-24", "expected": "2026-12-28", "why": "24, 25, 26 (sobota), 27 (niedziela)"},
+    {"date": "2027-05-03", "expected": "2027-05-04", "why": "Święto Konstytucji 3 Maja"}
+  ],
+  "deadline_in_days": [
+    {"event": "2026-10-20", "days": 30, "expected": "2026-11-19", "why": "§ 7 pkt 1 — kryteria w 30 dni od zatrudnienia; dzień zdarzenia się nie liczy", "seed": "EV-E09-2026"},
+    {"event": "2026-06-12", "days": 7, "expected": "2026-06-19", "why": "§ 7 pkt 2 — 7 dni od negatywnej", "seed": "EV-E06-2026R"},
+    {"event": "2026-06-15", "days": 7, "expected": "2026-06-22", "why": "art. 83 ust. 1 — sprzeciw 7 dni od zapoznania"},
+    {"event": "2026-11-05", "days": 30, "expected": "2026-12-07", "why": "05.12.2026 to sobota", "seed": "EV-E08-2028"},
+    {"event": "2026-11-06", "days": 30, "expected": "2026-12-07", "why": "art. 89 ust. 2 — 30 dni od zapoznania; 06.12.2026 to niedziela"}
+  ],
+  "deadline_in_months": [
+    {"start": "2026-06-15", "months": 6, "expected": "2026-12-15", "why": "art. 81 ust. 9 — ponowna ocena 6 mies. po zapoznaniu z negatywną", "seed": "EV-E06-2026R"},
+    {"start": "2024-11-29", "months": 24, "expected": "2026-11-30", "why": "29.11.2026 to niedziela", "seed": "EV-E03-2024"},
+    {"start": "2026-11-05", "months": 24, "expected": "2028-11-06", "why": "05.11.2028 to niedziela", "seed": "EV-E08-2028"}
+  ],
+  "merge_absences": [
+    {
+      "periods": [["2026-10-05", "2026-10-16"], ["2026-10-19", "2026-11-06"]],
+      "expected": [["2026-10-05", "2026-11-06"]],
+      "why": "przykład z „liczenie terminów” — weekend między okresami nie przerywa ciągłości"
+    },
+    {
+      "periods": [["2026-07-06", "2026-07-17"], ["2026-07-21", "2026-07-31"]],
+      "expected": [["2026-07-06", "2026-07-17"], ["2026-07-21", "2026-07-31"]],
+      "why": "20.07.2026 (poniedziałek) jest dniem roboczym — ciągłość przerwana (seed: Ewa, E07)"
+    }
+  ],
+  "is_longer_than_month": [
+    {"start": "2026-10-05", "end": "2026-11-06", "expected": true, "why": "przykład z „liczenie terminów”"},
+    {"start": "2026-07-06", "end": "2026-07-31", "expected": false},
+    {"start": "2026-08-03", "end": "2026-10-30", "expected": true, "why": "seed: Krzysztof, E10 — 89 dni"}
+  ]
+}

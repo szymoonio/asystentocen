@@ -1,0 +1,596 @@
+{
+  "source": "context/5. Przykładowe wypełnione formularze oceny/*.docx",
+  "generated_by": "krok 0 — oczekiwane wartości wyliczone z ocen cząstkowych wg § 11 rozporządzenia (ułamki), NIE przepisane z dokumentów",
+  "cases": [
+    {
+      "file": "09) Arkusz oceny C - gł specjalista (neg.).docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 1
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 1
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 1
+        },
+        {
+          "code": "MYSLENIE_ANALITYCZNE",
+          "name_in_document": "Myślenie analityczne",
+          "mandatory": false,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 3,
+        "mean_denominator": 1,
+        "level": "PONIZEJ",
+        "outcome": "NEGATYWNA"
+      },
+      "document": {
+        "mean_text": "3,3",
+        "level_marked": "PONIZEJ",
+        "outcome_marked": "NEGATYWNA",
+        "promotion_request": "NIE_DOTYCZY"
+      },
+      "notes": [
+        "Średnia w dokumencie (3,3) różni się od wyliczonej (3.0000) — błąd w przykładzie."
+      ]
+    },
+    {
+      "file": "1) Arkusz oceny A - GLW.docx",
+      "sheet": "A",
+      "criteria": [
+        {
+          "code": "ZARZADZANIE_LUDZMI",
+          "name_in_document": "Zarządzanie ludźmi",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "PODEJMOWANIE_DECYZJI",
+          "name_in_document": "Podejmowanie decyzji i odpowiedzialność",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "ZARZADZANIE_STRATEGICZNE",
+          "name_in_document": "Zarządzanie strategiczne",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "NEGOCJOWANIE",
+          "name_in_document": "Negocjowanie",
+          "mandatory": false,
+          "points": 5
+        },
+        {
+          "code": "RADZENIE_SOBIE_W_KRYZYSIE",
+          "name_in_document": "Radzenie sobie w sytuacjach kryzysowych",
+          "mandatory": false,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 11,
+        "mean_denominator": 2,
+        "level": "NA_POZIOMIE",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "5,5",
+        "level_marked": "NA_POZIOMIE",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "NIE_DOTYCZY"
+      },
+      "notes": []
+    },
+    {
+      "file": "10) Arkusz oceny C - archiwista.docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 5,
+        "mean_denominator": 1,
+        "level": "NA_POZIOMIE",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "5",
+        "level_marked": "NA_POZIOMIE",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "NIE_DOTYCZY"
+      },
+      "notes": []
+    },
+    {
+      "file": "11) Arkusz oceny C - główny analityk.docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 9
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "MYSLENIE_ANALITYCZNE",
+          "name_in_document": "Myślenie analityczne",
+          "mandatory": false,
+          "points": 7
+        }
+      ],
+      "expected": {
+        "mean_numerator": 7,
+        "mean_denominator": 1,
+        "level": "POWYZEJ",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "7",
+        "level_marked": "POWYZEJ",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "NIE_DOTYCZY"
+      },
+      "notes": []
+    },
+    {
+      "file": "12) Arkusz oceny C - specjalista (negatywna).docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 3
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 3
+        },
+        {
+          "code": "ORIENTACJA_NA_KLIENTA",
+          "name_in_document": "Orientacja na klienta/interesanta",
+          "mandatory": false,
+          "points": 3
+        },
+        {
+          "code": "KREATYWNOSC",
+          "name_in_document": "Kreatywność",
+          "mandatory": false,
+          "points": 3
+        }
+      ],
+      "expected": {
+        "mean_numerator": 27,
+        "mean_denominator": 7,
+        "level": "PONIZEJ",
+        "outcome": "NEGATYWNA"
+      },
+      "document": {
+        "mean_text": "3,8",
+        "level_marked": "PONIZEJ",
+        "outcome_marked": "NEGATYWNA",
+        "promotion_request": "NIE"
+      },
+      "notes": []
+    },
+    {
+      "file": "13) Arkusz oceny B - dyrektor dep..docx",
+      "sheet": "B",
+      "criteria": [
+        {
+          "code": "ZARZADZANIE_LUDZMI",
+          "name_in_document": "Zarządzanie ludźmi",
+          "mandatory": true,
+          "points": 9
+        },
+        {
+          "code": "PODEJMOWANIE_DECYZJI",
+          "name_in_document": "Podejmowanie decyzji i odpowiedzialność",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WYSTAPIENIA_PUBLICZNE",
+          "name_in_document": "Wystąpienia publiczne",
+          "mandatory": false,
+          "points": 3
+        },
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": false,
+          "points": 7
+        },
+        {
+          "code": "NEGOCJOWANIE",
+          "name_in_document": "Negocjacje",
+          "mandatory": false,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 25,
+        "mean_denominator": 4,
+        "level": "POWYZEJ",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "6,25",
+        "level_marked": "POWYZEJ",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "TAK"
+      },
+      "notes": []
+    },
+    {
+      "file": "2) Arkusz oceny B - naczelnik.docx",
+      "sheet": "B",
+      "criteria": [
+        {
+          "code": "ZARZADZANIE_LUDZMI",
+          "name_in_document": "Zarządzanie ludźmi",
+          "mandatory": true,
+          "points": 9
+        },
+        {
+          "code": "PODEJMOWANIE_DECYZJI",
+          "name_in_document": "Podejmowanie decyzji i odpowiedzialność",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WYSTAPIENIA_PUBLICZNE",
+          "name_in_document": "Wystąpienia publiczne",
+          "mandatory": false,
+          "points": 5
+        },
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": false,
+          "points": 7
+        },
+        {
+          "code": "KREATYWNOSC",
+          "name_in_document": "Kreatywność",
+          "mandatory": false,
+          "points": 7
+        }
+      ],
+      "expected": {
+        "mean_numerator": 27,
+        "mean_denominator": 4,
+        "level": "POWYZEJ",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "6,75",
+        "level_marked": "POWYZEJ",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "TAK"
+      },
+      "notes": []
+    },
+    {
+      "file": "3) Arkusz oceny B - kierownik odd..docx",
+      "sheet": "B",
+      "criteria": [
+        {
+          "code": "ZARZADZANIE_LUDZMI",
+          "name_in_document": "Zarządzanie ludźmi",
+          "mandatory": true,
+          "points": 9
+        },
+        {
+          "code": "PODEJMOWANIE_DECYZJI",
+          "name_in_document": "Podejmowanie decyzji i odpowiedzialność",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 9
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "ZARZADZANIE_STRATEGICZNE",
+          "name_in_document": "Zarządzanie strategiczne",
+          "mandatory": false,
+          "points": 9
+        },
+        {
+          "code": "NEGOCJOWANIE",
+          "name_in_document": "Negocjowanie",
+          "mandatory": false,
+          "points": 7
+        }
+      ],
+      "expected": {
+        "mean_numerator": 55,
+        "mean_denominator": 7,
+        "level": "POWYZEJ",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "7,8",
+        "level_marked": "POWYZEJ",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "NIE"
+      },
+      "notes": []
+    },
+    {
+      "file": "4) Arkusz oceny C - główny spec.(neg).docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 1
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 21,
+        "mean_denominator": 5,
+        "level": "NA_POZIOMIE",
+        "outcome": "NEGATYWNA"
+      },
+      "document": {
+        "mean_text": "4,2",
+        "level_marked": "NA_POZIOMIE",
+        "outcome_marked": "NEGATYWNA",
+        "promotion_request": "NIE_DOTYCZY"
+      },
+      "notes": [
+        "Ocena negatywna mimo poziomu ≥ „na poziomie” — co najmniej jedna ocena cząstkowa = 1 (§ 11 ust. 1 pkt 4)."
+      ]
+    },
+    {
+      "file": "5) Arkusz oceny C - radca.docx",
+      "sheet": "C",
+      "criteria": [
+        {
+          "code": "WYKORZYSTYWANIE_WIEDZY",
+          "name_in_document": "Wykorzystywanie wiedzy i doskonalenie zawodowe",
+          "mandatory": true,
+          "points": 5
+        },
+        {
+          "code": "RZETELNOSC",
+          "name_in_document": "Rzetelność",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "ORGANIZACJA_PRACY",
+          "name_in_document": "Organizacja pracy i orientacja na osiąganie celów",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "WSPOLPRACA",
+          "name_in_document": "Współpraca",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "KOMUNIKACJA",
+          "name_in_document": "Komunikacja",
+          "mandatory": true,
+          "points": 7
+        },
+        {
+          "code": "MYSLENIE_ANALITYCZNE",
+          "name_in_document": "Myślenie analityczne",
+          "mandatory": false,
+          "points": 5
+        }
+      ],
+      "expected": {
+        "mean_numerator": 19,
+        "mean_denominator": 3,
+        "level": "POWYZEJ",
+        "outcome": "POZYTYWNA"
+      },
+      "document": {
+        "mean_text": "6,3",
+        "level_marked": "POWYZEJ",
+        "outcome_marked": "POZYTYWNA",
+        "promotion_request": "TAK"
+      },
+      "notes": []
+    }
+  ]
+}

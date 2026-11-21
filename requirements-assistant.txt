@@ -1,0 +1,3 @@
+# Zależności modułu ASSISTANT (agent B). Instalacja: pip install -r requirements-assistant.txt
+anthropic
+# faster-whisper   # transkrypcja lokalna (ciężka paczka — odkomentuj, gdy potrzebna)

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["app.main:app", "--port", "8000"],
+      "env": { "DEMO_TODAY": "2026-11-21" },
+      "port": 8000
+    }
+  ]
+}

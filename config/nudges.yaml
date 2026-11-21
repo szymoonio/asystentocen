@@ -1,0 +1,8 @@
+# Przypomnienia o notatkach — agent B (docs/ARCHITEKTURA.md § 5.4, docs/AGENT_B.md).
+no_note_after_days: 45
+coverage_check_every_days: 30
+recency_window_days: 90          # sprawdzane 90 dni przed terminem oceny
+recency_share_threshold: 0.8     # ≥80% notatek z ostatnich 3 mies. → przypomnienie
+pre_interview_days: [60, 30]
+no_positive_after_days: 120
+digest: weekly                   # jedno zestawienie tygodniowo na przełożonego
