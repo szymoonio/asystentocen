@@ -1,0 +1,493 @@
+# Fikcyjny urząd do demo i testów. ZAMROŻONE (krok 0).
+# Dane zaprojektowane pod datę demo 2026-11-21 (DEMO_TODAY), żeby od razu były widoczne:
+#   - Zofia Nowicka (E09): termin ustalenia kryteriów minął 19.11.2026 (zaległe)
+#   - Ewa Rzetelna (E07): termin oceny 10.12.2026, ostatnia notatka sprzed miesięcy
+#   - Grzegorz Wzór (E06): ponowna ocena po negatywnej — termin 15.12.2026
+#   - Anna Kierunkowa (E03): rozmowa oceniająca odbyta, termin 30.11.2026 (29.11 to niedziela)
+#   - Piotr Analityczny (E08): 2 kolejne oceny „powyżej oczekiwań” → obligatoryjny stopień
+#     do 07.12.2026 (30 dni od zapoznania 06.11.2026 wypada w niedzielę)
+#   - Krzysztof Długi (E10): nieobecność 89 dni → termin 03.02.2027 + 89 dni = 03.05.2027
+#     (święto) → 04.05.2027
+#   - Tomasz Młodszy (E12): umowa na czas określony — NIE podlega ocenie
+# Wartości due_date / criteria_due_date to oczekiwane wyniki reguł (A może je przeliczać
+# i porównywać w testach).
+
+office:
+  name: Generalna Dyrekcja Przekładów i Przykładów
+  city: Warszawa
+  objection_addressee_head: ministra właściwego do spraw przekładów
+
+org_units:
+  - {id: U-KIER, name: Kierownictwo Urzędu, parent_id: null, city: Warszawa}
+  - {id: U-DP, name: Departament Przekładów, parent_id: U-KIER, city: Warszawa}
+  - {id: U-WTP, name: Wydział Tłumaczeń Pisemnych, parent_id: U-DP, city: Warszawa}
+  - {id: U-RP, name: Referat Przekładów, parent_id: U-WTP, city: Warszawa}
+  - {id: U-WK, name: Wydział Kadr, parent_id: U-KIER, city: Warszawa}
+
+employees:
+  - id: E01
+    first_name: Barbara
+    last_name: Główna
+    email: barbara.glowna@przyklady.example
+    position: {title: Generalny Dyrektor Przekładów, org_unit_id: U-KIER, is_head_of_office: true, manages_people: true}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2023-01-15
+    supervisor_id: null          # oceniający spoza urzędu (minister)
+    extra_roles: [ZARZADZAJACY]
+
+  - id: E02
+    first_name: Tadeusz
+    last_name: Generalny
+    email: tadeusz.generalny@przyklady.example
+    position: {title: Dyrektor generalny urzędu, org_unit_id: U-KIER, manages_people: true}
+    basis: MIANOWANIE
+    indefinite_since: 2015-05-12
+    appointed_year: 2015
+    grade: 6
+    grade_granted_on: 2023-06-01
+    supervisor_id: E01
+    extra_roles: [ZARZADZAJACY]
+
+  - id: E03
+    first_name: Anna
+    last_name: Kierunkowa
+    email: anna.kierunkowa@przyklady.example
+    position: {title: Dyrektor Departamentu Przekładów, org_unit_id: U-DP, manages_people: true}
+    basis: MIANOWANIE
+    indefinite_since: 2016-11-29
+    appointed_year: 2016
+    grade: 5
+    grade_granted_on: 2022-12-01
+    supervisor_id: E02
+
+  - id: E04
+    first_name: Marek
+    last_name: Naczelny
+    email: marek.naczelny@przyklady.example
+    position: {title: Naczelnik Wydziału Tłumaczeń Pisemnych, org_unit_id: U-WTP, manages_people: true}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2018-03-01
+    supervisor_id: E03
+
+  - id: E05
+    first_name: Henryk
+    last_name: Pryncypał
+    email: henryk.pryncypal@przyklady.example
+    position: {title: Kierownik Referatu Przekładów, org_unit_id: U-RP, manages_people: true}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2019-03-03
+    supervisor_id: E04
+
+  - id: E06
+    first_name: Grzegorz
+    last_name: Wzór
+    email: grzegorz.wzor@przyklady.example
+    position: {title: specjalista ds. przekładów, org_unit_id: U-RP}
+    basis: MIANOWANIE
+    indefinite_since: 2019-06-12
+    appointed_year: 2019
+    grade: 2
+    grade_granted_on: 2021-07-01
+    supervisor_id: E05
+
+  - id: E07
+    first_name: Ewa
+    last_name: Rzetelna
+    email: ewa.rzetelna@przyklady.example
+    position: {title: główny specjalista ds. terminologii, org_unit_id: U-RP}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2024-12-10
+    supervisor_id: E05
+
+  - id: E08
+    first_name: Piotr
+    last_name: Analityczny
+    email: piotr.analityczny@przyklady.example
+    position: {title: główny analityk, org_unit_id: U-WTP}
+    basis: MIANOWANIE
+    indefinite_since: 2015-09-01
+    appointed_year: 2015
+    grade: 4
+    grade_granted_on: 2022-01-10
+    supervisor_id: E04
+
+  - id: E09
+    first_name: Zofia
+    last_name: Nowicka
+    email: zofia.nowicka@przyklady.example
+    position: {title: specjalista ds. przekładów, org_unit_id: U-RP}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2026-10-20
+    supervisor_id: E05
+
+  - id: E10
+    first_name: Krzysztof
+    last_name: Długi
+    email: krzysztof.dlugi@przyklady.example
+    position: {title: referendarz, org_unit_id: U-WTP}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2025-02-03
+    supervisor_id: E04
+
+  - id: E11
+    first_name: Magda
+    last_name: Kadrowa
+    email: magda.kadrowa@przyklady.example
+    position: {title: starszy specjalista ds. kadr, org_unit_id: U-WK}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2025-06-02
+    supervisor_id: E02
+    extra_roles: [KADRY, ADMIN]
+
+  - id: E12
+    first_name: Tomasz
+    last_name: Młodszy
+    email: tomasz.mlodszy@przyklady.example
+    position: {title: młodszy referent, org_unit_id: U-RP}
+    basis: UMOWA_OKRESLONY
+    indefinite_since: null
+    supervisor_id: E05
+
+absences:
+  - {employee_id: E10, start: 2026-08-03, end: 2026-10-30, justified: true}
+  # dwie krótkie nieobecności Ewy — rozdzielone dniem roboczym, więc NIE łączą się
+  - {employee_id: E07, start: 2026-07-06, end: 2026-07-17, justified: true}
+  - {employee_id: E07, start: 2026-07-21, end: 2026-07-31, justified: true}
+
+evaluations:
+  # --- kierownictwo -----------------------------------------------------------------
+  - id: EV-E01-2025
+    employee_id: E01
+    evaluator_id: null
+    sheet: A
+    state: OBSERVATION
+    additional: [NEGOCJOWANIE, RADZENIE_SOBIE_W_KRYZYSIE]
+    criteria_set_on: 2025-01-15
+    period_from: 2025-01-15
+    due_date: 2027-01-15
+
+  - id: EV-E02-2025
+    employee_id: E02
+    evaluator_id: E01
+    sheet: B
+    state: OBSERVATION
+    additional: [WYSTAPIENIA_PUBLICZNE]
+    criteria_set_on: 2025-05-12
+    period_from: 2025-05-12
+    due_date: 2027-05-12
+
+  - id: EV-E03-2024
+    employee_id: E03
+    evaluator_id: E02
+    sheet: B
+    state: INTERVIEW_HELD
+    additional: [ZARZADZANIE_STRATEGICZNE, NEGOCJOWANIE]
+    criteria_set_on: 2024-12-05
+    period_from: 2024-12-05
+    due_date: 2026-11-30          # 29.11.2026 (niedziela) → 30.11.2026
+
+  # --- Marek: historia dwóch ocen, nowy cykl -----------------------------------------
+  - id: EV-E04-2024
+    employee_id: E04
+    evaluator_id: E03
+    sheet: B
+    state: FINAL
+    additional: [WYSTAPIENIA_PUBLICZNE]
+    criteria_set_on: 2022-03-10
+    period_from: 2022-03-10
+    due_date: 2024-03-01
+    result:
+      partial_points: {ZARZADZANIE_LUDZMI: 7, PODEJMOWANIE_DECYZJI: 7, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 5, KOMUNIKACJA: 7, WYSTAPIENIA_PUBLICZNE: 5}
+      mean_numerator: 19
+      mean_denominator: 3
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2024-03-01
+      acknowledged_on: 2024-03-04
+      promotion_requested: null
+
+  - id: EV-E04-2026
+    employee_id: E04
+    evaluator_id: E03
+    sheet: B
+    state: FINAL
+    additional: [WYSTAPIENIA_PUBLICZNE, WYKORZYSTYWANIE_WIEDZY, KREATYWNOSC]
+    criteria_set_on: 2024-03-15
+    period_from: 2024-03-15
+    due_date: 2026-03-02          # 01.03.2026 (niedziela) → 02.03.2026
+    result:
+      partial_points: {ZARZADZANIE_LUDZMI: 9, PODEJMOWANIE_DECYZJI: 5, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 7, WYSTAPIENIA_PUBLICZNE: 5, WYKORZYSTYWANIE_WIEDZY: 7, KREATYWNOSC: 7}
+      mean_numerator: 27
+      mean_denominator: 4
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2026-03-02
+      acknowledged_on: 2026-03-03
+      promotion_requested: null
+
+  - id: EV-E04-2028
+    employee_id: E04
+    evaluator_id: E03
+    sheet: B
+    state: OBSERVATION
+    additional: [WYSTAPIENIA_PUBLICZNE]
+    criteria_set_on: 2026-03-23
+    period_from: 2026-03-23
+    criteria_due_date: 2026-04-01
+    due_date: 2028-03-02
+
+  # --- Henryk ------------------------------------------------------------------------
+  - id: EV-E05-2025
+    employee_id: E05
+    evaluator_id: E04
+    sheet: B
+    state: OBSERVATION
+    additional: [NEGOCJOWANIE]
+    criteria_set_on: 2025-03-03
+    period_from: 2025-03-03
+    due_date: 2027-03-03
+
+  # --- Grzegorz: pozytywna 2024, negatywna 2026, ponowna ocena po 6 mies. -------------
+  - id: EV-E06-2024
+    employee_id: E06
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: []
+    criteria_set_on: 2022-06-20
+    period_from: 2022-06-20
+    due_date: 2024-06-12
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 5, RZETELNOSC: 5, ORGANIZACJA_PRACY: 5, WSPOLPRACA: 5, KOMUNIKACJA: 5}
+      mean_numerator: 5
+      mean_denominator: 1
+      level: NA_POZIOMIE
+      outcome: POZYTYWNA
+      assessed_on: 2024-06-12
+      acknowledged_on: 2024-06-13
+      promotion_requested: false
+
+  - id: EV-E06-2026
+    employee_id: E06
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [ORIENTACJA_NA_KLIENTA, KREATYWNOSC]
+    criteria_set_on: 2024-06-14
+    period_from: 2024-06-14
+    due_date: 2026-06-12
+    result:   # jak przykładowy arkusz nr 12 (27/7 = 3,857 → „poniżej oczekiwań”)
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 5, RZETELNOSC: 5, ORGANIZACJA_PRACY: 5, WSPOLPRACA: 3, KOMUNIKACJA: 3, ORIENTACJA_NA_KLIENTA: 3, KREATYWNOSC: 3}
+      mean_numerator: 27
+      mean_denominator: 7
+      level: PONIZEJ
+      outcome: NEGATYWNA
+      assessed_on: 2026-06-12
+      acknowledged_on: 2026-06-15
+      promotion_requested: false
+
+  - id: EV-E06-2026R
+    employee_id: E06
+    evaluator_id: E05
+    sheet: C
+    state: OBSERVATION
+    after_negative: true
+    additional: [ORIENTACJA_NA_KLIENTA, KREATYWNOSC]
+    criteria_due_date: 2026-06-19   # 7 dni od sporządzenia negatywnej (§ 7 pkt 2)
+    criteria_set_on: 2026-06-18
+    period_from: 2026-06-18
+    due_date: 2026-12-15            # 6 mies. od zapoznania 15.06.2026 (art. 81 ust. 9)
+
+  # --- Ewa: pierwsza ocena -----------------------------------------------------------
+  - id: EV-E07-2024
+    employee_id: E07
+    evaluator_id: E05
+    sheet: C
+    state: OBSERVATION
+    additional: [ORIENTACJA_NA_KLIENTA]
+    criteria_due_date: 2025-01-09
+    criteria_set_on: 2024-12-20
+    period_from: 2024-12-20
+    due_date: 2026-12-10            # 24 mies. od zatrudnienia na czas nieokreślony
+
+  # --- Piotr: dwie kolejne „powyżej oczekiwań” → obligatoryjny stopień ----------------
+  - id: EV-E08-2024
+    employee_id: E08
+    evaluator_id: E04
+    sheet: C
+    state: FINAL
+    additional: [MYSLENIE_ANALITYCZNE]
+    criteria_set_on: 2022-11-20
+    period_from: 2022-11-20
+    due_date: 2024-11-05
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 7, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 7, MYSLENIE_ANALITYCZNE: 9}
+      mean_numerator: 22
+      mean_denominator: 3
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2024-11-05
+      acknowledged_on: 2024-11-06
+      promotion_requested: false
+
+  - id: EV-E08-2026
+    employee_id: E08
+    evaluator_id: E04
+    sheet: C
+    state: FINAL
+    additional: [MYSLENIE_ANALITYCZNE]
+    criteria_set_on: 2024-11-25
+    period_from: 2024-11-25
+    due_date: 2026-11-05
+    result:   # jak przykładowy arkusz nr 11 (42/6 = 7)
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 9, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 5, MYSLENIE_ANALITYCZNE: 7}
+      mean_numerator: 7
+      mean_denominator: 1
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2026-11-05
+      acknowledged_on: 2026-11-06
+      promotion_requested: false
+
+  - id: EV-E08-2028
+    employee_id: E08
+    evaluator_id: E04
+    sheet: C
+    state: CYCLE_OPEN
+    additional: []
+    criteria_due_date: 2026-12-07   # 05.12.2026 (sobota) → 07.12.2026
+    due_date: 2028-11-06            # 05.11.2028 (niedziela) → 06.11.2028
+
+  # --- Zofia: nowa osoba, kryteria zaległe -------------------------------------------
+  - id: EV-E09-2026
+    employee_id: E09
+    evaluator_id: E05
+    sheet: C
+    state: CYCLE_OPEN
+    additional: []
+    criteria_due_date: 2026-11-19   # 30 dni od 20.10.2026 (dzień zdarzenia się nie liczy)
+    due_date: 2028-10-20
+
+  # --- Krzysztof: długa nieobecność przedłuża termin ----------------------------------
+  - id: EV-E10-2025
+    employee_id: E10
+    evaluator_id: E04
+    sheet: C
+    state: OBSERVATION
+    additional: [ORIENTACJA_NA_KLIENTA]
+    criteria_set_on: 2025-02-20
+    period_from: 2025-02-20
+    due_date: 2027-05-04            # 03.02.2027 + 89 dni = 03.05.2027 (święto) → 04.05.2027
+
+  # --- Magda -------------------------------------------------------------------------
+  - id: EV-E11-2025
+    employee_id: E11
+    evaluator_id: E02
+    sheet: C
+    state: OBSERVATION
+    additional: []
+    criteria_set_on: 2025-06-20
+    period_from: 2025-06-20
+    due_date: 2027-06-02
+
+# Notatki przełożonych (przykładowe dane dla modułu B i panelu „Twoje obserwacje”).
+notes:
+  - id: N001
+    author_id: E05
+    subject_id: E06
+    evaluation_id: EV-E06-2026R
+    observed_on: 2026-07-08
+    created_at: 2026-07-08T16:10:00
+    body: Sprawa wniosku z brakującym załącznikiem — tym razem sam zadzwonił do Wydziału Kadr i uzupełnił dokument w dwa dni zamiast odsyłać wniosek.
+    strengths: [Samodzielnie skontaktował się z innym wydziałem, Sprawa zamknięta w terminie]
+    improvements: []
+    ratings: [{criterion_code: WSPOLPRACA, value: 5}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N002
+    author_id: E05
+    subject_id: E06
+    evaluation_id: EV-E06-2026R
+    observed_on: 2026-08-19
+    created_at: 2026-08-19T09:30:00
+    body: Na odprawie referatu nie przekazał informacji o opóźnieniu tłumaczenia dla ministerstwa — dowiedziałem się od klienta.
+    strengths: []
+    improvements: [Informować przełożonego o ryzyku opóźnienia z wyprzedzeniem]
+    ratings: [{criterion_code: KOMUNIKACJA, value: 3}]
+
+  - id: N003
+    author_id: E05
+    subject_id: E06
+    evaluation_id: EV-E06-2026R
+    observed_on: 2026-09-23
+    created_at: 2026-09-24T08:05:00
+    source: VOICE
+    body: Zaproponował nowy szablon odpowiedzi na typowe zapytania klientów, zespół zaczął go używać. Dobra inicjatywa.
+    strengths: [Własna inicjatywa — szablon odpowiedzi, Podzielił się rozwiązaniem z zespołem]
+    improvements: []
+    ratings: [{criterion_code: KREATYWNOSC, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N004
+    author_id: E05
+    subject_id: E06
+    evaluation_id: EV-E06-2026R
+    observed_on: 2026-10-14
+    created_at: 2026-10-14T15:40:00
+    body: Tłumaczenie umowy ramowej oddane w terminie, bez uwag weryfikatora.
+    strengths: [Terminowość, Jakość tłumaczenia bez poprawek]
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N005
+    author_id: E05
+    subject_id: E06
+    evaluation_id: EV-E06-2026R
+    observed_on: 2026-11-04
+    created_at: 2026-11-04T12:00:00
+    body: W korespondencji z interesantem odpowiedział poprawnie merytorycznie, ale bardzo lakonicznie — interesant dopytywał trzy razy.
+    strengths: [Poprawność merytoryczna]
+    improvements: [Pełniejsze, zrozumiałe odpowiedzi dla interesantów]
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 3}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N006
+    author_id: E05
+    subject_id: E07
+    evaluation_id: EV-E07-2024
+    observed_on: 2025-03-12
+    created_at: 2025-03-12T10:00:00
+    body: Przygotowała glosariusz terminów prawniczych dla referatu.
+    strengths: [Inicjatywa, Dzielenie się wiedzą]
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N007
+    author_id: E05
+    subject_id: E07
+    evaluation_id: EV-E07-2024
+    observed_on: 2025-06-30
+    created_at: 2025-06-30T14:20:00
+    body: Przy pilnym zleceniu przesunęła priorytety bez przypominania, ale nie uprzedziła zespołu, że inne zadania się opóźnią.
+    strengths: [Szybka reakcja na pilne zlecenie]
+    improvements: [Komunikowanie zespołowi zmian priorytetów]
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: KOMUNIKACJA, value: 3}]
+
+  - id: N008
+    author_id: E05
+    subject_id: E07
+    evaluation_id: EV-E07-2024
+    observed_on: 2026-04-15
+    created_at: 2026-04-15T11:45:00
+    body: Bardzo dobra obsługa trudnego interesanta przy telefonie — spokojnie, z wyjaśnieniem procedury.
+    strengths: [Cierpliwość, Jasne wyjaśnienie procedury]
+    improvements: []
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 9}]
+
+  - id: N009
+    author_id: E04
+    subject_id: E10
+    evaluation_id: EV-E10-2025
+    observed_on: 2026-11-03
+    created_at: 2026-11-03T09:00:00
+    body: Pierwszy tydzień po powrocie z długiej nieobecności. Ustaliliśmy, że przez dwa tygodnie nie dostaje nowych spraw terminowych.
+    strengths: []
+    improvements: []
+    ratings: []

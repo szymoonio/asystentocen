@@ -1,0 +1,14 @@
+# Warstwa LLM — agent B (docs/ARCHITEKTURA.md § 6.4). Zadanie usunięte z listy = funkcja ukryta w UI.
+llm:
+  provider: anthropic            # później: local | none
+  anthropic:
+    api_key_env: ANTHROPIC_API_KEY
+    refusal_fallback: true
+  tasks:
+    split_note:        { model: claude-opus-5-5, effort: low }
+    classify_note:     { model: claude-opus-5-5, effort: low }
+    rewrite_feedback:  { model: claude-opus-5-5, effort: medium }
+    procedure_qa:      { model: claude-opus-5-5, effort: medium }
+    conversation_prep: { model: claude-opus-5-5, effort: medium }
+    roleplay:          { model: claude-opus-5-5, effort: medium }
+    summarize_cycle:   { model: claude-opus-5-5, effort: high }

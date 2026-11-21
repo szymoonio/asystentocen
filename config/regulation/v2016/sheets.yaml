@@ -1,0 +1,50 @@
+# Arkusze A/B/C — § 3 i § 4 rozporządzenia PRM z 4.04.2016 (Dz. U. poz. 470), załączniki 2–4.
+# ZAMROŻONE (krok 0). Różnice między arkuszami: lista kryteriów obowiązkowych,
+# pole „Komórka organizacyjna” oraz adresat sprzeciwu w pouczeniu.
+
+version: "2016"
+legal_basis: "Rozporządzenie Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r. (Dz. U. poz. 470)"
+# Wejście w życie: 14 dni od ogłoszenia (8.04.2016). Wybór wersji wg § 13:
+# decyduje data zapoznania ocenianego z kryteriami.
+valid_from: 2016-04-23
+max_additional_criteria: 3
+
+sheets:
+  A:
+    title: "Arkusz A"
+    applies_to: "stanowisko kierownika urzędu, które jest stanowiskiem pracy w służbie cywilnej (§ 3 ust. 2)"
+    mandatory:
+      - ZARZADZANIE_LUDZMI
+      - PODEJMOWANIE_DECYZJI
+      - ORGANIZACJA_PRACY
+      - WSPOLPRACA
+      - KOMUNIKACJA
+      - ZARZADZANIE_STRATEGICZNE
+    has_org_unit: false
+    # null = pole edytowalne (kierownik urzędu nie ma nad sobą dyrektora generalnego);
+    # domyślna wartość z ustawień urzędu (seed: office.objection_addressee_head)
+    objection_addressee: null
+
+  B:
+    title: "Arkusz B"
+    applies_to: "stanowisko, na którym praca polega na bezpośrednim kierowaniu pracownikami (§ 3 ust. 3)"
+    mandatory:
+      - ZARZADZANIE_LUDZMI
+      - PODEJMOWANIE_DECYZJI
+      - ORGANIZACJA_PRACY
+      - WSPOLPRACA
+      - KOMUNIKACJA
+    has_org_unit: true
+    objection_addressee: "dyrektora generalnego urzędu"
+
+  C:
+    title: "Arkusz C"
+    applies_to: "pozostałe stanowiska pracy (§ 3 ust. 4)"
+    mandatory:
+      - WYKORZYSTYWANIE_WIEDZY
+      - RZETELNOSC
+      - ORGANIZACJA_PRACY
+      - WSPOLPRACA
+      - KOMUNIKACJA
+    has_org_unit: true
+    objection_addressee: "dyrektora generalnego urzędu"

@@ -1,0 +1,11 @@
+# Harmonogram przypomnień o terminach procesu — agent A (docs/AGENT_A.md).
+# Liczby = dni przed terminem; overdue = co ile dni po terminie.
+criteria:
+  before_days: [14, 7, 1]
+  overdue_every_days: 1
+assessment:
+  before_days: [60, 30, 14, 7, 1]
+  overdue_every_days: 1
+  escalate_to_hr_after_days: 0   # od razu po terminie kopia do kadr
+promotion:
+  before_days: [14, 7, 1]

@@ -1,0 +1,41 @@
+# Skala ocen — § 11 ust. 1 rozporządzenia PRM z 4.04.2016 (Dz. U. poz. 470).
+# ZAMROŻONE (krok 0).
+
+partial_points:
+  1: ZNACZNIE_PONIZEJ
+  3: PONIZEJ
+  5: NA_POZIOMIE
+  7: POWYZEJ
+  9: ZNACZNIE_POWYZEJ
+
+# Przedziały średniej arytmetycznej (§ 11 ust. 1 pkt 2). Porównywać na ułamkach, nie floatach:
+# „od 1 do 2” zawiera 2; „powyżej 2 do 4” nie zawiera 2, zawiera 4 itd.
+levels:
+  - level: ZNACZNIE_PONIZEJ
+    lower: 1
+    lower_inclusive: true
+    upper: 2
+  - level: PONIZEJ
+    lower: 2
+    lower_inclusive: false
+    upper: 4
+  - level: NA_POZIOMIE
+    lower: 4
+    lower_inclusive: false
+    upper: 6
+  - level: POWYZEJ
+    lower: 6
+    lower_inclusive: false
+    upper: 8
+  - level: ZNACZNIE_POWYZEJ
+    lower: 8
+    lower_inclusive: false
+    upper: 9
+
+# § 11 ust. 1 pkt 3–4
+positive_levels: [NA_POZIOMIE, POWYZEJ, ZNACZNIE_POWYZEJ]
+negative_if_any_partial_equals: 1
+
+# art. 89 ust. 2 ustawy — dwie kolejne pozytywne na jednym z dwóch najwyższych poziomów
+promotion_levels: [POWYZEJ, ZNACZNIE_POWYZEJ]
+max_grade: 9

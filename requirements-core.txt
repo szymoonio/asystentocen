@@ -1,0 +1,2 @@
+# Zależności modułu CORE (agent A). Instalacja: pip install -r requirements-core.txt
+# np. weasyprint (PDF), holidays (opcjonalnie), apscheduler

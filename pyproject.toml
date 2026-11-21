@@ -1,0 +1,31 @@
+# ZAMROŻONE (krok 0). Zależności specyficzne dla modułu dopisuj w requirements-core.txt (A)
+# albo requirements-assistant.txt (B), żeby nie było konfliktów przy merge'u.
+
+[project]
+name = "asystentocen"
+version = "0.1.0"
+description = "Cyfrowy Asystent Ocen Okresowych w służbie cywilnej"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "hypothesis>=6.100"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,59 @@
+/* ZAMROŻONE (krok 0). Style modułów: static/core/*.css (A), static/assistant/*.css (B). */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2430;
+  --muted: #5d6b7d;
+  --border: #dde2e9;
+  --accent: #1f4e9c;
+  --accent-soft: #e7eefa;
+  --warn: #9a5b00;
+  --warn-soft: #fff3df;
+  --danger: #a1262b;
+  --danger-soft: #fde8e8;
+  --ok: #1e6b3c;
+  --ok-soft: #e4f4ea;
+  --radius: 8px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+
+.topbar {
+  display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center;
+  padding: 0.75rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; flex-direction: column; }
+.nav { display: flex; flex-wrap: wrap; gap: 1rem; flex: 1; }
+.nav a { text-decoration: none; font-weight: 500; }
+.userswitch { position: relative; }
+.userswitch summary { cursor: pointer; list-style: none; }
+.userswitch .menu {
+  position: absolute; right: 0; z-index: 10; width: min(22rem, 90vw); max-height: 70vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem;
+}
+.userswitch .menu a { display: block; padding: 0.35rem 0.5rem; border-radius: 6px; text-decoration: none; color: var(--text); }
+.userswitch .menu a:hover, .userswitch .menu a[aria-current] { background: var(--accent-soft); }
+
+.page { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem; }
+.footer { text-align: center; padding: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.card h2 { margin-top: 0; font-size: 1.1rem; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.table th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+@media (max-width: 640px) { .table { display: block; overflow-x: auto; } }
+
+.badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.danger { background: var(--danger-soft); color: var(--danger); }
+.badge.ok { background: var(--ok-soft); color: var(--ok); }
+
+button, .button { font: inherit; padding: 0.45rem 0.9rem; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; text-decoration: none; }
+button.secondary, .button.secondary { background: var(--surface); color: var(--accent); }
+input, select, textarea { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; width: 100%; }
+label { display: block; font-weight: 500; margin: 0.75rem 0 0.25rem; }
