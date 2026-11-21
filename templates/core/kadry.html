@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
+{% block content %}
+  <h1>Kadry</h1>
+  {% if msg_ok %}<div class="alert ok">{{ msg_ok }}</div>{% endif %}
+  {% if msg_error %}<div class="alert error">{{ msg_error }}</div>{% endif %}
+
+  <section class="card">
+    <h2>Stan ocen w urzędzie</h2>
+    <div class="stat"><b>{{ stats.open }}</b>trwające cykle</div>
+    <div class="stat"><b style="color:var(--danger)">{{ stats.overdue }}</b>po terminie</div>
+    <div class="stat"><b>{{ stats.final_count }}</b>oceny ostateczne</div>
+    <p class="small">{% for label, n in stats.by_state.items() %}{{ label }}: {{ n }}{{ " · " if not loop.last }}{% endfor %}</p>
+    {% if stats.levels %}
+      <p class="small"><b>Rozkład poziomów ocen ostatecznych:</b>
+        {% for label, n in stats.levels.items() %}{{ label }}: {{ n }}{{ " · " if not loop.last }}{% endfor %}</p>
+    {% else %}
+      <p class="small muted">Rozkład poziomów pokazujemy dopiero dla co najmniej {{ stats.min_group }} ocen — inaczej dałoby się wskazać konkretne osoby.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="pagehead">
+      <h2>Pracownicy i terminy</h2>
+      <div class="small">Pokaż:
+        <a href="/core/kadry" {% if not filt %}aria-current="true"{% endif %}>wszystkich</a> ·
+        <a href="/core/kadry?filtr=30dni">termin w ciągu 30 dni</a> ·
+        <a href="/core/kadry?filtr=zalegle">zaległe</a>
+      </div>
+    </div>
+    <table class="table">
+      <thead><tr><th>Osoba</th><th>Komórka</th><th>Etap</th><th>Najbliższy termin</th><th>Uwagi</th></tr></thead>
+      <tbody>
+      {% for p in people %}
+        <tr>
+          <td>{{ p.emp.full_name }}<br><span class="muted small">{{ p.emp.position.title }} · {{ "urzędnik" if p.emp.is_urzednik else ("pracownik" if p.emp.subject_to_evaluation else "umowa na czas określony") }}</span></td>
+          <td class="small">{{ p.unit.name }}</td>
+          <td>{% if p.ev %}<a href="/core/oceny/{{ p.ev.id }}">{{ STATE_LABELS[p.ev.state] }}</a>{% elif p.emp.subject_to_evaluation %}
+                <form method="post" action="/core/kadry/{{ p.emp.id }}/pierwszy-cykl" class="inline-form"><button class="link" type="submit">otwórz pierwszy cykl</button></form>
+              {% else %}<span class="muted">nie podlega ocenie</span>{% endif %}</td>
+          <td>{% if p.next_due %}<span class="badge {{ p.flag }}">{{ p.next_due | pl_date }}</span>
+              <div class="muted small">{{ "kryteria" if p.ev.state == "CYCLE_OPEN" else "ocena" }}</div>{% endif %}</td>
+          <td class="small">
+            {% if p.promo %}
+              <div><span class="badge warn">obligatoryjny stopień</span> do {{ p.promo.deadline.date | pl_date }} ({{ p.promo.deadline.basis }})
+                <form method="post" action="/core/kadry/{{ p.emp.id }}/stopien" class="inline-form">
+                  <input type="hidden" name="granted_on" value="{{ today.isoformat() }}">
+                  <button class="link" type="submit">odnotuj przyznanie {{ p.promo.next_grade }}. stopnia</button>
+                </form></div>
+            {% endif %}
+            {% for a in p.absences %}<div>nieobecność {{ a.start | pl_date }}–{{ a.end | pl_date }}</div>{% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Wprowadź nieobecność</h2>
+    <p class="small muted">Tylko daty, bez przyczyny (przyczyna nieobecności to często dane o zdrowiu). Nieobecność ciągła dłuższa niż miesiąc przedłuża termin oceny (art. 81 ust. 7) — system przeliczy go i zawiadomi oceniającego i ocenianego.</p>
+    <form method="post" action="/core/kadry/nieobecnosc" class="grid3">
+      <div><label for="ae">Pracownik</label>
+        <select id="ae" name="employee_id">{% for p in people %}<option value="{{ p.emp.id }}">{{ p.emp.full_name }}</option>{% endfor %}</select></div>
+      <div><label for="as">Od</label><input type="date" id="as" name="start" required></div>
+      <div><label for="aend">Do</label><input type="date" id="aend" name="end" required></div>
+      <div style="align-self:end"><button type="submit">Zapisz nieobecność</button></div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,40 +1,64 @@
-{# Agent A — rozwija dowolnie. Stub z kroku 0 pokazuje dane z fake'ów. #}
 {% extends "base.html" %}
+{% block head %}<link rel="stylesheet" href="/static/core/core.css">{% endblock %}
 {% block content %}
-  <h1>Pulpit</h1>
-
-  <section class="card">
-    <h2>Twoi podwładni</h2>
-    {% if rows %}
-      <table class="table">
-        <thead><tr><th>Osoba</th><th>Arkusz</th><th>Etap</th><th>Kryteria do</th><th>Termin oceny</th></tr></thead>
-        <tbody>
-        {% for employee, ev in rows %}
-          <tr>
-            <td>{{ employee.full_name }}<br><span class="muted small">{{ employee.position.title }}</span></td>
-            {% if ev %}
-              <td>{{ ev.sheet }}</td>
-              <td><span class="badge">{{ ev.state }}</span></td>
-              <td>{{ ev.criteria_due_date | pl_date }}</td>
-              <td>{{ ev.due_date | pl_date }}</td>
-            {% else %}
-              <td colspan="4" class="muted">nie podlega ocenie okresowej</td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="muted">Nie oceniasz nikogo.</p>
-    {% endif %}
-  </section>
+  <div class="pagehead">
+    <h1>Pulpit</h1>
+    <form method="post" action="/core/scheduler/run" class="inline-form">
+      <button class="secondary" type="submit">Uruchom przypomnienia</button>
+    </form>
+  </div>
+  {% if request.query_params.get("ok") %}<div class="alert ok">{{ request.query_params.get("ok") }}</div>{% endif %}
 
   <section class="card">
     <h2>Przypomnienia</h2>
     {% for r in inbox %}
-      <p>{{ r.message }}</p>
+      <div class="reminder">
+        <div>
+          {% if r.link %}<a href="{{ r.link }}">{{ r.message }}</a>{% else %}{{ r.message }}{% endif %}
+          {% if r.due %}<div class="muted small">termin: {{ r.due | pl_date }}</div>{% endif %}
+        </div>
+        <form method="post" action="/core/przypomnienia/przeczytane" class="inline-form">
+          <input type="hidden" name="key" value="{{ r.dedupe_key }}">
+          <button class="link" type="submit">odhacz</button>
+        </form>
+      </div>
     {% else %}
       <p class="muted">Brak przypomnień.</p>
     {% endfor %}
   </section>
+
+  {% if rows %}
+  <section class="card">
+    <h2>Twoi podwładni</h2>
+    <table class="table">
+      <thead><tr><th>Osoba</th><th>Arkusz</th><th>Etap</th><th>Najbliższy termin</th><th></th></tr></thead>
+      <tbody>
+      {% for employee, ev, next_due, flag in rows %}
+        <tr>
+          <td>{{ employee.full_name }}<br><span class="muted small">{{ employee.position.title }}</span></td>
+          {% if ev %}
+            <td>{{ ev.sheet }}</td>
+            <td>{{ STATE_LABELS[ev.state] }}{% if ev.after_negative %}<br><span class="badge warn">po ocenie negatywnej</span>{% endif %}</td>
+            <td>
+              {% if next_due %}<span class="badge {{ flag }}">{{ next_due | pl_date }}</span>
+              <div class="muted small">{{ "kryteria" if ev.state == "CYCLE_OPEN" else "ocena" }}</div>{% endif %}
+            </td>
+            <td><a href="/core/oceny/{{ ev.id }}">Otwórz</a></td>
+          {% else %}
+            <td colspan="4" class="muted">nie podlega ocenie okresowej</td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if own %}
+  <section class="card">
+    <h2>Twoja ocena okresowa</h2>
+    <p>{{ STATE_LABELS[own.state] }} · termin oceny {{ own.due_date | pl_date }}
+      · <a href="/core/oceny/{{ own.id }}">szczegóły</a></p>
+  </section>
+  {% endif %}
 {% endblock %}

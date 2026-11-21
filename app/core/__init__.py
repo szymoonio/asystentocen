@@ -21,11 +21,16 @@ __all__ = ["register", "router"]
 
 
 def register(c: Container) -> None:
-    # Krok 0: nic nie podmieniamy — działają fake'i z app/contracts/fakes.py.
-    # Agent A docelowo:
-    #   from app.core import models  # noqa: F401  (tabele core_*)
-    #   c.employees = DbEmployeeDirectory(c.session_factory)
-    #   c.evaluations = DbEvaluationReader(c.session_factory, c.catalog)
-    #   c.reminder_sink = DbReminderSink(c.session_factory)
-    #   c.reminder_providers.append(ProcessReminders(c))
-    return None
+    from app.core import models  # noqa: F401 — rejestruje tabele core_* w Base.metadata
+    from app.core.reminders import ProcessReminders
+    from app.core.repo import DbEmployeeDirectory, DbEvaluationReader, DbReminderSink, import_seed
+    from app.db import Base
+
+    core_tables = [t for name, t in Base.metadata.tables.items() if name.startswith("core_")]
+    Base.metadata.create_all(c.engine, tables=core_tables)
+    import_seed(c.session_factory, c.seed)
+
+    c.employees = DbEmployeeDirectory(c.session_factory)
+    c.evaluations = DbEvaluationReader(c.session_factory, c.catalog)
+    c.reminder_sink = DbReminderSink(c.session_factory, c.clock)
+    c.reminder_providers.append(ProcessReminders(c))
