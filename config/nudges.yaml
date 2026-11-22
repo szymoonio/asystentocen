@@ -11,3 +11,21 @@ return_min_absence_days: 30      # „długa” nieobecność
 return_window_days: 30           # ile dni po powrocie przypominamy (jeśli nie ma notatki po powrocie)
 snooze_days: 14                  # „odłóż o 2 tygodnie”
 digest: weekly                   # jedno zestawienie tygodniowo na przełożonego
+
+# Powiadomienia e-mail „dawno bez notatki” — jeden mail na osobę z linkiem prosto do nowej notatki.
+# W mailu NIE ma treści notatek (tylko imię i nazwisko, data ostatniej notatki, termin oceny).
+# Maile nie są pokazywane w aplikacji. Własną skrzynkę podłącza się w .env (MAIL_TRANSPORT=smtp, SMTP_*,
+# MAIL_REDIRECT_TO, MAIL_ONLY_FOR) — szczegóły: docs/assistant/POWIADOMIENIA_EMAIL.md.
+email:
+  enabled: true
+  transport: outbox              # outbox = nic nie wysyła (tylko dziennik); smtp = prawdziwa wysyłka
+  base_url: http://127.0.0.1:8000  # adres aplikacji w linkach (nadpisuje zmienna APP_BASE_URL)
+  sender: "Asystent Ocen <asystent-ocen@przyklady.example>"
+  repeat_after_days: 21          # jeśli nadal brak notatki — ponowne przypomnienie najwcześniej po tylu dniach
+  max_per_day: 3                 # najwyżej tyle maili dziennie na przełożonego (najdawniej bez notatki najpierw)
+  smtp:                          # używane tylko przy transport: smtp; hasło wyłącznie ze zmiennej środowiskowej
+    host_env: SMTP_HOST
+    port_env: SMTP_PORT
+    user_env: SMTP_USER
+    password_env: SMTP_PASSWORD
+    starttls: true
