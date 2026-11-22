@@ -29,7 +29,7 @@ def test_container_uses_db_reader(container):
 def test_seed_notes_imported_once(settings, container, seed):
     assert len(services(container).notes_repo.current("E05")) == len([n for n in seed.notes if n.author_id == "E05"])
     again = build_container(settings)  # ta sama baza → bez ponownego importu
-    assert len(services(again).notes_repo.current("E05")) == 8
+    assert len(services(again).notes_repo.current("E05")) == len([n for n in seed.notes if n.author_id == "E05"])
 
 
 def test_only_author_sees_notes(container):

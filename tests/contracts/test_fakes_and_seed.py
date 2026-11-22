@@ -67,7 +67,7 @@ def test_directory_and_reader(seed, catalog):
     directory = FakeEmployeeDirectory(seed)
     reader = FakeEvaluationReader(seed, catalog)
     henryk = {e.id for e in directory.subordinates("E05")}
-    assert henryk == {"E06", "E07", "E09", "E12"}
+    assert henryk == {"E06", "E07", "E09", "E12", "E13", "E14", "E15"}
     assert reader.current_for("E12") is None  # umowa na czas określony
     current = reader.current_for("E06")
     assert current.id == "EV-E06-2026R" and current.after_negative
@@ -114,3 +114,13 @@ def test_rating_scale_enforced():
     with pytest.raises(ValidationError):
         CriterionRating(criterion_code="KOMUNIKACJA", value=4)
     Note(id="n", author_id="E05", subject_id="E06", observed_on=date(2026, 1, 1), created_at=datetime(2026, 1, 1))
+
+
+def test_demo_team_has_history_for_charts(seed, catalog):
+    """E13–E15: kilka lat pracy, oceny za sobą i dziesiątki notatek — wykresy i analiza mają na czym pracować."""
+    reader = FakeEvaluationReader(seed, catalog)
+    notes = FakeNotesReader(seed)
+    for employee_id, n_history, min_notes in [("E13", 2, 30), ("E14", 2, 40), ("E15", 1, 15)]:
+        assert len(reader.history(employee_id)) == n_history, employee_id
+        assert len(notes.notes_for("E05", employee_id)) >= min_notes, employee_id
+    assert reader.current_for("E13").state == EvaluationState.INTERVIEW_HELD

@@ -165,8 +165,26 @@ def teczka(request: Request, q: str = "", sort: str = "nazwisko"):
 
 @dataclass
 class TimelineItem:
-    note: Note
+    note: Note | None
     previous_versions: list[Note]
+    evaluation: EvaluationSummary | None = None  # wpis „ocena okresowa” zamiast notatki
+
+    @property
+    def on(self) -> date:
+        return self.note.observed_on if self.note else self.evaluation.result.assessed_on
+
+
+def _evaluation_items(evaluations: list[EvaluationSummary], *, cycle: str, kind: str) -> list[EvaluationSummary]:
+    """Zakończone oceny okresowe na osi czasu. Przy filtrze cyklu: ocena tego cyklu i ta, która go otworzyła."""
+    done = [e for e in evaluations if e.result]
+    if kind == "oceny" or not cycle:
+        return done
+    ids = [e.id for e in evaluations]
+    if cycle not in ids:
+        return []
+    i = ids.index(cycle)
+    keep = {cycle} | ({ids[i - 1]} if i > 0 else set())
+    return [e for e in done if e.id in keep]
 
 
 def _evaluations_of(c: Container, subject_id: str) -> list[EvaluationSummary]:
@@ -232,17 +250,23 @@ def teczka_osoby(
 
     # domyślnie bieżący cykl; „wszystkie” = pusty parametr
     cycle = (evaluation.id if evaluation else "") if cykl is None else cykl
-    notes = _filter_notes(all_notes, cycle=cycle, kind=rodzaj, criterion=kryterium, q=q.strip())
+    notes = [] if rodzaj == "oceny" else _filter_notes(all_notes, cycle=cycle, kind=rodzaj, criterion=kryterium, q=q.strip())
+    evaluations = _evaluations_of(c, subject_id)
+    shown_evaluations = (
+        _evaluation_items(evaluations, cycle=cycle, kind=rodzaj)
+        if rodzaj in ("", "oceny") and not kryterium and not q.strip() else []
+    )
     items = [
         TimelineItem(
             note=n,
             previous_versions=svc.notes_repo.history(user.employee_id, n.id)[1:] if n.version > 1 else [],
         )
-        for n in reversed(notes)
-    ]
+        for n in notes
+    ] + [TimelineItem(note=None, previous_versions=[], evaluation=e) for e in shown_evaluations]
+    items.sort(key=lambda it: it.on, reverse=True)
     groups: list[tuple[str, list[TimelineItem]]] = []
     for item in items:
-        label = f"{MONTHS[item.note.observed_on.month - 1]} {item.note.observed_on.year}"
+        label = f"{MONTHS[item.on.month - 1]} {item.on.year}"
         if not groups or groups[-1][0] != label:
             groups.append((label, []))
         groups[-1][1].append(item)
@@ -259,7 +283,9 @@ def teczka_osoby(
         subject=subject,
         is_subordinate=is_sub,
         evaluation=evaluation,
-        evaluations=_evaluations_of(c, subject_id),
+        evaluations=evaluations,
+        n_evaluations=len(shown_evaluations),
+        level_labels=LEVEL_LABELS,
         state_labels=STATE_LABELS,
         criteria_view=criteria_view,
         chart=chart,

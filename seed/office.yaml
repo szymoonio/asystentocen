@@ -9,6 +9,12 @@
 #   - Krzysztof Długi (E10): nieobecność 89 dni → termin 03.02.2027 + 89 dni = 03.05.2027
 #     (święto) → 04.05.2027
 #   - Tomasz Młodszy (E12): umowa na czas określony — NIE podlega ocenie
+#   - Jolanta Wytrwała (E13): urzędniczka od 2016 r., dwie oceny za sobą, rozmowa oceniająca
+#     odbyta 18.11.2026, arkusz częściowo wypełniony — termin 02.12.2026; 35 notatek
+#   - Michał Rzeczowy (E14): od 2021 r., dwie oceny „na poziomie”, w notatkach wyraźna poprawa
+#     (komunikacja, obsługa interesantów); 42 notatki
+#   - Natalia Bystra (E15): od 2023 r., pierwsza ocena „powyżej”, od połowy 2026 r. spadek
+#     w organizacji pracy i rzetelności; 20 notatek
 # Wartości due_date / criteria_due_date to oczekiwane wyniki reguł (A może je przeliczać
 # i porównywać w testach).
 
@@ -146,6 +152,36 @@ employees:
     position: {title: młodszy referent, org_unit_id: U-RP}
     basis: UMOWA_OKRESLONY
     indefinite_since: null
+    supervisor_id: E05
+
+  - id: E13
+    first_name: Jolanta
+    last_name: Wytrwała
+    email: jolanta.wytrwala@przyklady.example
+    position: {title: starszy specjalista ds. weryfikacji przekładów, org_unit_id: U-RP}
+    basis: MIANOWANIE
+    indefinite_since: 2016-04-04
+    appointed_year: 2016
+    grade: 3
+    grade_granted_on: 2023-01-02
+    supervisor_id: E05
+
+  - id: E14
+    first_name: Michał
+    last_name: Rzeczowy
+    email: michal.rzeczowy@przyklady.example
+    position: {title: specjalista ds. przekładów, org_unit_id: U-RP}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2021-02-15
+    supervisor_id: E05
+
+  - id: E15
+    first_name: Natalia
+    last_name: Bystra
+    email: natalia.bystra@przyklady.example
+    position: {title: referendarz, org_unit_id: U-RP}
+    basis: UMOWA_NIEOKRESLONY
+    indefinite_since: 2023-05-08
     supervisor_id: E05
 
 absences:
@@ -390,6 +426,151 @@ evaluations:
     period_from: 2025-06-20
     due_date: 2027-06-02
 
+  # --- Jolanta: dwie oceny „powyżej”, bieżąca w trakcie sporządzania ------------------
+  - id: EV-E13-2022
+    employee_id: E13
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [MYSLENIE_ANALITYCZNE]
+    criteria_set_on: 2020-12-07
+    period_from: 2020-12-07
+    due_date: 2022-12-01
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 9, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 5, MYSLENIE_ANALITYCZNE: 7}
+      mean_numerator: 7
+      mean_denominator: 1
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2022-12-01
+      acknowledged_on: 2022-12-02
+      promotion_requested: true    # stopień 3 przyznany 02.01.2023
+    form:
+      interview_date: 2022-11-24
+      justification: Oceniana wyróżnia się rzetelnością — w okresie oceny nie miała zwrotów tłumaczeń od weryfikatorów. Dobrze wykorzystuje wiedzę z zakresu prawa UE. Komunikacja na poziomie oczekiwań; zdarzało się, że o problemach informowała dopiero zapytana.
+      iprz: Szkolenie z prowadzenia krótkich prezentacji na odprawach; udział w pracach nad glosariuszem urzędu.
+
+  - id: EV-E13-2024
+    employee_id: E13
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [MYSLENIE_ANALITYCZNE]
+    criteria_set_on: 2022-12-12
+    period_from: 2022-12-12
+    due_date: 2024-12-02            # 01.12.2024 (niedziela) → 02.12.2024
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 7, ORGANIZACJA_PRACY: 5, WSPOLPRACA: 7, KOMUNIKACJA: 5, MYSLENIE_ANALITYCZNE: 7}
+      mean_numerator: 19
+      mean_denominator: 3
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2024-12-02
+      acknowledged_on: 2024-12-03
+      promotion_requested: false
+    form:
+      interview_date: 2024-11-27
+      justification: Wysoka jakość weryfikacji i samodzielność przy trudnych tekstach prawniczych. Przy kilku równoległych zleceniach zdarzało się gubienie priorytetów. Komunikacja poprawna, do rozwinięcia — informowanie zespołu o ryzykach z wyprzedzeniem.
+      iprz: Warsztaty z planowania pracy przy wielu zleceniach; mentoring dla nowych osób w referacie.
+
+  - id: EV-E13-2026
+    employee_id: E13
+    evaluator_id: E05
+    sheet: C
+    state: INTERVIEW_HELD
+    additional: [MYSLENIE_ANALITYCZNE]
+    criteria_set_on: 2024-12-09
+    period_from: 2024-12-09
+    due_date: 2026-12-02            # 24 mies. od poprzedniej oceny (02.12.2024)
+    form:                           # rozmowa odbyta, arkusz w wersji roboczej
+      interview_date: 2026-11-18
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 9, RZETELNOSC: 9, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7}
+      justification: Oceniana utrzymuje bardzo wysoką jakość weryfikacji przekładów i chętnie dzieli się wiedzą z zespołem (szkolenie z narzędzia CAT, aktualizacja glosariusza).
+
+  # --- Michał: dwie oceny „na poziomie”, bieżący okres z wyraźną poprawą ----------------
+  - id: EV-E14-2023
+    employee_id: E14
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [ORIENTACJA_NA_KLIENTA]
+    criteria_set_on: 2021-03-01
+    period_from: 2021-03-01
+    due_date: 2023-02-15            # 24 mies. od zatrudnienia na czas nieokreślony
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 5, RZETELNOSC: 5, ORGANIZACJA_PRACY: 5, WSPOLPRACA: 5, KOMUNIKACJA: 3, ORIENTACJA_NA_KLIENTA: 5}
+      mean_numerator: 14
+      mean_denominator: 3
+      level: NA_POZIOMIE
+      outcome: POZYTYWNA
+      assessed_on: 2023-02-15
+      acknowledged_on: 2023-02-16
+
+  - id: EV-E14-2025
+    employee_id: E14
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [ORIENTACJA_NA_KLIENTA, KREATYWNOSC]
+    criteria_set_on: 2023-02-27
+    period_from: 2023-02-27
+    due_date: 2025-02-17            # 15.02.2025 (sobota) → 17.02.2025
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 5, ORGANIZACJA_PRACY: 5, WSPOLPRACA: 7, KOMUNIKACJA: 5, ORIENTACJA_NA_KLIENTA: 7, KREATYWNOSC: 5}
+      mean_numerator: 41
+      mean_denominator: 7
+      level: NA_POZIOMIE
+      outcome: POZYTYWNA
+      assessed_on: 2025-02-17
+      acknowledged_on: 2025-02-18
+    form:
+      interview_date: 2025-02-10
+      justification: Widoczna poprawa w obsłudze interesantów i współpracy z weryfikatorami. Komunikacja nadal do rozwinięcia — informacje o opóźnieniach przekazywane zbyt późno.
+      iprz: Szkolenie z komunikacji pisemnej z interesantem; ustalenie stałego punktu w odprawie na status zleceń.
+
+  - id: EV-E14-2027
+    employee_id: E14
+    evaluator_id: E05
+    sheet: C
+    state: OBSERVATION
+    additional: [ORIENTACJA_NA_KLIENTA, KREATYWNOSC]
+    criteria_set_on: 2025-02-24
+    period_from: 2025-02-24
+    due_date: 2027-02-17            # 24 mies. od poprzedniej oceny (17.02.2025)
+
+  # --- Natalia: pierwsza ocena „powyżej”, w bieżącym okresie spadek --------------------
+  - id: EV-E15-2025
+    employee_id: E15
+    evaluator_id: E05
+    sheet: C
+    state: FINAL
+    additional: [ORIENTACJA_NA_KLIENTA]
+    criteria_set_on: 2023-05-22
+    period_from: 2023-05-22
+    due_date: 2025-05-08            # 24 mies. od zatrudnienia na czas nieokreślony
+    result:
+      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 7, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 5, ORIENTACJA_NA_KLIENTA: 7}
+      mean_numerator: 20
+      mean_denominator: 3
+      level: POWYZEJ
+      outcome: POZYTYWNA
+      assessed_on: 2025-05-08
+      acknowledged_on: 2025-05-09
+    form:
+      interview_date: 2025-04-30
+      justification: Bardzo dobry start w referacie — terminowo, starannie, z dobrym kontaktem z interesantami.
+      iprz: Kurs przekładu prawniczego (poziom zaawansowany).
+
+  - id: EV-E15-2027
+    employee_id: E15
+    evaluator_id: E05
+    sheet: C
+    state: OBSERVATION
+    additional: [ORIENTACJA_NA_KLIENTA]
+    criteria_set_on: 2025-05-19
+    period_from: 2025-05-19
+    due_date: 2027-05-10            # 08.05.2027 (sobota) → 10.05.2027
+
 # Notatki przełożonych (przykładowe dane dla modułu B i panelu „Twoje obserwacje”).
 notes:
   - id: N001
@@ -491,3 +672,1070 @@ notes:
     strengths: []
     improvements: []
     ratings: []
+
+  - id: N010
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-01-31
+    created_at: 2023-01-31T10:20:00
+    body: 'Dobrze radzi sobie z jednym zleceniem naraz, przy kilku gubi priorytety.'
+    strengths: ['Skupienie na zadaniu']
+    improvements: ['Ustalanie priorytetów przy wielu zleceniach']
+    ratings: []
+
+  - id: N011
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-03-07
+    created_at: 2023-03-07T13:05:00
+    body: 'Przejęła pilne zlecenie po koledze i domknęła je bez opóźnień.'
+    strengths: ['Niezawodność w pilnych sprawach']
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 9}]
+
+  - id: N012
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-05-05
+    created_at: 2023-05-05T13:05:00
+    body: 'Pomogła koleżance z referatu przy pilnym tłumaczeniu, choć nie było to jej zadanie.'
+    strengths: ['Gotowość do pomocy']
+    improvements: []
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N013
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-08-14
+    created_at: 2023-08-14T13:35:00
+    body: 'Przygotowała zestawienie najczęstszych uwag weryfikatorów — na tej podstawie zmieniliśmy instrukcję.'
+    strengths: ['Wnioski z danych', 'Gotowość do pomocy']
+    improvements: []
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N014
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-09-18
+    created_at: 2023-09-18T11:50:00
+    body: 'Przy rozbieżnych wersjach oryginału ustaliła, która jest wiążąca, i udokumentowała to.'
+    strengths: ['Dociekliwość', 'Dokumentowanie ustaleń', 'Przyjmuje uwagi bez sporu']
+    improvements: ['Kompletne wprowadzanie uwag']
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 7}, {criterion_code: WSPOLPRACA, value: 5}]
+
+  - id: N015
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2023-12-11
+    created_at: 2023-12-11T09:50:00
+    body: 'Zorganizowała wymianę doświadczeń z Wydziałem Tłumaczeń Ustnych.'
+    strengths: ['Budowanie współpracy między komórkami', 'Rzetelne dane']
+    improvements: ['Formułowanie wniosków z zestawień']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: MYSLENIE_ANALITYCZNE, value: 5}]
+
+  - id: N016
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2024-01-12
+    created_at: 2024-01-12T14:35:00
+    body: 'Sama rozplanowała kolejność trzech pilnych zleceń i uprzedziła o konsekwencjach.'
+    strengths: ['Planowanie priorytetów', 'Przejrzystość', 'Rzetelne źródła terminologii']
+    improvements: []
+    ratings: []
+
+  - id: N017
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2024-04-04
+    created_at: 2024-04-04T16:20:00
+    body: 'Podzieliła duże tłumaczenie na etapy i oddawała części do weryfikacji na bieżąco.'
+    strengths: ['Dobre rozbicie pracy na etapy', 'Rzetelne dane', 'Przekazywanie wiedzy']
+    improvements: ['Formułowanie wniosków z zestawień']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: MYSLENIE_ANALITYCZNE, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N018
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2024-06-10
+    created_at: 2024-06-10T12:05:00
+    body: 'Przy rozbieżnych wersjach oryginału ustaliła, która jest wiążąca, i udokumentowała to.'
+    strengths: ['Dociekliwość', 'Dokumentowanie ustaleń', 'Konkretna korespondencja', 'Gotowość do pomocy']
+    improvements: []
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 7}, {criterion_code: KOMUNIKACJA, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N019
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2024-09-02
+    created_at: 2024-09-02T09:50:00
+    body: 'Starannie prowadzi rejestr zleceń — przy kontroli wszystko się zgadzało.'
+    strengths: ['Porządek w dokumentacji', 'Rzetelne dane']
+    improvements: ['Formułowanie wniosków z zestawień']
+    ratings: [{criterion_code: RZETELNOSC, value: 7}, {criterion_code: MYSLENIE_ANALITYCZNE, value: 5}]
+
+  - id: N020
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2024
+    observed_on: 2024-10-29
+    created_at: 2024-10-29T15:05:00
+    body: 'Zestawienie zleceń przygotowane poprawnie, ale bez wniosków, o które prosiłem.'
+    strengths: ['Rzetelne dane']
+    improvements: ['Formułowanie wniosków z zestawień', 'Wcześniejsze planowanie dużych zleceń']
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 5}, {criterion_code: ORGANIZACJA_PRACY, value: 5}]
+
+  - id: N021
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-01-01
+    created_at: 2025-01-01T08:20:00
+    body: 'Zadania wykonane, ale planowanie na ostatnią chwilę — końcówka tygodnia w nerwach.'
+    strengths: []
+    improvements: ['Wcześniejsze planowanie dużych zleceń']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}]
+
+  - id: N022
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-01-10
+    created_at: 2025-01-10T12:35:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi']
+    improvements: []
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N023
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-02-11
+    created_at: 2025-02-11T15:20:00
+    body: 'Korespondencja poprawna, choć zbyt długa — zleceniodawca prosił o skrót.'
+    strengths: ['Kompletność informacji', 'Rzetelne źródła terminologii', 'Dociekliwość']
+    improvements: ['Zwięzłość w korespondencji']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}, {criterion_code: MYSLENIE_ANALITYCZNE, value: 7}]
+
+  - id: N024
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-03-28
+    created_at: 2025-03-28T13:35:00
+    body: 'Terminy dotrzymane, ale kosztem nadgodzin pod koniec miesiąca — warto rozłożyć pracę równiej.'
+    strengths: ['Dotrzymuje terminów', 'Rzetelne źródła terminologii']
+    improvements: ['Równomierne rozkładanie pracy', 'Częstsze informowanie zespołu o postępach']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}, {criterion_code: WSPOLPRACA, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N025
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-04-11
+    created_at: 2025-04-11T13:35:00
+    body: 'Mimo urlopu dwóch osób referat oddał wszystkie zlecenia — dużą część koordynowała.'
+    strengths: ['Odporność na obciążenie', 'Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 9}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N026
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-05-15
+    created_at: 2025-05-15T16:35:00
+    body: 'Na odprawie przedstawiła stan prac rzetelnie, ale bez informacji o ryzykach.'
+    strengths: ['Rzetelny przegląd prac']
+    improvements: ['Mówienie o ryzykach wprost']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N027
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-06-10
+    created_at: 2025-06-10T12:50:00
+    body: 'Sama uprzedziła o możliwym opóźnieniu tydzień wcześniej i zaproponowała rozwiązanie.'
+    strengths: ['Proaktywna informacja o ryzyku']
+    improvements: []
+    ratings: [{criterion_code: KOMUNIKACJA, value: 7}]
+
+  - id: N028
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-07-25
+    created_at: 2025-07-25T15:20:00
+    body: 'Sama rozplanowała kolejność trzech pilnych zleceń i uprzedziła o konsekwencjach.'
+    strengths: ['Planowanie priorytetów', 'Przejrzystość', 'Gotowość do pomocy']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N029
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-08-21
+    created_at: 2025-08-21T16:05:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi']
+    improvements: []
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N030
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-09-22
+    created_at: 2025-09-22T08:35:00
+    body: 'Mimo urlopu dwóch osób referat oddał wszystkie zlecenia — dużą część koordynowała.'
+    strengths: ['Odporność na obciążenie', 'Rzetelne źródła terminologii']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N031
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-10-13
+    created_at: 2025-10-13T15:50:00
+    body: 'Podzieliła duże tłumaczenie na etapy i oddawała części do weryfikacji na bieżąco.'
+    strengths: ['Dobre rozbicie pracy na etapy', 'Otwartość na uwagi']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N032
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-11-05
+    created_at: 2025-11-05T11:20:00
+    body: 'Wyłapała błąd w danych liczbowych oryginału i zgłosiła go do zleceniodawcy.'
+    strengths: ['Dokładność', 'Odpowiedzialność za całość']
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 7}]
+
+  - id: N033
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2025-12-16
+    created_at: 2025-12-16T15:35:00
+    body: 'Jasno przedstawiła na odprawie stan prac nad dużym zleceniem — bez dopytywania.'
+    strengths: ['Klarowny przekaz', 'Planowanie priorytetów']
+    improvements: []
+    ratings: [{criterion_code: KOMUNIKACJA, value: 9}, {criterion_code: ORGANIZACJA_PRACY, value: 7}]
+
+  - id: N034
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-01-07
+    created_at: 2026-01-07T08:50:00
+    body: 'Przygotowała zestawienie najczęstszych uwag weryfikatorów — na tej podstawie zmieniliśmy instrukcję.'
+    strengths: ['Wnioski z danych', 'Konkretna korespondencja']
+    improvements: []
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 7}, {criterion_code: KOMUNIKACJA, value: 7}]
+
+  - id: N035
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-01-27
+    created_at: 2026-01-27T16:35:00
+    body: 'Samodzielnie ukończyła kurs przekładu prawniczego i od razu wykorzystała go przy umowie licencyjnej.'
+    strengths: ['Rozwój własny przełożony na praktykę', 'Dobre rozbicie pracy na etapy']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}, {criterion_code: ORGANIZACJA_PRACY, value: 9}]
+
+  - id: N036
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-03-03
+    created_at: 2026-03-03T12:20:00
+    body: 'Przeprowadziła krótkie szkolenie z narzędzia CAT dla dwóch nowych osób.'
+    strengths: ['Przekazywanie wiedzy', 'Cierpliwość wobec nowych osób']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N037
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-04-02
+    created_at: 2026-04-02T08:50:00
+    body: 'Przekład sprawozdania oddany przed terminem, weryfikator nie miał uwag.'
+    strengths: ['Terminowość', 'Jakość bez poprawek', 'Dobre rozbicie pracy na etapy']
+    improvements: []
+    ratings: []
+
+  - id: N038
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-04-28
+    created_at: 2026-04-28T10:05:00
+    body: 'Przy trudnym tekście technicznym sięgnęła po normy branżowe zamiast zgadywać terminy.'
+    strengths: ['Rzetelne źródła terminologii']
+    improvements: ['Częstsze informowanie zespołu o postępach']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}, {criterion_code: WSPOLPRACA, value: 5}]
+
+  - id: N039
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-05-25
+    created_at: 2026-05-25T10:05:00
+    body: 'Analiza zgłoszonego problemu trafna, ale bez propozycji rozwiązania.'
+    strengths: ['Trafne rozpoznanie problemu', 'Proaktywna informacja o ryzyku']
+    improvements: ['Proponowanie rozwiązań']
+    ratings: [{criterion_code: MYSLENIE_ANALITYCZNE, value: 5}, {criterion_code: KOMUNIKACJA, value: 7}]
+
+  - id: N040
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-07-02
+    created_at: 2026-07-02T15:05:00
+    body: 'Podzieliła duże tłumaczenie na etapy i oddawała części do weryfikacji na bieżąco.'
+    strengths: ['Dobre rozbicie pracy na etapy', 'Budowanie współpracy między komórkami']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N041
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-07-20
+    created_at: 2026-07-20T10:35:00
+    body: 'Sama rozplanowała kolejność trzech pilnych zleceń i uprzedziła o konsekwencjach.'
+    strengths: ['Planowanie priorytetów', 'Przejrzystość']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}]
+
+  - id: N042
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-08-31
+    created_at: 2026-08-31T15:20:00
+    body: 'Przekład sprawozdania oddany przed terminem, weryfikator nie miał uwag.'
+    strengths: ['Terminowość', 'Jakość bez poprawek']
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 9}]
+
+  - id: N043
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-09-28
+    created_at: 2026-09-28T16:05:00
+    body: 'Zaproponowała aktualizację glosariusza referatu po zmianie ustawy.'
+    strengths: ['Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}]
+
+  - id: N044
+    author_id: E05
+    subject_id: E13
+    evaluation_id: EV-E13-2026
+    observed_on: 2026-10-28
+    created_at: 2026-10-28T16:50:00
+    body: 'Maile do zleceniodawców krótkie i konkretne, z jasnym terminem.'
+    strengths: ['Konkretna korespondencja', 'Niezawodność w pilnych sprawach']
+    improvements: []
+    ratings: [{criterion_code: KOMUNIKACJA, value: 7}, {criterion_code: RZETELNOSC, value: 9}]
+
+  - id: N045
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-04-03
+    created_at: 2023-04-03T16:05:00
+    body: 'Zlecenie wykonane poprawnie, choć dopiero po przypomnieniu o terminie.'
+    strengths: ['Dobry kierunek']
+    improvements: ['Samodzielne pilnowanie terminów', 'Elastyczność wobec próśb zleceniodawców', 'Pilnowanie własnych inicjatyw']
+    ratings: [{criterion_code: RZETELNOSC, value: 5}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 3}, {criterion_code: KREATYWNOSC, value: 5}]
+
+  - id: N046
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-05-09
+    created_at: 2023-05-09T15:50:00
+    body: 'Dobrze radzi sobie z jednym zleceniem naraz, przy kilku gubi priorytety.'
+    strengths: ['Skupienie na zadaniu', 'Rozwój własny przełożony na praktykę']
+    improvements: ['Ustalanie priorytetów przy wielu zleceniach']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N047
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-06-14
+    created_at: 2023-06-14T13:20:00
+    body: 'Terminy dotrzymane, ale kosztem nadgodzin pod koniec miesiąca — warto rozłożyć pracę równiej.'
+    strengths: ['Dotrzymuje terminów']
+    improvements: ['Równomierne rozkładanie pracy']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}]
+
+  - id: N048
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-07-17
+    created_at: 2023-07-17T11:05:00
+    body: 'Odpowiedzi poprawne, ale językiem urzędowym trudnym dla interesanta.'
+    strengths: ['Poprawność merytoryczna', 'Terminowość']
+    improvements: ['Prostszy język w kontaktach z interesantami', 'Autokorekta przed oddaniem']
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}, {criterion_code: RZETELNOSC, value: 5}]
+
+  - id: N049
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-09-01
+    created_at: 2023-09-01T14:50:00
+    body: 'Tekst poprawny, ale formatowanie niezgodne z wzorem urzędu — trzeba było poprawiać.'
+    strengths: ['Poprawna treść', 'Prosi o pomoc, gdy trzeba']
+    improvements: ['Stosowanie wzorów dokumentów', 'Wcześniej sygnalizować braki wiedzy']
+    ratings: [{criterion_code: RZETELNOSC, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N050
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-10-23
+    created_at: 2023-10-23T15:35:00
+    body: 'Pomógł koleżance z referatu przy pilnym tłumaczeniu, choć nie było to jego zadanie.'
+    strengths: ['Gotowość do pomocy', 'Terminowość']
+    improvements: ['Autokorekta przed oddaniem', 'Informowanie o opóźnieniach']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: RZETELNOSC, value: 5}, {criterion_code: KOMUNIKACJA, value: 3}]
+
+  - id: N051
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2023-11-30
+    created_at: 2023-11-30T14:20:00
+    body: 'Przy tekście z nowej dziedziny poprosił o konsultację — rozsądnie, ale późno.'
+    strengths: ['Prosi o pomoc, gdy trzeba']
+    improvements: ['Wcześniej sygnalizować braki wiedzy']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N052
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-01-11
+    created_at: 2024-01-11T12:05:00
+    body: 'Przy nowym formacie zleceń zastosował sprawdzone rozwiązanie zamiast szukać lepszego.'
+    strengths: ['Bezpieczne podejście', 'Poprawność merytoryczna']
+    improvements: ['Szukanie usprawnień przy nowych zadaniach', 'Prostszy język w kontaktach z interesantami']
+    ratings: [{criterion_code: KREATYWNOSC, value: 5}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N053
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-02-02
+    created_at: 2024-02-02T14:20:00
+    body: 'Zadania wykonane, ale planowanie na ostatnią chwilę — końcówka tygodnia w nerwach.'
+    strengths: ['Kompletność informacji']
+    improvements: ['Wcześniejsze planowanie dużych zleceń', 'Zwięzłość w korespondencji']
+    ratings: []
+
+  - id: N054
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-03-27
+    created_at: 2024-03-27T10:35:00
+    body: 'Na odprawie nie zgłosił problemu z narzędziem, który blokował pracę od tygodnia.'
+    strengths: ['Poprawność ogólna']
+    improvements: ['Zgłaszanie przeszkód od razu', 'Sprawdzać aktualność glosariusza']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 3}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N055
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-05-20
+    created_at: 2024-05-20T13:35:00
+    body: 'Przygotował dla interesantów listę najczęstszych pytań i odpowiedzi.'
+    strengths: ['Myślenie o odbiorcy', 'Niezawodność w pilnych sprawach', 'Pomysłowość']
+    improvements: []
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}, {criterion_code: RZETELNOSC, value: 7}, {criterion_code: KREATYWNOSC, value: 7}]
+
+  - id: N056
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-06-14
+    created_at: 2024-06-14T09:05:00
+    body: 'Zgłosił pomysł na wspólny słownik z innym wydziałem, ale nie wrócił do tematu.'
+    strengths: ['Dobry kierunek', 'Rzetelny przegląd prac']
+    improvements: ['Pilnowanie własnych inicjatyw', 'Mówienie o ryzykach wprost']
+    ratings: [{criterion_code: KREATYWNOSC, value: 5}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N057
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-08-01
+    created_at: 2024-08-01T13:50:00
+    body: 'Pomysł na usprawnienie dobry, ale bez planu wdrożenia.'
+    strengths: ['Pomysłowość', 'Myślenie o odbiorcy']
+    improvements: ['Doprowadzanie pomysłów do wdrożenia', 'Samodzielne pilnowanie terminów']
+    ratings: [{criterion_code: KREATYWNOSC, value: 5}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}, {criterion_code: RZETELNOSC, value: 5}]
+
+  - id: N058
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-09-23
+    created_at: 2024-09-23T10:05:00
+    body: 'Dobrze radzi sobie z jednym zleceniem naraz, przy kilku gubi priorytety.'
+    strengths: ['Skupienie na zadaniu', 'Poprawność merytoryczna']
+    improvements: ['Ustalanie priorytetów przy wielu zleceniach', 'Prostszy język w kontaktach z interesantami']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N059
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-10-14
+    created_at: 2024-10-14T15:20:00
+    body: 'Współpraca poprawna, choć woli pracować sam i rzadko dzieli się postępami.'
+    strengths: ['Odporność na obciążenie']
+    improvements: ['Częstsze informowanie zespołu o postępach']
+    ratings: [{criterion_code: WSPOLPRACA, value: 5}, {criterion_code: ORGANIZACJA_PRACY, value: 7}]
+
+  - id: N060
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2024-12-23
+    created_at: 2024-12-23T12:50:00
+    body: 'Przy trudnym tekście technicznym sięgnął po normy branżowe zamiast zgadywać terminy.'
+    strengths: ['Rzetelne źródła terminologii', 'Wykonał swoją część dobrze']
+    improvements: ['Samodzielne ustalanie podziału pracy']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}, {criterion_code: WSPOLPRACA, value: 5}]
+
+  - id: N061
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2025
+    observed_on: 2025-01-30
+    created_at: 2025-01-30T16:05:00
+    body: 'Terminy dotrzymane, ale kosztem nadgodzin pod koniec miesiąca — warto rozłożyć pracę równiej.'
+    strengths: ['Dotrzymuje terminów']
+    improvements: ['Równomierne rozkładanie pracy']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}]
+
+  - id: N062
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-03-17
+    created_at: 2025-03-17T11:05:00
+    body: 'Przy wspólnym zleceniu podział zadań ustalony dopiero po mojej interwencji.'
+    strengths: ['Wykonał swoją część dobrze', 'Rzetelny przegląd prac']
+    improvements: ['Samodzielne ustalanie podziału pracy', 'Mówienie o ryzykach wprost']
+    ratings: [{criterion_code: WSPOLPRACA, value: 5}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N063
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-04-08
+    created_at: 2025-04-08T10:50:00
+    body: 'Wymyślił prosty szablon zgłaszania uwag do weryfikacji, który przyjął cały referat.'
+    strengths: ['Praktyczne usprawnienia']
+    improvements: ['Uzupełniać bazę terminologiczną']
+    ratings: [{criterion_code: KREATYWNOSC, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N064
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-05-06
+    created_at: 2025-05-06T10:50:00
+    body: 'Podzielił duże tłumaczenie na etapy i oddawał części do weryfikacji na bieżąco.'
+    strengths: ['Dobre rozbicie pracy na etapy', 'Własna inicjatywa']
+    improvements: ['Częstsze informowanie zespołu o postępach']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WSPOLPRACA, value: 5}, {criterion_code: KREATYWNOSC, value: 7}]
+
+  - id: N065
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-05-20
+    created_at: 2025-05-20T15:35:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi']
+    improvements: []
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N066
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-06-30
+    created_at: 2025-06-30T08:35:00
+    body: 'Zaproponował aktualizację glosariusza referatu po zmianie ustawy.'
+    strengths: ['Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N067
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-07-21
+    created_at: 2025-07-21T09:50:00
+    body: 'Sam zaproponował zleceniodawcy wersję skróconą tekstu, która lepiej odpowiadała potrzebie.'
+    strengths: ['Rozumienie potrzeb zleceniodawcy']
+    improvements: []
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}]
+
+  - id: N068
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-08-14
+    created_at: 2025-08-14T12:35:00
+    body: 'Przy nowym formacie zleceń zastosował sprawdzone rozwiązanie zamiast szukać lepszego.'
+    strengths: ['Bezpieczne podejście', 'Dzielenie się wiedzą']
+    improvements: ['Szukanie usprawnień przy nowych zadaniach']
+    ratings: [{criterion_code: KREATYWNOSC, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N069
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-08-29
+    created_at: 2025-08-29T12:35:00
+    body: 'Informacje przekazuje, ale zwykle dopiero zapytany.'
+    strengths: ['Poprawna treść']
+    improvements: ['Samodzielne informowanie o postępach', 'Stosowanie wzorów dokumentów']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 5}, {criterion_code: RZETELNOSC, value: 5}]
+
+  - id: N070
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-10-08
+    created_at: 2025-10-08T10:50:00
+    body: 'Sam rozplanował kolejność trzech pilnych zleceń i uprzedził o konsekwencjach.'
+    strengths: ['Planowanie priorytetów', 'Przejrzystość', 'Gotowość do pomocy']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N071
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-10-20
+    created_at: 2025-10-20T08:20:00
+    body: 'Zaproponował makro do automatycznego sprawdzania numeracji przepisów — oszczędza zespołowi czas.'
+    strengths: ['Własna inicjatywa', 'Usprawnienie pracy zespołu', 'Poprawność merytoryczna']
+    improvements: ['Prostszy język w kontaktach z interesantami']
+    ratings: [{criterion_code: KREATYWNOSC, value: 7}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N072
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-11-25
+    created_at: 2025-11-25T13:35:00
+    body: 'Zadania wykonane, ale planowanie na ostatnią chwilę — końcówka tygodnia w nerwach.'
+    strengths: []
+    improvements: ['Wcześniejsze planowanie dużych zleceń']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 5}]
+
+  - id: N073
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2025-12-16
+    created_at: 2025-12-16T10:20:00
+    body: 'Zorganizował wymianę doświadczeń z Wydziałem Tłumaczeń Ustnych.'
+    strengths: ['Budowanie współpracy między komórkami', 'Poprawność merytoryczna']
+    improvements: ['Prostszy język w kontaktach z interesantami']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N074
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-01-05
+    created_at: 2026-01-05T13:05:00
+    body: 'Sam uprzedził o możliwym opóźnieniu tydzień wcześniej i zaproponował rozwiązanie.'
+    strengths: ['Proaktywna informacja o ryzyku', 'Myślenie o odbiorcy']
+    improvements: []
+    ratings: [{criterion_code: KOMUNIKACJA, value: 7}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}]
+
+  - id: N075
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-01-26
+    created_at: 2026-01-26T13:20:00
+    body: 'Pomógł koleżance z referatu przy pilnym tłumaczeniu, choć nie było to jego zadanie.'
+    strengths: ['Gotowość do pomocy']
+    improvements: []
+    ratings: []
+
+  - id: N076
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-03-04
+    created_at: 2026-03-04T15:05:00
+    body: 'Zgłosił pomysł na wspólny słownik z innym wydziałem, ale nie wrócił do tematu.'
+    strengths: ['Dobry kierunek']
+    improvements: ['Pilnowanie własnych inicjatyw']
+    ratings: []
+
+  - id: N077
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-03-16
+    created_at: 2026-03-16T12:50:00
+    body: 'Przeprowadził krótkie szkolenie z narzędzia CAT dla dwóch nowych osób.'
+    strengths: ['Przekazywanie wiedzy', 'Cierpliwość wobec nowych osób']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}]
+
+  - id: N078
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-04-27
+    created_at: 2026-04-27T09:20:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi', 'Poprawność merytoryczna']
+    improvements: ['Prostszy język w kontaktach z interesantami']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 5}]
+
+  - id: N079
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-05-18
+    created_at: 2026-05-18T16:50:00
+    body: 'Mimo urlopu dwóch osób referat oddał wszystkie zlecenia — dużą część koordynował.'
+    strengths: ['Odporność na obciążenie', 'Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 9}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N080
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-06-01
+    created_at: 2026-06-01T09:05:00
+    body: 'Samodzielnie ukończył kurs przekładu prawniczego i od razu wykorzystał go przy umowie licencyjnej.'
+    strengths: ['Rozwój własny przełożony na praktykę', 'Praktyczne usprawnienia', 'Cierpliwość']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}, {criterion_code: KREATYWNOSC, value: 7}, {criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}]
+
+  - id: N081
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-06-29
+    created_at: 2026-06-29T13:20:00
+    body: 'Wyjaśnił zespołowi różnice w terminologii nowej dyrektywy UE — wszyscy korzystają z notatki.'
+    strengths: ['Dzielenie się wiedzą', 'Dobra znajomość przepisów UE', 'Pomysłowość']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 9}, {criterion_code: KREATYWNOSC, value: 7}]
+
+  - id: N082
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-07-24
+    created_at: 2026-07-24T13:20:00
+    body: 'Terminy dotrzymane, ale kosztem nadgodzin pod koniec miesiąca — warto rozłożyć pracę równiej.'
+    strengths: ['Dotrzymuje terminów', 'Otwartość na uwagi']
+    improvements: ['Równomierne rozkładanie pracy']
+    ratings: []
+
+  - id: N083
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-08-24
+    created_at: 2026-08-24T14:05:00
+    body: 'Podzielił duże tłumaczenie na etapy i oddawał części do weryfikacji na bieżąco.'
+    strengths: ['Dobre rozbicie pracy na etapy']
+    improvements: ['Samodzielne pilnowanie terminów']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: RZETELNOSC, value: 5}]
+
+  - id: N084
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-09-21
+    created_at: 2026-09-21T16:35:00
+    body: 'Zaproponował aktualizację glosariusza referatu po zmianie ustawy.'
+    strengths: ['Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N085
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-10-09
+    created_at: 2026-10-09T11:35:00
+    body: 'Zaproponował, żeby uwagi weryfikatorów zbierać w jednej tabeli — szybciej widać powtarzające się błędy.'
+    strengths: ['Pomysłowość', 'Myślenie o zespole', 'Budowanie współpracy między komórkami']
+    improvements: []
+    ratings: [{criterion_code: KREATYWNOSC, value: 7}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N086
+    author_id: E05
+    subject_id: E14
+    evaluation_id: EV-E14-2027
+    observed_on: 2026-11-04
+    created_at: 2026-11-04T12:35:00
+    body: 'Korespondencja poprawna, choć zbyt długa — zleceniodawca prosił o skrót.'
+    strengths: ['Kompletność informacji', 'Gotowość do pomocy']
+    improvements: ['Zwięzłość w korespondencji']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 5}, {criterion_code: WSPOLPRACA, value: 7}]
+
+  - id: N087
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2023-07-10
+    created_at: 2023-07-10T13:05:00
+    body: 'Pomogła koleżance z referatu przy pilnym tłumaczeniu, choć nie było to jej zadanie.'
+    strengths: ['Gotowość do pomocy', 'Rzetelny przegląd prac']
+    improvements: ['Mówienie o ryzykach wprost']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N088
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2023-09-18
+    created_at: 2023-09-18T09:35:00
+    body: 'Zna procedury referatu, ale przy nietypowym zleceniu nie sprawdziła aktualnych wytycznych.'
+    strengths: ['Znajomość procedur', 'Otwartość na uwagi', 'Dobre rozbicie pracy na etapy']
+    improvements: ['Sprawdzanie wytycznych przy nietypowych sprawach']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}, {criterion_code: WSPOLPRACA, value: 7}, {criterion_code: ORGANIZACJA_PRACY, value: 9}]
+
+  - id: N089
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2024-03-04
+    created_at: 2024-03-04T10:20:00
+    body: 'Zaproponowała aktualizację glosariusza referatu po zmianie ustawy.'
+    strengths: ['Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: []
+
+  - id: N090
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2024-05-28
+    created_at: 2024-05-28T12:20:00
+    body: 'Przejęła pilne zlecenie po koledze i domknęła je bez opóźnień.'
+    strengths: ['Niezawodność w pilnych sprawach']
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 7}]
+
+  - id: N091
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2024-07-25
+    created_at: 2024-07-25T15:20:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi', 'Poprawna treść']
+    improvements: ['Stosowanie wzorów dokumentów']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: RZETELNOSC, value: 5}]
+
+  - id: N092
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2024-11-21
+    created_at: 2024-11-21T14:35:00
+    body: 'Starannie prowadzi rejestr zleceń — przy kontroli wszystko się zgadzało.'
+    strengths: ['Porządek w dokumentacji']
+    improvements: []
+    ratings: [{criterion_code: RZETELNOSC, value: 7}]
+
+  - id: N093
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2025
+    observed_on: 2025-03-10
+    created_at: 2025-03-10T15:50:00
+    body: 'Przy tekście z nowej dziedziny poprosiła o konsultację — rozsądnie, ale późno.'
+    strengths: ['Prosi o pomoc, gdy trzeba']
+    improvements: ['Wcześniej sygnalizować braki wiedzy']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N094
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2025-06-09
+    created_at: 2025-06-09T09:50:00
+    body: 'Sama zaproponowała zleceniodawcy wersję skróconą tekstu, która lepiej odpowiadała potrzebie.'
+    strengths: ['Rozumienie potrzeb zleceniodawcy', 'Planowanie priorytetów', 'Niezawodność w pilnych sprawach']
+    improvements: []
+    ratings: []
+
+  - id: N095
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2025-07-30
+    created_at: 2025-07-30T09:05:00
+    body: 'Samodzielnie ukończyła kurs przekładu prawniczego i od razu wykorzystała go przy umowie licencyjnej.'
+    strengths: ['Rozwój własny przełożony na praktykę']
+    improvements: ['Samodzielne informowanie o postępach']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  - id: N096
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2025-08-18
+    created_at: 2025-08-18T14:20:00
+    body: 'Sama rozplanowała kolejność trzech pilnych zleceń i uprzedziła o konsekwencjach.'
+    strengths: ['Planowanie priorytetów', 'Przejrzystość', 'Rzetelny przegląd prac', 'Przekazywanie wiedzy']
+    improvements: ['Mówienie o ryzykach wprost']
+    ratings: [{criterion_code: ORGANIZACJA_PRACY, value: 9}, {criterion_code: KOMUNIKACJA, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N097
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2025-10-27
+    created_at: 2025-10-27T09:50:00
+    body: 'Przygotowała dla interesantów listę najczęstszych pytań i odpowiedzi.'
+    strengths: ['Myślenie o odbiorcy']
+    improvements: []
+    ratings: []
+
+  - id: N098
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2025-12-08
+    created_at: 2025-12-08T09:50:00
+    body: 'Maile do zleceniodawców krótkie i konkretne, z jasnym terminem.'
+    strengths: ['Konkretna korespondencja', 'Śledzi zmiany w przepisach']
+    improvements: []
+    ratings: [{criterion_code: KOMUNIKACJA, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N099
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-01-05
+    created_at: 2026-01-05T13:35:00
+    body: 'Zorganizowała wymianę doświadczeń z Wydziałem Tłumaczeń Ustnych.'
+    strengths: ['Budowanie współpracy między komórkami', 'Klarowny przekaz', 'Poprawność ogólna']
+    improvements: ['Sprawdzać aktualność glosariusza']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: KOMUNIKACJA, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N100
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-02-05
+    created_at: 2026-02-05T15:05:00
+    body: 'Pomogła koleżance z referatu przy pilnym tłumaczeniu, choć nie było to jej zadanie.'
+    strengths: ['Gotowość do pomocy']
+    improvements: ['Samodzielne pilnowanie terminów']
+    ratings: []
+
+  - id: N101
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-03-16
+    created_at: 2026-03-16T09:50:00
+    body: 'Spokojnie wyjaśniła interesantowi procedurę uwierzytelnienia tłumaczenia — interesant podziękował mailowo.'
+    strengths: ['Cierpliwość', 'Jasne wyjaśnienie procedury', 'Dobre rozbicie pracy na etapy', 'Prosi o pomoc, gdy trzeba']
+    improvements: ['Wcześniej sygnalizować braki wiedzy']
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}, {criterion_code: ORGANIZACJA_PRACY, value: 7}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N102
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-05-04
+    created_at: 2026-05-04T11:50:00
+    body: 'Przygotowała dla interesantów listę najczęstszych pytań i odpowiedzi.'
+    strengths: ['Myślenie o odbiorcy']
+    improvements: []
+    ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 7}]
+
+  - id: N103
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-06-04
+    created_at: 2026-06-04T12:50:00
+    body: 'Informacje przekazuje, ale zwykle dopiero zapytana.'
+    strengths: ['Rzetelne źródła terminologii']
+    improvements: ['Samodzielne informowanie o postępach']
+    ratings: [{criterion_code: KOMUNIKACJA, value: 5}, {criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 7}]
+
+  - id: N104
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-08-13
+    created_at: 2026-08-13T14:05:00
+    body: 'Tłumaczenie poprawne, ale część terminów wzięta ze starego glosariusza.'
+    strengths: ['Poprawność ogólna']
+    improvements: ['Sprawdzać aktualność glosariusza']
+    ratings: [{criterion_code: WYKORZYSTYWANIE_WIEDZY, value: 5}]
+
+  - id: N105
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-09-15
+    created_at: 2026-09-15T11:05:00
+    body: 'Zadania wykonane, ale planowanie na ostatnią chwilę — końcówka tygodnia w nerwach.'
+    strengths: ['Budowanie współpracy między komórkami']
+    improvements: ['Wcześniejsze planowanie dużych zleceń']
+    ratings: []
+
+  - id: N106
+    author_id: E05
+    subject_id: E15
+    evaluation_id: EV-E15-2027
+    observed_on: 2026-10-07
+    created_at: 2026-10-07T11:20:00
+    body: 'Dobrze współpracuje z weryfikatorami — uwagi przyjmuje rzeczowo i szybko wprowadza.'
+    strengths: ['Otwartość na uwagi', 'Kompletność informacji']
+    improvements: ['Zwięzłość w korespondencji']
+    ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: KOMUNIKACJA, value: 5}]

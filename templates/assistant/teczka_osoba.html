@@ -83,6 +83,7 @@
           <option value="">wszystkie notatki</option>
           <option value="zalety" {% if filters.rodzaj == "zalety" %}selected{% endif %}>z zaletami</option>
           <option value="obszary" {% if filters.rodzaj == "obszary" %}selected{% endif %}>z obszarami do poprawy</option>
+          <option value="oceny" {% if filters.rodzaj == "oceny" %}selected{% endif %}>oceny okresowe</option>
         </select>
       </div>
       <div>
@@ -100,17 +101,35 @@
       </div>
       <div class="t-filter-btn"><button type="submit" class="secondary">Filtruj</button></div>
     </form>
-    <p class="muted small">Pokazano {{ n_shown }} z {{ n_total }} notatek.</p>
+    <p class="muted small">Pokazano {{ n_shown }} z {{ n_total }} notatek{% if n_evaluations %} i {{ n_evaluations }} {{ "ocenę okresową" if n_evaluations == 1 else "oceny okresowe" if n_evaluations < 5 else "ocen okresowych" }}{% endif %}.</p>
 
     {% for label, items in groups %}
       <h3 class="t-month">{{ label }}</h3>
       <ol class="t-timeline">
       {% for item in items %}
+        {% if item.evaluation %}
+        {% set ev = item.evaluation %}
+        <li class="t-note t-eval" id="{{ ev.id }}">
+          <div class="t-note-meta">
+            <strong>{{ ev.result.assessed_on | pl_date }}</strong>
+            <span class="badge">Ocena okresowa</span>
+            <span class="badge {{ 'ok' if ev.result.outcome == 'POZYTYWNA' else 'danger' }}">{{ ev.result.outcome | lower }}</span>
+            <span class="t-edit small"><a href="/core/oceny/{{ ev.id }}">Zobacz arkusz</a></span>
+          </div>
+          <p class="t-body"><strong>{{ level_labels[ev.result.level] | capitalize }}</strong>
+            · średnia {{ ("%.2f" | format(ev.result.mean_numerator / ev.result.mean_denominator)) | replace(".", ",") }}
+            <span class="muted small">· okres {{ ev.period_from | pl_date }} – {{ ev.result.assessed_on | pl_date }} · arkusz {{ ev.sheet }}</span></p>
+          <div class="t-chips">
+            {% for code, value in ev.result.partial_points.items() %}
+              <span class="t-chip" title="{{ point_labels[value] }}">{{ criterion_name(code) }} <strong>{{ value }}</strong></span>
+            {% endfor %}
+          </div>
+        </li>
+        {% else %}
         {% set n = item.note %}
         <li class="t-note" id="{{ n.id }}">
           <div class="t-note-meta">
             <strong>{{ n.observed_on | pl_date }}</strong>
-            {% if n.source == "VOICE" %}<span class="badge">głosowa</span>{% endif %}
             {% if n.version > 1 %}<span class="badge">wersja {{ n.version }}</span>{% endif %}
             {% if evaluation and n.evaluation_id and n.evaluation_id != evaluation.id %}<span class="badge secondary-badge">poprzedni cykl</span>{% endif %}
             <span class="t-edit small">
@@ -155,6 +174,7 @@
             </details>
           {% endif %}
         </li>
+        {% endif %}
       {% endfor %}
       </ol>
     {% else %}
