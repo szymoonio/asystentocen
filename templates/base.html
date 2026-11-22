@@ -52,6 +52,16 @@
   <main class="page" id="tresc">
     {% block content %}{% endblock %}
   </main>
+  <script>
+  // Zapamiętujemy zwinięcie sekcji (details.fold z id) — tylko wygoda w tej przeglądarce.
+  (() => {
+    const key = (d) => "fold:" + location.pathname + ":" + d.id;
+    document.querySelectorAll("details.fold[id]").forEach((d) => {
+      try { const v = localStorage.getItem(key(d)); if (v !== null) d.open = v === "1"; } catch (e) {}
+      d.addEventListener("toggle", () => { try { localStorage.setItem(key(d), d.open ? "1" : "0"); } catch (e) {} });
+    });
+  })();
+  </script>
   <footer class="footer muted small"><div class="wrap">Dziś: {{ today | pl_date }} · prototyp, dane fikcyjne</div></footer>
 </body>
 </html>

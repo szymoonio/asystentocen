@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
 
+{% import "core/_notatki.html" as nt %}
 {% macro pts_label(p) %}{{ p }} {{ "punkt" if p == 1 else ("punkty" if p == 3 else "punktów") }}{% endmacro %}
 
 {% block content %}
@@ -49,6 +50,19 @@
     </div>
   {% endif %}
 </section>
+{% endif %}
+
+{% if notes_box %}
+<details class="card fold" id="asystent-podsumowanie" open>
+  <summary>Asystent HR: podsumowanie notatek <span class="fold-meta">{{ notes_box.count }} {{ "notatka" if notes_box.count == 1 else ("notatki" if notes_box.count % 10 in [2,3,4] and notes_box.count % 100 not in [12,13,14] else "notatek") }} z tego okresu</span></summary>
+  <div class="hr-summary" data-fragment="{{ notes_box.summary_url }}">
+    <p class="muted small">Podsumowanie asystenta — <a href="{{ notes_box.summary_url }}">otwórz</a></p>
+  </div>
+  <details class="more">
+    <summary>Z Twoich notatek: co poszło dobrze, co do poprawy</summary>
+    {{ nt.pros_cons(notes_box.pros, notes_box.cons, notes_box.teczka) }}
+  </details>
+</details>
 {% endif %}
 
 {# ============================ CZĘŚĆ I ============================ #}
@@ -184,17 +198,11 @@
       </div>
 
       <label for="justification">Uzasadnienie przyznanej oceny <span class="muted small" id="just-hint">(obowiązkowe przy ocenie negatywnej)</span></label>
-      {% for d in drafts.get("UZASADNIENIE", []) %}
-        <div class="draft"><div class="small muted">Projekt asystenta{% if d.citations %} · na podstawie {{ d.citations|length }} notatek{% endif %}</div>
-          <p>{{ d.text }}</p><button type="button" class="secondary insert-draft" data-target="justification" data-text="{{ d.text }}">Wstaw do pola</button></div>
-      {% endfor %}
+      {{ nt.drafts_box(drafts.get("UZASADNIENIE", []), "justification") }}
       <textarea id="justification" name="justification" rows="6">{{ form.justification or "" }}</textarea>
 
       <label for="iprz">Wnioski dotyczące indywidualnego programu rozwoju zawodowego <span class="muted small">(obowiązkowe)</span></label>
-      {% for d in drafts.get("WNIOSKI_IPRZ", []) %}
-        <div class="draft"><div class="small muted">Projekt asystenta{% if d.citations %} · na podstawie {{ d.citations|length }} notatek{% endif %}</div>
-          <p>{{ d.text }}</p><button type="button" class="secondary insert-draft" data-target="iprz" data-text="{{ d.text }}">Wstaw do pola</button></div>
-      {% endfor %}
+      {{ nt.drafts_box(drafts.get("WNIOSKI_IPRZ", []), "iprz") }}
       <textarea id="iprz" name="iprz" rows="5">{{ form.iprz or "" }}</textarea>
 
       {% if urzednik %}
@@ -233,9 +241,7 @@
           <p id="grade9" class="alert warn" style="display:none">Ocenianemu nie można przyznać kolejnego stopnia służbowego. Oceniany posiada już najwyższy możliwy stopień służbowy.</p>
           <p class="small">Wnioskuję o przyznanie <b id="next-grade">{{ next_grade or "—" }}</b> stopnia służbowego.</p>
           <label for="p3m">Umotywowanie wniosku</label>
-          {% for d in drafts.get("UMOTYWOWANIE_WNIOSKU", []) %}
-            <div class="draft"><p>{{ d.text }}</p><button type="button" class="secondary insert-draft" data-target="p3m" data-text="{{ d.text }}">Wstaw do pola</button></div>
-          {% endfor %}
+          {{ nt.drafts_box(drafts.get("UMOTYWOWANIE_WNIOSKU", []), "p3m") }}
           <textarea id="p3m" name="p3_motivation" rows="4">{{ p3.motivation or "" }}</textarea>
         </fieldset>
       {% endif %}
@@ -456,6 +462,18 @@
     const g = () => { const v = +gr.value; document.getElementById("grade9").style.display = v >= 9 ? "" : "none"; document.getElementById("next-grade").textContent = ord[v] || "—"; };
     gr.addEventListener("change", g); g();
   }
+
+  // Podsumowanie asystenta (moduł B) — dociągane jako fragment; bez JS zostaje link „otwórz”.
+  document.querySelectorAll("[data-fragment]").forEach(async (box) => {
+    try {
+      const res = await fetch(box.dataset.fragment, {headers: {Accept: "text/html"}});
+      if (!res.ok) return;
+      box.innerHTML = await res.text();
+      box.querySelectorAll(".a-generate").forEach((f) => f.addEventListener("submit", () => {
+        f.querySelector("button").disabled = true; const w = f.querySelector(".a-wait"); if (w) w.hidden = false;
+      }));
+    } catch (e) { /* zostaje link */ }
+  });
 
   document.querySelectorAll(".insert-draft").forEach(b => b.addEventListener("click", () => {
     const t = document.getElementById(b.dataset.target);

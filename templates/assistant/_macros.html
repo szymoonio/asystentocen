@@ -32,3 +32,33 @@
     {% endfor %}
   </div>
 {% endmacro %}
+
+{# Zalety | obszary do poprawy z notatek: dwie kolumny, 5 najczęstszych, reszta zwinięta. #}
+{% macro pros_cons(pros, cons, link="", visible=5) %}
+  <div class="pros-cons">
+    {% for title, items, cls in [("Co poszło dobrze", pros, "pc-pros"), ("Do poprawy", cons, "pc-cons")] %}
+      <div class="pc-col {{ cls }}">
+        <h3>{{ title }} <span class="muted small">({{ items | length }})</span></h3>
+        {% if items %}
+          <ul class="pc-list">
+            {% for p in items[:visible] %}{{ pc_item(p, link) }}{% endfor %}
+          </ul>
+          {% if items | length > visible %}
+            <details class="more">
+              <summary>Pokaż wszystkie ({{ items | length }})</summary>
+              <ul class="pc-list">{% for p in items[visible:] %}{{ pc_item(p, link) }}{% endfor %}</ul>
+            </details>
+          {% endif %}
+        {% else %}
+          <p class="muted small">Brak wpisów.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro pc_item(p, link) %}
+  <li><span class="pc-text">{% if link %}<a href="{{ link }}#{{ p.note_id }}">{{ p.text }}</a>{% else %}{{ p.text }}{% endif %}</span>
+    {% if p.count > 1 %}<span class="pc-count" title="w {{ p.count }} notatkach">×{{ p.count }}</span>{% endif %}
+    <span class="pc-date muted">{{ p.last | pl_date }}</span></li>
+{% endmacro %}

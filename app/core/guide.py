@@ -19,6 +19,7 @@ from app.core.rules.scoring import level_for
 # Adresy stron modułu B, do których prowadzimy (poza kontraktem — trzymamy je w jednym miejscu).
 B_NEW_NOTE = "{teczka}/nowa"
 B_HR_PREP = "/asystent/hr/przygotowanie?rodzaj={kind}&osoba={employee_id}"
+B_NOTES_SUMMARY = "/asystent/analiza/fragment?osoba={employee_id}&wroc={back}"  # podsumowanie LLM do osadzenia
 
 
 def new_note_url(c, employee_id: str) -> str:
@@ -27,6 +28,37 @@ def new_note_url(c, employee_id: str) -> str:
 
 def hr_prep_url(kind: str, employee_id: str) -> str:
     return B_HR_PREP.format(kind=kind, employee_id=employee_id)
+
+
+def notes_summary_url(employee_id: str, back: str) -> str:
+    from urllib.parse import quote
+
+    return B_NOTES_SUMMARY.format(employee_id=employee_id, back=quote(back, safe=""))
+
+
+@dataclass(frozen=True)
+class NotePoint:
+    """Zaleta albo obszar do poprawy z notatek, zgrupowany po treści (×N = w ilu notatkach)."""
+
+    text: str
+    count: int
+    last: date
+    note_id: str
+
+
+def grouped_points(notes: Sequence[Note], attr: str) -> list[NotePoint]:
+    groups: dict[str, list] = {}
+    for n in notes:
+        for text in getattr(n, attr):
+            key = " ".join(text.split()).casefold()
+            if not key:
+                continue
+            g = groups.setdefault(key, [text.strip(), 0, n.observed_on, n.id])
+            g[1] += 1
+            if n.observed_on >= g[2]:
+                g[0], g[2], g[3] = text.strip(), n.observed_on, n.id
+    points = [NotePoint(t, c, d, nid) for t, c, d, nid in groups.values()]
+    return sorted(points, key=lambda p: (-p.count, -p.last.toordinal(), p.text))
 
 
 # --- liczebniki i czas ------------------------------------------------------------------------
@@ -291,8 +323,8 @@ class Prep:
     notes_count: int
     last_note: str
     criteria: list[tuple[CriterionRef, dict[str, Any] | None]]
-    strengths: list[tuple[date, str]]
-    improvements: list[tuple[date, str]]
+    strengths: list[NotePoint]
+    improvements: list[NotePoint]
     topics: list[str]
     outline: list[tuple[str, str, list[str]]]
 
@@ -316,8 +348,8 @@ def prepare(
 ) -> Prep:
     notes = sorted(notes, key=lambda n: n.observed_on, reverse=True)
     views = [(cr, stats_view(stats[cr.code]) if cr.code in stats else None) for cr in criteria]
-    strengths = [(n.observed_on, s) for n in notes for s in n.strengths if s.strip()][:6]
-    improvements = [(n.observed_on, s) for n in notes for s in n.improvements if s.strip()][:6]
+    strengths = grouped_points(notes, "strengths")
+    improvements = grouped_points(notes, "improvements")
 
     topics: list[str] = []
     if ev.after_negative:
@@ -336,8 +368,8 @@ def prepare(
         topics.append("Doceń konkretnym przykładem: " + ", ".join(strong) + ".")
     if missing:
         topics.append("Brak Twoich obserwacji: " + ", ".join(missing) + " — poproś o przykłady, zanim ocenisz.")
-    for _, text in improvements[:2]:
-        topics.append(f"Wróć do: „{text}” — czy jest poprawa?")
+    for p in improvements[:2]:
+        topics.append(f"Wróć do: „{p.text}”{f' (w {p.count} notatkach)' if p.count > 1 else ''} — czy jest poprawa?")
     if notes and (today - notes[-1].observed_on).days <= 60:
         topics.append("Wszystkie notatki są z ostatnich tygodni — przypomnij sobie początek okresu.")
     topics.append("Zapytaj o potrzeby szkoleniowe — z tego powstaną obowiązkowe wnioski do IPRZ.")

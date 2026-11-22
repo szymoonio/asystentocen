@@ -17,7 +17,7 @@ def test_container_uses_db_ports(container):
 
 def test_directory(container):
     d = container.employees
-    assert {e.id for e in d.subordinates("E05")} == {"E06", "E07", "E09", "E12"}
+    assert {e.id for e in d.subordinates("E05")} == {"E06", "E07", "E09", "E12", "E13", "E14", "E15"}
     assert d.get("E06").is_urzednik and d.get("E06").grade == 2
     assert d.office().name == "Generalna Dyrekcja Przekładów i Przykładów"
     assert d.org_unit("U-RP").name == "Referat Przekładów"

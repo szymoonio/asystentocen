@@ -360,6 +360,8 @@ def import_seed(session_factory: sessionmaker, seed: Seed) -> bool:
                 confirmed = rec["criteria_set_on"].isoformat()
                 form.update(part1_confirmed_by_evaluator_on=confirmed, part1_confirmed_by_employee_on=confirmed,
                             part1_place_evaluator=office.city, part1_place_employee=office.city)
+            # arkusz z seedu (np. wersja robocza po rozmowie, uzasadnienie przeszłej oceny); daty jako ISO
+            form.update({k: v.isoformat() if isinstance(v, date) else v for k, v in (rec.get("form") or {}).items()})
             if result:
                 form["partial_points"] = dict(result["partial_points"])
                 form["imported"] = True

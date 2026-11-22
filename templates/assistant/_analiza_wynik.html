@@ -1,0 +1,55 @@
+{# Wynik słownej analizy asystenta: krótkie podsumowanie widoczne od razu, szczegóły zwinięte.
+   Używane w Analizie (osoba/zespół) i — jako fragment — na stronie oceny okresowej (moduł A).
+   Kontekst: stored, outdated, llm_available, widok, osoba, names, wroc (opcjonalnie). #}
+{% import "assistant/_macros.html" as m %}
+
+{% macro point_list(items) %}
+  <ul class="a-points">
+    {% for p in items %}
+      <li>{{ p.text }}
+        {% for r in p.refs %}<a class="a-ref" href="/asystent/teczka/{{ r.subject_id }}?cykl=#{{ r.note_id }}" title="Notatka{% if widok == 'zespol' %} o: {{ names.get(r.subject_id, '') }}{% endif %}">{{ r.alias }}</a>{% endfor %}
+      </li>
+    {% else %}
+      <li class="muted">—</li>
+    {% endfor %}
+  </ul>
+{% endmacro %}
+
+<div class="a-result">
+  {% if stored %}
+    {% set r = stored.result %}
+    <p class="a-summary">{{ r.summary }}</p>
+    <details class="more a-details">
+      <summary>Mocne strony ({{ r.strengths | length }}) · słabe strony ({{ r.weaknesses | length }}) · co możesz zrobić ({{ r.recommendations | length }})</summary>
+      <div class="a-pros-cons">
+        <div class="a-pros"><h3 class="a-plus">Mocne strony</h3>{{ point_list(r.strengths) }}</div>
+        <div class="a-cons"><h3 class="a-minus">Słabe strony</h3>{{ point_list(r.weaknesses) }}</div>
+      </div>
+      <h3>Co możesz zrobić</h3>
+      {{ point_list(r.recommendations) }}
+      <p class="muted small">
+        Projekt asystenta AI — sprawdź go z notatkami (odnośniki N…). Nie jest oceną.
+        {% if r.excluded_notes %}Pominięto {{ r.excluded_notes }} notatki z danymi wrażliwymi.{% endif %}
+        {% if r.dropped %}Odrzucono {{ r.dropped }} punkty bez oparcia w notatkach.{% endif %}
+        Imiona i nazwiska są zastępowane przed wysłaniem.
+      </p>
+    </details>
+    <p class="muted small a-meta">
+      {{ stored.created_at.strftime("%d.%m.%Y %H:%M") }} · na podstawie {{ r.used_notes }} notatek
+      {% if outdated %}<span class="badge warn">od tego czasu zmieniły się notatki</span>{% endif %}
+    </p>
+  {% elif llm_available %}
+    <p class="muted">Asystent przeczyta Twoje notatki{% if widok == "zespol" %} o całym zespole{% else %} z bieżącego okresu oceny{% endif %} i przygotuje krótkie podsumowanie: mocne i słabe strony oraz propozycje działań. Imiona i nazwiska są zastępowane przed wysłaniem.</p>
+  {% else %}
+    {{ m.llm_off("Słowne podsumowanie") }}
+  {% endif %}
+  {% if llm_available %}
+    <form method="post" action="/asystent/analiza/generuj" class="a-generate">
+      <input type="hidden" name="widok" value="{{ widok }}">
+      <input type="hidden" name="osoba" value="{{ osoba }}">
+      {% if wroc %}<input type="hidden" name="wroc" value="{{ wroc }}">{% endif %}
+      <button type="submit" class="{{ 'secondary' if stored and not outdated else '' }}">{{ "Odśwież podsumowanie" if stored else "Poproś asystenta o podsumowanie" }}</button>
+      <span class="muted small a-wait" hidden>Asystent czyta notatki — to może potrwać do minuty…</span>
+    </form>
+  {% endif %}
+</div>

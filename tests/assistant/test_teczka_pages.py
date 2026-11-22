@@ -41,7 +41,7 @@ def test_timeline_and_means(client):
     assert "Bieżący okres oceny" in page and 'class="t-score l' in page
     assert "brak obserwacji" in page  # Organizacja pracy bez suwaka
     assert "Oceny w czasie" in page and "charts.js" in page
-    assert "głosowa" in page  # N003
+    assert "głosowa" not in page  # notatek głosowych na razie nie wspieramy — bez znacznika
 
 
 def test_quick_note_picker_then_form(client):
@@ -143,3 +143,26 @@ def test_edit_keeps_rating_on_criterion_outside_evaluation(client, container):
     form = client.get(f"/asystent/teczka/E06/notatka/{note.id}/edytuj").text
     assert 'name="rating_NEGOCJOWANIE" value="7" checked' in form
     assert 'name="rating_ZARZADZANIE_LUDZMI"' not in form
+
+
+def test_timeline_shows_evaluation_that_opened_current_cycle(client):
+    page = client.get("/asystent/teczka/E06").text  # domyślnie bieżący cykl (ponowna ocena)
+    assert 'id="EV-E06-2026"' in page and "Ocena okresowa" in page  # negatywna, która otworzyła ten cykl
+    assert "Poniżej oczekiwań" in page and "średnia 3,86" in page and 'href="/core/oceny/EV-E06-2026"' in page
+    assert 'id="EV-E06-2024"' not in page  # starsza — tylko przy „wszystkie”
+    assert "Pokazano 5 z 5 notatek i 1 ocenę okresową" in page
+
+
+def test_timeline_filter_periodic_evaluations_only(client):
+    page = client.get("/asystent/teczka/E14?rodzaj=oceny").text
+    assert 'value="oceny" selected' in page
+    assert 'id="EV-E14-2023"' in page and 'id="EV-E14-2025"' in page
+    assert 'class="t-note" id="N' not in page  # same oceny, bez notatek
+    assert "2 oceny okresowe" in page
+    everything = client.get("/asystent/teczka/E14?cykl=").text
+    assert 'id="EV-E14-2023"' in everything and 'class="t-note" id="N' in everything
+
+
+def test_criterion_filter_hides_evaluations(client):
+    page = client.get("/asystent/teczka/E14?cykl=&kryterium=KOMUNIKACJA").text
+    assert 'id="EV-E14-2023"' not in page

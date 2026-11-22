@@ -119,3 +119,29 @@ def chart_series(notes: Iterable[Note], names: dict[str, str]) -> dict:
         + [{"code": code, "name": names.get(code, code)} for code in order],
         "series": {"": overall, **series},
     }
+
+
+@dataclass(frozen=True)
+class Point:
+    """Punkt z notatek (zaleta albo obszar do poprawy) zgrupowany po treści."""
+
+    text: str
+    count: int
+    last: date
+    note_id: str  # najnowsza notatka z tym punktem
+
+
+def grouped_points(notes: Iterable[Note], attr: str) -> list[Point]:
+    """Te same punkty z wielu notatek liczymy razem: najczęstsze i najnowsze najpierw."""
+    groups: dict[str, list] = {}
+    for n in notes:
+        for text in getattr(n, attr):
+            key = " ".join(text.split()).casefold()
+            if not key:
+                continue
+            g = groups.setdefault(key, [text.strip(), 0, n.observed_on, n.id])
+            g[1] += 1
+            if n.observed_on >= g[2]:
+                g[0], g[2], g[3] = text.strip(), n.observed_on, n.id
+    points = [Point(t, c, d, nid) for t, c, d, nid in groups.values()]
+    return sorted(points, key=lambda p: (-p.count, -p.last.toordinal(), p.text))

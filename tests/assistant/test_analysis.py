@@ -59,7 +59,7 @@ def test_team_view_without_llm(client):
 def test_person_view(client):
     page = client.get("/asystent/analiza?widok=osoba&osoba=E06").text
     assert 'aria-current="page">Osoba' in page
-    assert "Grzegorz Wzór" in page and "Oceny w czasie" in page and "Zalety z notatek" in page
+    assert "Grzegorz Wzór" in page and "Oceny w czasie" in page and "Co poszło dobrze" in page
 
 
 def test_only_own_subordinates(client):
@@ -83,7 +83,7 @@ def _analysis(*, user: str, **_):
 def test_generate_person_analysis(client, container, fake_llm):
     services(container).llm = fake_llm({"analyze_person": _analysis})
     page = client.get("/asystent/analiza?widok=osoba&osoba=E06").text
-    assert "Wygeneruj analizę" in page
+    assert "Poproś asystenta o podsumowanie" in page
     response = client.post("/asystent/analiza/generuj", data={"widok": "osoba", "osoba": "E06"}, follow_redirects=False)
     assert response.status_code == 303 and "blad" not in response.headers["location"]
     page = client.get("/asystent/analiza?widok=osoba&osoba=E06").text
@@ -91,7 +91,7 @@ def test_generate_person_analysis(client, container, fake_llm):
     assert "Rzetelne przygotowanie dokumentów." in page
     assert "Zmyślona mocna strona." not in page  # bez źródła w notatkach — odrzucona
     assert "Odrzucono 1 punkty" in page
-    assert "Odśwież analizę" in page and "/asystent/teczka/E06?cykl=#" in page
+    assert "Odśwież podsumowanie" in page and "/asystent/teczka/E06?cykl=#" in page
 
 
 def test_generate_team_analysis(client, container, fake_llm):
@@ -127,3 +127,45 @@ def test_team_analysis_is_in_main_menu_not_in_teczka(client):
     assert 'class="button secondary" href="/asystent/analiza"' not in teczka  # bez przycisku w teczce
     client.get("/login/E07")  # bez podwładnych — bez pozycji w menu
     assert "Analiza zespołu" not in client.get("/core/").text
+
+
+def test_summary_details_are_collapsed_and_sections_foldable(client, container, fake_llm):
+    services(container).llm = fake_llm({"analyze_person": _analysis})
+    client.post("/asystent/analiza/generuj", data={"widok": "osoba", "osoba": "E06"})
+    page = client.get("/asystent/analiza?widok=osoba&osoba=E06").text
+    assert '<details class="more a-details">' in page  # szczegóły zwinięte, podsumowanie widoczne
+    assert 'class="card fold' in page and 'id="osoba-wykres" open' in page
+
+
+def test_fragment_for_evaluation_page_and_return(client, container, fake_llm):
+    services(container).llm = fake_llm({"analyze_person": _analysis})
+    frag = client.get("/asystent/analiza/fragment?osoba=E06&wroc=/core/oceny/EV-E06-2026R").text
+    assert "<html" not in frag and 'name="wroc" value="/core/oceny/EV-E06-2026R"' in frag
+    response = client.post("/asystent/analiza/generuj",
+                           data={"widok": "osoba", "osoba": "E06", "wroc": "/core/oceny/EV-E06-2026R"}, follow_redirects=False)
+    assert response.headers["location"] == "/core/oceny/EV-E06-2026R#asystent-podsumowanie"
+    assert "Grzegorz Wzór wyraźnie poprawia komunikację." in client.get("/asystent/analiza/fragment?osoba=E06").text
+
+
+def test_return_address_must_stay_in_app(client, container, fake_llm):
+    services(container).llm = fake_llm({"analyze_person": _analysis})
+    for bad in ["//evil.example/x", "https://evil.example", "/\\evil"]:
+        response = client.post("/asystent/analiza/generuj", data={"widok": "osoba", "osoba": "E06", "wroc": bad},
+                               follow_redirects=False)
+        assert response.headers["location"].startswith("/asystent/analiza"), bad
+
+
+def test_grouped_points_count_repeats():
+    from datetime import datetime
+
+    from app.assistant.display import grouped_points
+    from app.contracts.models import Note
+
+    def note(i, day, strengths):
+        return Note(id=f"X{i}", author_id="E05", subject_id="E06", observed_on=day, created_at=datetime(2026, 1, 1),
+                    strengths=strengths)
+
+    pts = grouped_points([note(1, date(2026, 1, 5), ["Terminowość"]), note(2, date(2026, 3, 5), ["terminowość ", "Inicjatywa"]),
+                          note(3, date(2026, 2, 5), ["Inicjatywa"]), note(4, date(2026, 4, 5), ["Dokładność"])], "strengths")
+    assert [(p.text, p.count) for p in pts] == [("Inicjatywa", 2), ("terminowość", 2), ("Dokładność", 1)]
+    assert pts[1].note_id == "X2"  # najnowsza notatka z tym punktem

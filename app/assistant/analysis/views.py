@@ -13,6 +13,7 @@ from fastapi.responses import RedirectResponse
 
 from app.assistant.analysis import data as analysis_data
 from app.assistant.analysis import llm as analysis_llm
+from app.assistant.display import grouped_points
 from app.assistant.llm import LLMError
 from app.assistant.pages import PageError, html_errors
 from app.assistant.services import services
@@ -72,6 +73,7 @@ def analiza(request: Request, widok: str = "zespol", osoba: str = ""):
         scope, task = f"osoba:{osoba}", analysis_llm.PERSON_TASK
         key = analysis_llm.input_key(person.notes)
         ctx.update(person=person, chart=analysis_data.person_chart(c, person),
+                   pros=grouped_points(person.notes, "strengths"), cons=grouped_points(person.notes, "improvements"),
                    person_activity=analysis_data.activity(person.all_notes, c.clock.today()),
                    teczka=c.notes.teczka_url(osoba), title=f"Analiza · {person.employee.full_name}")
     stored = svc.analyses.latest(user.employee_id, scope) if svc.analyses else None
@@ -83,6 +85,26 @@ def analiza(request: Request, widok: str = "zespol", osoba: str = ""):
     return render(request, "assistant/analiza.html", **ctx)
 
 
+def _safe_back(value: str) -> str | None:
+    """Tylko ścieżki w obrębie aplikacji (bez otwartego przekierowania na inną domenę)."""
+    return value if value.startswith("/") and not value.startswith("//") and "\\" not in value else None
+
+
+@router.get("/analiza/fragment")
+@html_errors
+def fragment(request: Request, osoba: str = "", wroc: str = ""):
+    """Podsumowanie notatek o osobie do osadzenia na innej stronie (np. ocena okresowa w module A)."""
+    c, user, svc, subordinates, notes, scale = _context(request)
+    person = _person(c, subordinates, notes, scale, osoba)
+    stored = svc.analyses.latest(user.employee_id, f"osoba:{osoba}") if svc.analyses else None
+    return render(
+        request, "assistant/_analiza_wynik.html", stored=stored,
+        outdated=bool(stored and stored.input_key != analysis_llm.input_key(person.notes)),
+        llm_available=svc.llm.available(analysis_llm.PERSON_TASK), widok="osoba", osoba=osoba,
+        names={e.id: e.full_name for e in subordinates}, wroc=_safe_back(wroc),
+    )
+
+
 @router.post("/analiza/generuj")
 @html_errors
 async def generuj(request: Request):
@@ -90,6 +112,7 @@ async def generuj(request: Request):
     form = await request.form()
     widok, osoba = str(form.get("widok", "zespol")), str(form.get("osoba", ""))
     back = "/asystent/analiza?widok=zespol" if widok != "osoba" else f"/asystent/analiza?widok=osoba&osoba={osoba}"
+    return_to = _safe_back(str(form.get("wroc", "")))
     pseudonymizer = svc.pseudonymizer()
     if widok == "osoba":
         person = _person(c, subordinates, notes, scale, osoba)
@@ -102,6 +125,11 @@ async def generuj(request: Request):
     try:
         result = analysis_llm.run(task, req, svc.llm)
     except LLMError as err:
+        if return_to:
+            sep = "&" if "?" in return_to else "?"
+            return RedirectResponse(f"{return_to}{sep}error={quote(err.user_message)}#asystent-podsumowanie", status_code=303)
         return RedirectResponse(f"{back}&blad={quote(err.user_message)}", status_code=303)
     svc.analyses.save(user.employee_id, scope, analysis_llm.input_key(scoped), result, c.clock.now())
+    if return_to:
+        return RedirectResponse(return_to + "#asystent-podsumowanie", status_code=303)
     return RedirectResponse(back + "#claude", status_code=303)
