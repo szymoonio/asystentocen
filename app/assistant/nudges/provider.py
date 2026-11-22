@@ -107,7 +107,7 @@ class NoteNudges:
             digest = self.digest_for(supervisor.id, today)
             if digest.empty:
                 continue
-            header = f"Teczka — przegląd tygodnia ({count(digest.n_items, 'sprawa', 'sprawy', 'spraw')}):"
+            header = f"Notatki — przegląd tygodnia ({count(digest.n_items, 'sprawa', 'sprawy', 'spraw')}):"
             reminders.append(
                 Reminder(
                     recipient_id=supervisor.id,

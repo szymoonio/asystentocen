@@ -1,6 +1,7 @@
 {# Wynik słownej analizy asystenta: krótkie podsumowanie widoczne od razu, szczegóły zwinięte.
    Używane w Analizie (osoba/zespół) i — jako fragment — na stronie oceny okresowej (moduł A).
-   Kontekst: stored, outdated, llm_available, widok, osoba, names, wroc (opcjonalnie). #}
+   Kontekst: stored, outdated, llm_available, widok, osoba, names, wroc i compact (opcjonalnie).
+   compact = tylko mocne i słabe strony, bez opisu (mały panel asystenta HR na stronie oceny). #}
 {% import "assistant/_macros.html" as m %}
 
 {% macro point_list(items) %}
@@ -15,8 +16,20 @@
   </ul>
 {% endmacro %}
 
-<div class="a-result">
-  {% if stored %}
+<div class="a-result{{ ' a-compact' if compact }}">
+  {% if compact %}
+    {% if stored %}
+      {% set r = stored.result %}
+      <div class="a-pros-cons">
+        <div class="a-pros"><h3 class="a-plus">Mocne strony</h3>{{ point_list(r.strengths) }}</div>
+        <div class="a-cons"><h3 class="a-minus">Słabe strony</h3>{{ point_list(r.weaknesses) }}</div>
+      </div>
+      <p class="muted small a-meta">{{ stored.created_at.strftime("%d.%m.%Y %H:%M") }} · {{ r.used_notes }} notatek · projekt asystenta, nie ocena
+        {% if outdated %}<span class="badge warn">są nowsze notatki</span>{% endif %}</p>
+    {% elif not llm_available %}
+      {{ m.llm_off("Podsumowanie") }}
+    {% endif %}
+  {% elif stored %}
     {% set r = stored.result %}
     <p class="a-summary">{{ r.summary }}</p>
     <details class="more a-details">
@@ -48,7 +61,11 @@
       <input type="hidden" name="widok" value="{{ widok }}">
       <input type="hidden" name="osoba" value="{{ osoba }}">
       {% if wroc %}<input type="hidden" name="wroc" value="{{ wroc }}">{% endif %}
+      {% if compact %}
+      <button type="submit" class="{{ 'secondary' if stored and not outdated else '' }}">{{ "Odśwież podsumowanie" if stored else "Poproś o podsumowanie" }}</button>
+      {% else %}
       <button type="submit" class="{{ 'secondary' if stored and not outdated else '' }}">{{ "Odśwież podsumowanie" if stored else "Poproś asystenta o podsumowanie" }}</button>
+      {% endif %}
       <span class="muted small a-wait" hidden>Asystent czyta notatki — to może potrwać do minuty…</span>
     </form>
   {% endif %}

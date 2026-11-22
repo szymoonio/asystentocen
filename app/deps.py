@@ -13,7 +13,7 @@ from app.contracts.fakes import roles_for
 from app.contracts.models import UserContext
 
 DEMO_COOKIE = "demo_user"
-DEFAULT_DEMO_USER = "E05"  # Henryk Pryncypał — kierownik referatu z podwładnymi do oceny
+DEFAULT_DEMO_USER = "E05"  # Henryk Kowalczyk — kierownik referatu z podwładnymi do oceny
 
 
 def get_container(request: Request) -> Container:

@@ -50,7 +50,7 @@ class MailConfig:
     enabled: bool = True
     transport: str = "outbox"  # outbox | smtp
     base_url: str = "http://127.0.0.1:8000"
-    sender: str = "Asystent Ocen <asystent-ocen@przyklady.example>"
+    sender: str = "AsystentPLUS <asystentplus@przyklady.example>"
     repeat_after_days: int = 21
     max_per_day: int = 3
     redirect_to: str = ""  # demo: wszystkie maile na ten adres zamiast do przełożonych
@@ -196,7 +196,7 @@ class SmtpTransport:
         """Domeny .example nie istnieją — wtedy nadawcą jest konto SMTP (np. własny Gmail)."""
         user = os.environ.get(self.cfg.user_env, "")
         if configured.rstrip(">").endswith(".example") and "@" in user:
-            return formataddr(("Asystent Ocen", user))
+            return formataddr(("AsystentPLUS", user))
         return configured
 
     def send(self, mail: Mail, sender: str) -> None:
@@ -248,7 +248,7 @@ def compose(*, supervisor: Employee, subject: Employee, evaluation: EvaluationSu
         "Jeśli masz teraz chwilę — krótka notatka zajmuje minutę:",
         link,
         "",
-        "Wiadomość z Asystenta Ocen. W mailu nie ma treści Twoich notatek — są tylko w aplikacji.",
+        "Wiadomość z AsystentaPLUS. W mailu nie ma treści Twoich notatek — są tylko w aplikacji.",
     ]
     html = f"""<div style="font-family: Arial, sans-serif; font-size: 16px; line-height: 1.45; color: #1B1B1B; max-width: 560px">
   <p>Dzień dobry,</p>
@@ -256,7 +256,7 @@ def compose(*, supervisor: Employee, subject: Employee, evaluation: EvaluationSu
   <p>Ostatnia notatka: <strong>{escape(when)}</strong>.{f"<br>Termin oceny okresowej: <strong>{due}</strong>." if due else ""}</p>
   <p>Jeśli masz teraz chwilę — krótka notatka zajmuje minutę:</p>
   <p><a href="{escape(link)}" style="display: inline-block; padding: 10px 18px; background: #0052A5; color: #ffffff; font-weight: bold; text-decoration: none; border: 2px solid #0052A5">Dodaj notatkę: {escape(subject.full_name)}</a></p>
-  <p style="font-size: 13px; color: #555555">Wiadomość z Asystenta Ocen. W mailu nie ma treści Twoich notatek — są tylko w aplikacji.</p>
+  <p style="font-size: 13px; color: #555555">Wiadomość z AsystentaPLUS. W mailu nie ma treści Twoich notatek — są tylko w aplikacji.</p>
 </div>"""
     return Mail(dedupe_key, supervisor, subject.id, title, "\n".join(lines), html)
 

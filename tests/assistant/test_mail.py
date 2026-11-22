@@ -156,7 +156,7 @@ def test_redirect_to_own_mailbox_for_demo(monkeypatch, container, mailer):
     mailer.due(TODAY)
     assert FakeSMTP.sent and all(m["To"] == "ja@gmail.example.com" for m in FakeSMTP.sent)
     assert all(m["Subject"].startswith("[demo → Henryk Pryncypał] ") for m in FakeSMTP.sent)  # tylko przełożony E05
-    assert "Asystent Ocen" in FakeSMTP.sent[0]["From"] and "ja@gmail.example.com" in FakeSMTP.sent[0]["From"]
+    assert "AsystentPLUS" in FakeSMTP.sent[0]["From"] and "ja@gmail.example.com" in FakeSMTP.sent[0]["From"]
     log = services(container).mail.inbox_all()
     assert {r.recipient_id for r in log} == {"E05"} and {r.to_address for r in log} == {"ja@gmail.example.com"}
 

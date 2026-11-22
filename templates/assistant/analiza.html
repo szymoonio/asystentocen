@@ -49,7 +49,7 @@
         {% for e in people %}<option value="{{ e.id }}" {% if e.id == osoba %}selected{% endif %}>{{ e.full_name }}</option>{% endfor %}
       </select>
       <noscript><button type="submit" class="secondary">Pokaż</button></noscript>
-      <a class="small" href="{{ teczka }}">Otwórz teczkę</a>
+      <a class="small" href="{{ teczka }}">Otwórz notatki</a>
     </form>
   {% endif %}
 

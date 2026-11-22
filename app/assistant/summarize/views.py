@@ -106,3 +106,70 @@ def generuj(evaluation_id: str, request: Request):
     except LLMError as err:
         return _page(request, evidence, error=err.user_message, status_code=502)
     return RedirectResponse(f"/asystent/podsumowanie/{evaluation_id}#projekty", status_code=303)
+
+
+# --- krótkie sugestie do pól arkusza (panel asystenta obok pola na stronie oceny, moduł A) ---------
+
+MAX_CHARS = 600  # jedna propozycja na pole — cały projekt w jednym, krótkim tekście
+
+
+def _short(text: str) -> str:
+    """Akapit do panelu bocznego — przycięty na granicy zdania albo linii."""
+    text = "\n".join(" ".join(line.split()) for line in text.strip().splitlines())
+    if len(text) <= MAX_CHARS:
+        return text
+    cut = text[:MAX_CHARS]
+    end = max(cut.rfind(". "), cut.rfind("\n"))
+    return (cut[: end + 1] if end > MAX_CHARS // 2 else cut.rsplit(" ", 1)[0]).rstrip() + " …"
+
+
+PANEL_FIELDS = {"justification": DraftField.UZASADNIENIE, "iprz": DraftField.WNIOSKI_IPRZ}
+
+
+def suggestions_payload(c, evidence: CycleEvidence, keys=("justification", "iprz")) -> dict:
+    svc = services(c)
+    out: dict = {"ok": True}
+    for key in keys:
+        field = PANEL_FIELDS[key]
+        paragraphs, generator, _ = svc.drafts.paragraphs(evidence, field)
+        out["generator"] = generator
+        if not paragraphs:
+            out[key] = []
+            continue
+        # jedna propozycja na pole: akapity sklejone w jeden tekst, źródła bez powtórzeń
+        known = {n.id for n in evidence.notes}
+        note_ids = list(dict.fromkeys(nid for p in paragraphs for nid in p.note_ids if nid in known))
+        out[key] = [{
+            "text": _short("\n\n".join(p.text.strip() for p in paragraphs)),
+            "notes": [{"url": f"/asystent/teczka/{evidence.subject.id}?cykl=#{nid}",
+                       "label": evidence.note(nid).observed_on.strftime("%d.%m")} for nid in note_ids],
+        }]
+    return out
+
+
+@router.post("/podsumowanie/{evaluation_id}/sugestie")
+def sugestie(evaluation_id: str, request: Request, pole: str = ""):
+    """JSON dla panelu „Asystent HR” przy jednym polu arkusza (`pole` = justification | iprz; bez niego oba):
+    generuje projekt LLM tylko tego pola (gdy LLM dostępny), a bez LLM zwraca deterministyczny szkic z notatek."""
+    from fastapi.responses import JSONResponse
+
+    if pole and pole not in PANEL_FIELDS:
+        return JSONResponse({"ok": False, "error": "Nieznane pole."}, status_code=400)
+    keys = (pole,) if pole else tuple(PANEL_FIELDS)
+
+    try:
+        evidence = _evidence_for_user(request, evaluation_id)
+    except PageError as err:
+        return JSONResponse({"ok": False, "error": err.message}, status_code=err.status)
+    c = get_container(request)
+    svc = services(c)
+    if svc.llm.available(TASK):
+        try:
+            svc.drafts.generate(
+                evidence, llm=svc.llm, catalog=c.catalog,
+                scale=load_scale(c.settings.regulation_dir), pseudonymizer=svc.pseudonymizer(),
+                only={"justification": "justification", "iprz": "development"}[pole] if pole else None,
+            )
+        except LLMError as err:
+            return JSONResponse({"ok": False, "error": err.user_message}, status_code=502)
+    return JSONResponse(suggestions_payload(c, evidence, keys))

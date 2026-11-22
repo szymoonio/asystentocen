@@ -27,25 +27,73 @@ STATE_LABELS = {
     EvaluationState.CYCLE_OPEN: "Ustalenie kryteriów",
     EvaluationState.CRITERIA_CONFIRMED: "Kryteria do potwierdzenia przez ocenianego",
     EvaluationState.OBSERVATION: "Okres oceny",
-    EvaluationState.INTERVIEW_HELD: "Sporządzanie oceny",
+    EvaluationState.INTERVIEW_HELD: "Ocena na piśmie",
     EvaluationState.AWAITING_ACK: "Do zapoznania przez ocenianego",
     EvaluationState.ACKNOWLEDGED: "Termin na sprzeciw",
     EvaluationState.OBJECTION: "Sprzeciw w rozpatrzeniu",
     EvaluationState.FINAL: "Ocena ostateczna",
     EvaluationState.CANCELLED: "Anulowana",
 }
-STEPS = [
-    (EvaluationState.CYCLE_OPEN, "Kryteria"),
-    (EvaluationState.CRITERIA_CONFIRMED, "Potwierdzenie kryteriów"),
-    (EvaluationState.OBSERVATION, "Okres oceny"),
-    (EvaluationState.INTERVIEW_HELD, "Rozmowa i ocena"),
-    (EvaluationState.AWAITING_ACK, "Zapoznanie"),
-    (EvaluationState.ACKNOWLEDGED, "Sprzeciw (7 dni)"),
-    (EvaluationState.FINAL, "Ostateczna"),
+# Kroki procesu (zakładki na stronie oceny), pogrupowane w fazy. Krok „Rozmowa oceniająca” nie ma własnego
+# stanu w kontrakcie — to OBSERVATION z form.interview_stage (zob. workflow.interview_stage).
+PHASES = [
+    ("Początek", ["Rozmowa rozpoczynająca i kryteria", "Potwierdzenie kryteriów"]),
+    ("W trakcie", ["Okres oceny"]),
+    ("Zakończenie", ["Rozmowa oceniająca", "Ocena na piśmie"]),
+    ("Po ocenie", ["Zapoznanie", "Sprzeciw (7 dni)", "Ostateczna"]),
 ]
+STEPS = [label for _, labels in PHASES for label in labels]
+STEP_CRITERIA, STEP_CONFIRM, STEP_PERIOD, STEP_INTERVIEW, STEP_ASSESS, STEP_ACK, STEP_OBJECTION, STEP_FINAL = range(8)
+_STEP_OF_STATE = {
+    EvaluationState.CYCLE_OPEN: STEP_CRITERIA, EvaluationState.CRITERIA_CONFIRMED: STEP_CONFIRM,
+    EvaluationState.OBSERVATION: STEP_PERIOD, EvaluationState.INTERVIEW_HELD: STEP_ASSESS,
+    EvaluationState.AWAITING_ACK: STEP_ACK, EvaluationState.ACKNOWLEDGED: STEP_OBJECTION,
+    EvaluationState.OBJECTION: STEP_OBJECTION, EvaluationState.FINAL: STEP_FINAL,
+    EvaluationState.CANCELLED: STEP_ASSESS,
+}
+
+
+def current_step(row: EvaluationRow) -> int:
+    if workflow.interview_stage(row):
+        return STEP_INTERVIEW
+    return _STEP_OF_STATE[EvaluationState(row.state)]
+
+
+def _pl(d: date | str | None) -> str:
+    if isinstance(d, str):
+        d = date.fromisoformat(d)
+    return d.strftime("%d.%m.%Y") if d else ""
+
+
+def step_dates(row: EvaluationRow, objection_until: date | None) -> list[str]:
+    """Krótka data pod każdym krokiem: kiedy zrobiono, na kiedy umówiono albo do kiedy trzeba."""
+    form = row.form or {}
+    state = EvaluationState(row.state)
+    before_assessment = state in (EvaluationState.OBSERVATION, EvaluationState.INTERVIEW_HELD)
+    out = [""] * len(STEPS)
+    out[STEP_CRITERIA] = (_pl(form.get("part1_confirmed_by_evaluator_on"))
+                          or (f"do {_pl(row.criteria_due_date)}" if row.criteria_due_date else ""))
+    out[STEP_CONFIRM] = _pl(form.get("part1_confirmed_by_employee_on"))
+    out[STEP_PERIOD] = f"od {_pl(row.period_from)}" if row.period_from else ""
+    if form.get("interview_date"):
+        out[STEP_INTERVIEW] = _pl(form["interview_date"])
+    elif form.get("interview_planned_on"):
+        out[STEP_INTERVIEW] = f"umówiona {_pl(form['interview_planned_on'])}"
+    elif state == EvaluationState.OBSERVATION and row.due_date:
+        out[STEP_INTERVIEW] = f"przed {_pl(row.due_date)}"
+    if row.assessed_on:
+        out[STEP_ASSESS] = _pl(row.assessed_on)
+    elif before_assessment and row.due_date:
+        out[STEP_ASSESS] = f"do {_pl(row.due_date)}"
+    out[STEP_ACK] = _pl(row.acknowledged_on)
+    if objection_until and state == EvaluationState.ACKNOWLEDGED:
+        out[STEP_OBJECTION] = f"do {_pl(objection_until)}"
+    return out
 EVENT_LABELS = {
     "PART1_SAVED": "zapisano część I",
-    "CRITERIA_CONFIRMED": "oceniający potwierdził rozmowę i kryteria",
+    "CRITERIA_CONFIRMED": "oceniający potwierdził rozmowę rozpoczynającą i kryteria",
+    "INTERVIEW_STAGE_STARTED": "rozpoczęto etap rozmowy oceniającej",
+    "INTERVIEW_PLANNED": "umówiono rozmowę oceniającą",
     "CRITERIA_ACKNOWLEDGED": "oceniany zapoznał się z kryteriami i terminem",
     "INTERVIEW_RECORDED": "odnotowano rozmowę oceniającą",
     "ASSESSMENT_SAVED": "zapisano wersję roboczą oceny",
@@ -89,8 +137,7 @@ def _date(value: str | None) -> date | None:
 def urgency(due: date | None, today: date) -> str:
     if not due:
         return ""
-    left = (due - today).days
-    return "danger" if left < 0 else "warn" if left <= 30 else ""
+    return guide.tone_for_due(due, today)  # czerwony też dziś i jutro
 
 
 # --- pulpit ----------------------------------------------------------------------------------
@@ -207,43 +254,61 @@ def ocena(evaluation_id: str, request: Request):
 
     with c.session_factory() as s:
         first = workflow.first_assessment(row, s)
+        previous = workflow.previous_from_history(s, row)  # zawsze z historii ocen
     start = row.cycle_start or row.period_from or today
     can_change, change_basis = deadlines.can_change_due_date(start, today)
     objection = deadlines.objection_deadline(row.acknowledged_on) if row.acknowledged_on else None
-    step_index = next((i for i, (st, _) in enumerate(STEPS) if st == state), len(STEPS) if state == EvaluationState.FINAL else 3)
-    if state == EvaluationState.OBJECTION:
-        step_index = 5
+    step_index = current_step(row)
+    try:
+        view = int(request.query_params.get("krok", step_index))
+    except ValueError:
+        view = step_index
+    if not 0 <= view <= step_index:
+        view = step_index  # przyszłych kroków nie da się otworzyć
     p3 = form.get("part3") or {}
     obs = _observations(c, row, summary)
+    in_interview = workflow.interview_stage(row)
+    planned = date.fromisoformat(form["interview_planned_on"]) if form.get("interview_planned_on") else None
     period_notes = None
-    notes_box = None  # „Asystent HR: podsumowanie notatek” — tylko dla oceniającego (notatki są jego, prywatne)
+    summary_url = None  # „Poproś o podsumowanie” — mocne i słabe strony z notatek oceniającego (moduł B)
     if role == EVALUATOR and row.evaluator_id and state in (EvaluationState.OBSERVATION, EvaluationState.INTERVIEW_HELD):
         period_notes = c.notes.notes_for(row.evaluator_id, row.employee_id, since=row.period_from or row.cycle_start)
-        notes_box = {
-            "count": len(period_notes),
-            "pros": guide.grouped_points(period_notes, "strengths"),
-            "cons": guide.grouped_points(period_notes, "improvements"),
-            "teczka": c.notes.teczka_url(row.employee_id),
-            "summary_url": guide.notes_summary_url(row.employee_id, f"/core/oceny/{row.id}"),
-        }
-    tips = guide.tips_for(
-        ev=summary, role=role, today=today,
-        notes=period_notes if state == EvaluationState.OBSERVATION else None, warnings=len(obs["warnings"]),
-        objection_until=objection.date if objection else None,
-        new_note=guide.new_note_url(c, row.employee_id) if role == EVALUATOR and row.evaluator_id else None,
-    )
+        summary_url = guide.notes_summary_url(row.employee_id, f"/core/oceny/{row.id}") + "&tryb=krotki"
+    tips = None
+    if view == step_index:  # porady tylko do bieżącego kroku
+        tips = guide.tips_for(
+            ev=summary, role=role, today=today,
+            notes=period_notes if state == EvaluationState.OBSERVATION else None, warnings=len(obs["warnings"]),
+            objection_until=objection.date if objection else None,
+            new_note=guide.new_note_url(c, row.employee_id) if role == EVALUATOR and row.evaluator_id else None,
+            interview_stage=in_interview, interview_planned=planned,
+        )
+    hr_panel = None  # stały przebieg rozmowy w panelu bocznym + „Przygotuj szczegóły” (asystent HR)
+    if role == EVALUATOR and view == STEP_CRITERIA and state == EvaluationState.CYCLE_OPEN:
+        hr_panel = {"title": "Jak poprowadzić rozmowę rozpoczynającą", "outline": guide.START_OUTLINE,
+                    "prep": guide.hr_prep_url("rozpoczynajaca", row.employee_id), "cheat": None,
+                    "top": True}  # nad formularzem, zwinięty — widać tylko najważniejsze
+    elif role == EVALUATOR and view == STEP_INTERVIEW and state in (EvaluationState.OBSERVATION, EvaluationState.INTERVIEW_HELD):
+        hr_panel = {"title": "Jak poprowadzić rozmowę oceniającą", "outline": guide.interview_outline(criteria),
+                    "prep": guide.hr_prep_url("oceniajaca", row.employee_id),
+                    "cheat": f"/core/oceny/{row.id}/przygotowanie" if row.evaluator_id else None,
+                    "top": True, "open": True}  # na górze, jak panel asystenta w „Okresie oceny”
+    fresh_drafts = {k: [d for d in v if not d.generator.startswith("deterministic")] for k, v in drafts.items()}
 
     return render(
         request, "core/ocena.html", title=f"Ocena — {employee.full_name}",
         row=row, ev=summary, employee=employee, evaluator=evaluator, role=role, state=state, sheet=sheet,
         sheet_def=c.catalog.sheets[sheet], form=form, criteria=criteria, live=live, result=result, issues=issues,
-        additional_options=c.catalog.additional_for(sheet), drafts=drafts,
-        obs=obs, tips=tips, notes_box=notes_box, events=workflow.events_for(c, row.id),
+        additional_options=c.catalog.additional_for(sheet), drafts=fresh_drafts,
+        describe={d.code: d.description for d in [c.catalog.get(cr.code) for cr in criteria] + c.catalog.additional_for(sheet)},
+        suggest_url=guide.B_DRAFT_SUGGESTIONS.format(evaluation_id=row.id) if drafts else None,
+        obs=obs, tips=tips, summary_url=summary_url, hr_panel=hr_panel, in_interview=in_interview, planned=planned,
+        events=workflow.events_for(c, row.id), view=view, phases=PHASES, step_dates=step_dates(row, objection.date if objection else None),
         unit=c.employees.org_unit(employee.position.org_unit_id),
         evaluator_unit=c.employees.org_unit(evaluator.position.org_unit_id) if evaluator else None,
-        office=c.employees.office(), today=today, steps=STEPS, step_index=step_index,
+        office=c.employees.office(), today=today, steps=STEPS, step_index=step_index, final=state == EvaluationState.FINAL,
         can_change_due=can_change, change_basis=change_basis, change_reasons=deadlines.DUE_DATE_CHANGE_REASONS,
-        objection=objection, first_assessment=first, p3=p3,
+        objection=objection, first_assessment=first, p3=p3, previous=previous,
         next_grade=careers.next_grade_text(int(p3.get("grade") or employee.grade or 0) or None),
         ed=lambda field: FORM.can_edit(field, state, role), FORM=FORM, Role=Role, Level=Level,
         EVALUATOR=EVALUATOR, EMPLOYEE=EMPLOYEE, admin_fields=sorted(workflow.ADMIN_FIELDS),
@@ -283,8 +348,10 @@ def druk(evaluation_id: str, request: Request):
     sheet = SheetType(row.sheet)
     form = row.form or {}
     p3 = form.get("part3") or {}
+    with c.session_factory() as s:
+        previous = workflow.previous_from_history(s, row)
     return render(
-        request, "core/druk.html", title="Wydruk arkusza",
+        request, "core/druk.html", previous=previous, title="Wydruk arkusza",
         row=row, employee=employee, evaluator=evaluator, sheet=sheet, sheet_def=c.catalog.sheets[sheet],
         form=form, mandatory=c.catalog.mandatory_for(sheet),
         additional=[c.catalog.get(code) for code in (row.additional or [])],
@@ -317,7 +384,8 @@ async def _act(request: Request, evaluation_id: str, action, *, ok: str):
 @router.post("/oceny/{evaluation_id}/kryteria")
 async def post_part1(evaluation_id: str, request: Request):
     def action(c, user, data):
-        workflow.save_part1(c, evaluation_id, user, additional=[data.get(f"additional_{i}", "") for i in range(3)],
+        picked = data.getlist("additional") or [data.get(f"additional_{i}", "") for i in range(3)]
+        workflow.save_part1(c, evaluation_id, user, additional=list(picked),
                             due_date=_date(data.get("due_date")), place=data.get("place"))
         if data.get("confirm"):
             workflow.confirm_criteria(c, evaluation_id, user)
@@ -326,14 +394,31 @@ async def post_part1(evaluation_id: str, request: Request):
 
 @router.post("/oceny/{evaluation_id}/kryteria/potwierdz")
 async def post_ack_criteria(evaluation_id: str, request: Request):
-    return await _act(request, evaluation_id, lambda c, u, d: workflow.acknowledge_criteria(
-        c, evaluation_id, u, place=d.get("place")), ok="Potwierdzono zapoznanie z kryteriami i terminem oceny.")
+    def action(c, u, d):
+        if d.get("oswiadczenie") != "1":  # obowiązkowe oświadczenie — sprawdzane też na serwerze, nie tylko w przeglądarce
+            raise WorkflowError("Zaznacz oświadczenie o przeprowadzeniu rozmowy i zapoznaniu się z kryteriami.")
+        workflow.acknowledge_criteria(c, evaluation_id, u, place=d.get("place"))
+    return await _act(request, evaluation_id, action, ok="Potwierdzono zapoznanie z kryteriami i terminem oceny.")
+
+
+@router.post("/oceny/{evaluation_id}/rozmowa/etap")
+async def post_interview_stage(evaluation_id: str, request: Request):
+    return await _act(request, evaluation_id, lambda c, u, d: workflow.start_interview_stage(c, evaluation_id, u),
+                      ok="Etap rozmowy oceniającej — umów termin z ocenianym i przygotuj się.")
+
+
+@router.post("/oceny/{evaluation_id}/rozmowa/termin")
+async def post_interview_plan(evaluation_id: str, request: Request):
+    return await _act(request, evaluation_id, lambda c, u, d: workflow.plan_interview(
+        c, evaluation_id, u, planned_on=_date(d.get("planned_on"))), ok="Zapisano termin rozmowy oceniającej.")
 
 
 @router.post("/oceny/{evaluation_id}/rozmowa")
 async def post_interview(evaluation_id: str, request: Request):
     return await _act(request, evaluation_id, lambda c, u, d: workflow.record_interview(
-        c, evaluation_id, u, interview_date=_date(d.get("interview_date"))), ok="Zapisano datę rozmowy oceniającej.")
+        c, evaluation_id, u, interview_date=_date(d.get("interview_date")),
+        conclusions=d.get("interview_conclusions")),
+        ok="Zapisano rozmowę oceniającą. Teraz sporządź ocenę na piśmie.")
 
 
 def _assessment_data(data) -> dict[str, Any]:
@@ -347,9 +432,6 @@ def _assessment_data(data) -> dict[str, Any]:
         out["period_from"] = _date(data.get("period_from"))
     if data.get("period_to"):
         out["period_to"] = _date(data.get("period_to"))
-    if "prev_outcome" in data:
-        out["previous"] = {"outcome": data.get("prev_outcome") or None, "level": data.get("prev_level") or None,
-                           "assessed_on": data.get("prev_assessed_on") or None, "from_history": False}
     if "p3_motivation" in data:
         out["part3"] = {"appointed_year": data.get("p3_appointed_year"), "grade": data.get("p3_grade"),
                         "grade_granted_on": data.get("p3_grade_granted_on"), "motivation": data.get("p3_motivation")}
@@ -433,7 +515,7 @@ def kadry(request: Request):
             next_due = ev.criteria_due_date if ev.state == EvaluationState.CYCLE_OPEN else ev.due_date
         promo = careers.obligatory_promotion(emp, c.evaluations.history(emp.id))
         flag = urgency(next_due, today)
-        if filt == "zalegle" and flag != "danger":
+        if filt == "zalegle" and not (next_due and next_due < today):
             continue
         if filt == "30dni" and flag not in ("danger", "warn"):
             continue

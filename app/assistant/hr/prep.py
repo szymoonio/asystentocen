@@ -30,7 +30,7 @@ CHECKLISTS: dict[str, tuple[str, list[str]]] = {
             "główne obowiązki w okresie oceny i sposób ich realizacji, z uwzględnieniem ustalonych kryteriów",
             "sposób realizacji celów, jeśli zostały wyznaczone",
             "kierunki dalszego rozwoju zawodowego i potrzeby w zakresie podnoszenia kwalifikacji (→ wnioski IPRZ)",
-            "przygotuj fakty z całego okresu, nie tylko z ostatnich tygodni (teczka, podsumowanie cyklu)",
+            "przygotuj fakty z całego okresu, nie tylko z ostatnich tygodni (notatki, podsumowanie cyklu)",
         ],
     ),
     "rozpoczynajaca": (

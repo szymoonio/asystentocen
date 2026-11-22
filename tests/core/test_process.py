@@ -38,7 +38,7 @@ def test_criteria_flow_for_new_employee(client, container):
     assert state(container, "EV-E09-2026") == EvaluationState.CRITERIA_CONFIRMED
 
     login(client, "E09")
-    post(client, "/core/oceny/EV-E09-2026/kryteria/potwierdz", {"place": "Warszawa"})
+    post(client, "/core/oceny/EV-E09-2026/kryteria/potwierdz", {"place": "Warszawa", "oswiadczenie": "1"})
     ev = container.evaluations.get("EV-E09-2026")
     assert ev.state == EvaluationState.OBSERVATION
     assert ev.period_from == date(2026, 11, 21)

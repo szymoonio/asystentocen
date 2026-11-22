@@ -20,6 +20,7 @@ from app.core.rules.scoring import level_for
 B_NEW_NOTE = "{teczka}/nowa"
 B_HR_PREP = "/asystent/hr/przygotowanie?rodzaj={kind}&osoba={employee_id}"
 B_NOTES_SUMMARY = "/asystent/analiza/fragment?osoba={employee_id}&wroc={back}"  # podsumowanie LLM do osadzenia
+B_DRAFT_SUGGESTIONS = "/asystent/podsumowanie/{evaluation_id}/sugestie"  # POST → JSON z krótkimi projektami pól
 
 
 def new_note_url(c, employee_id: str) -> str:
@@ -106,8 +107,9 @@ def until(day: date, today: date) -> str:
 
 
 def tone_for_due(day: date, today: date) -> str:
+    """Kolor terminu: czerwony po terminie, dziś i jutro; żółty do 30 dni."""
     left = (day - today).days
-    return "danger" if left < 0 else "warn" if left <= 30 else ""
+    return "danger" if left <= 1 else "warn" if left <= 30 else ""
 
 
 # --- pulpit: do zrobienia -------------------------------------------------------------------
@@ -128,7 +130,7 @@ def _evaluator_todo(ev: EvaluationSummary, name: str, today: date) -> Todo | Non
     if ev.state == EvaluationState.CYCLE_OPEN and ev.criteria_due_date:
         due, what, url = ev.criteria_due_date, "ustal kryteria oceny", url + "#czesc-1"
     elif ev.state == EvaluationState.OBSERVATION and ev.due_date:
-        due, what, url = ev.due_date, "rozmowa i ocena", url + "/przygotowanie"
+        due, what, url = ev.due_date, "rozmowa oceniająca, potem ocena", url
     elif ev.state == EvaluationState.INTERVIEW_HELD and ev.due_date:
         due, what, url = ev.due_date, "dokończ arkusz oceny", url + "#czesc-2"
     else:
@@ -245,6 +247,7 @@ class Tips:
 def tips_for(
     *, ev: EvaluationSummary, role: str | None, today: date, notes: Sequence[Note] | None,
     warnings: int = 0, objection_until: date | None = None, new_note: str | None = None,
+    interview_stage: bool = False, interview_planned: date | None = None,
 ) -> Tips | None:
     """Krótkie, proaktywne porady zależne od etapu i roli. Bez LLM — z przepisów i terminów."""
     url = f"/core/oceny/{ev.id}"
@@ -252,15 +255,22 @@ def tips_for(
     if role == "EVALUATOR":
         if s == EvaluationState.CYCLE_OPEN:
             due = ev.criteria_due_date
-            t = Tips(f"Ustal kryteria{f' do {due:%d.%m}' if due else ''} — po rozmowie z ocenianym (§ 5).")
+            t = Tips(f"Przeprowadź rozmowę rozpoczynającą i ustal kryteria{f' do {due:%d.%m}' if due else ''}.")
             t.tips = ["Wybierz najwyżej 3 kryteria dodatkowe — te, które najlepiej opisują obowiązki na stanowisku.",
                       "Powiedz wprost, czego oczekujesz w każdym kryterium. To punkt odniesienia przy ocenie."]
-            t.actions = [("Przygotuj rozmowę rozpoczynającą", hr_prep_url("rozpoczynajaca", ev.employee_id), True),
-                         ("Do części I", url + "#czesc-1", False)]
             return t
         if s == EvaluationState.CRITERIA_CONFIRMED:
             return Tips("Czeka na potwierdzenie kryteriów przez ocenianego.",
                         ["Okres oceny zacznie się w dniu potwierdzenia. Warto przypomnieć o tym ocenianemu."])
+        if s == EvaluationState.OBSERVATION and interview_stage:
+            if interview_planned:
+                t = Tips(f"Rozmowa oceniająca {until(interview_planned, today)} ({interview_planned:%d.%m}).")
+                t.tips = ["Po rozmowie zapisz jej datę i najważniejsze wnioski — dopiero wtedy wpiszesz ocenę."]
+            else:
+                t = Tips(f"Umów rozmowę oceniającą{f' przed {ev.due_date:%d.%m}' if ev.due_date else ''}.")
+                t.tips = ["Najlepiej 2–3 tygodnie przed terminem oceny — zostanie czas na spokojne sporządzenie oceny.",
+                          "Ocenę wpiszesz dopiero po rozmowie."]
+            return t
         if s == EvaluationState.OBSERVATION:
             left = (ev.due_date - today).days if ev.due_date else None
             notes = list(notes or [])
@@ -274,9 +284,6 @@ def tips_for(
                           + (f", ostatnią {ago(last, today)}." if last else "."))
             if notes and all((today - n.observed_on).days <= 60 for n in notes) and len(notes) < 4:
                 t.tips.append("Notatki są tylko z ostatnich tygodni — przypomnij sobie też początek okresu.")
-            t.actions = [("Pomóż mi przygotować się do rozmowy", url + "/przygotowanie", True)]
-            if new_note:
-                t.actions.append(("Dodaj notatkę", new_note, False))
             return t
         if s == EvaluationState.INTERVIEW_HELD:
             t = Tips(f"Sporządź ocenę{f' do {ev.due_date:%d.%m}' if ev.due_date else ''}.")
@@ -285,7 +292,6 @@ def tips_for(
                               "od Twoich notatek (⚠). Jeśli świadomie — uzasadnij.")
             t.tips += ["Oceniaj cały okres, nie tylko ostatnie tygodnie.",
                        "Wnioski do IPRZ są obowiązkowe — wpisz to, o czym rozmawialiście."]
-            t.actions = [("Do arkusza", url + "#czesc-2", True), ("Ściąga z rozmowy", url + "/przygotowanie", False)]
             return t
         if s == EvaluationState.AWAITING_ACK:
             return Tips("Przekaż ocenę ocenianemu do zapoznania.",
@@ -301,14 +307,16 @@ def tips_for(
         return None
     if role == "EMPLOYEE":
         if s == EvaluationState.CRITERIA_CONFIRMED:
-            return Tips("Potwierdź, że znasz kryteria i termin oceny.", [],
-                        [("Potwierdź", url + "#czesc-1", True)])
+            return Tips("Przeczytaj kryteria i termin oceny, a potem potwierdź to na dole.")
+        if s == EvaluationState.OBSERVATION and interview_planned:
+            return Tips(f"Rozmowa oceniająca: {interview_planned:%d.%m.%Y} ({until(interview_planned, today)}).",
+                        ["Przygotuj swoje przykłady: największe sukcesy, trudności i czego chcesz się nauczyć."])
         if s == EvaluationState.OBSERVATION:
             return Tips("Trwa okres oceny.",
                         ["Możesz w każdej chwili poprosić przełożonego o rozmowę o postępach."])
         if s == EvaluationState.AWAITING_ACK:
             return Tips("Zapoznaj się z oceną.",
-                        ["Od dnia zapoznania masz 7 dni na sprzeciw (art. 83 ust. 1 ustawy)."],
+                        ["Od dnia zapoznania masz 7 dni na sprzeciw."],
                         [("Przejdź do oceny", url + "#czesc-2", True)])
         if s == EvaluationState.ACKNOWLEDGED and objection_until:
             return Tips(f"Sprzeciw możesz wnieść do {objection_until:%d.%m.%Y}.")
@@ -340,6 +348,32 @@ OUTLINE_BASE = [
     ("Zamknięcie", "3 min", ["Podsumuj ustalenia i następne kroki.",
                               "Powiedz, kiedy dostanie arkusz do zapoznania i że ma 7 dni na sprzeciw."]),
 ]
+
+
+# Stały przebieg rozmowy rozpoczynającej okres oceny — panel asystenta HR przy kryteriach.
+START_OUTLINE = [
+    ("Cel rozmowy", "3 min", ["Po co jest ocena okresowa i jak będzie przebiegać.",
+                              "Kiedy będzie rozmowa oceniająca i termin oceny."]),
+    ("Obowiązki", "5–10 min", ["Główne obowiązki z opisu stanowiska — czy opis jest aktualny?"]),
+    ("Kryteria", "10 min", ["Kryteria obowiązkowe dla tego arkusza.",
+                            "Do 3 kryteriów dodatkowych — wyjaśnij, dlaczego te."]),
+    ("Oczekiwania", "10 min", ["Jak wygląda spełnienie każdego kryterium „na poziomie oczekiwań”.",
+                               "Przykłady z codziennej pracy, nie ogólniki."]),
+    ("Cele", "5–10 min", ["Jeśli to ma sens: 2–3 cele na okres oceny i sposób ich realizacji."]),
+    ("Zamknięcie", "3 min", ["Podsumuj ustalenia.",
+                             "Wpisz kryteria i przekaż arkusz ocenianemu do potwierdzenia."]),
+]
+
+
+def interview_outline(criteria: Sequence[CriterionRef]) -> list[tuple[str, str, list[str]]]:
+    """Stały przebieg rozmowy oceniającej; punkt „Obowiązki i kryteria” uzupełniany kryteriami tej oceny."""
+    outline = []
+    for title, minutes, points in OUTLINE_BASE:
+        if not points:
+            points = ["Przejdź kolejno przez kryteria: " + ", ".join(cr.name for cr in criteria) + ".",
+                      "Przy każdym: fakt z notatek → pytanie o perspektywę ocenianego → oczekiwanie na przyszłość."]
+        outline.append((title, minutes, points))
+    return outline
 
 
 def prepare(
@@ -374,12 +408,6 @@ def prepare(
         topics.append("Wszystkie notatki są z ostatnich tygodni — przypomnij sobie początek okresu.")
     topics.append("Zapytaj o potrzeby szkoleniowe — z tego powstaną obowiązkowe wnioski do IPRZ.")
 
-    outline = []
-    for title, minutes, points in OUTLINE_BASE:
-        if not points:
-            points = ["Przejdź kolejno przez kryteria: " + ", ".join(cr.name for cr in criteria) + ".",
-                      "Przy każdym: fakt z notatek → pytanie o perspektywę ocenianego → oczekiwanie na przyszłość."]
-        outline.append((title, minutes, points))
-
+    outline = interview_outline(criteria)
     last = notes[0].observed_on if notes else None
     return Prep(len(notes), ago(last, today), views, strengths, improvements, topics, outline)

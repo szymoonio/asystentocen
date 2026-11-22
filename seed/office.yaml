@@ -1,20 +1,18 @@
-# Fikcyjny urząd do demo i testów. ZAMROŻONE (krok 0).
+# Fikcyjny urząd do demo: referat Henryka Kowalczyka i jego podwładni + robocze konto administratora.
+# (Pełny, dawny zestaw osób — kierownictwo, kadry, awans obligatoryjny, długa nieobecność — jest w
+# tests/fixtures/office_full.yaml i służy testom.)
 # Dane zaprojektowane pod datę demo 2026-11-21 (DEMO_TODAY), żeby od razu były widoczne:
 #   - Zofia Nowicka (E09): termin ustalenia kryteriów minął 19.11.2026 (zaległe)
-#   - Ewa Rzetelna (E07): termin oceny 10.12.2026, ostatnia notatka sprzed miesięcy
-#   - Grzegorz Wzór (E06): ponowna ocena po negatywnej — termin 15.12.2026
-#   - Anna Kierunkowa (E03): rozmowa oceniająca odbyta, termin 30.11.2026 (29.11 to niedziela)
-#   - Piotr Analityczny (E08): 2 kolejne oceny „powyżej oczekiwań” → obligatoryjny stopień
-#     do 07.12.2026 (30 dni od zapoznania 06.11.2026 wypada w niedzielę)
-#   - Krzysztof Długi (E10): nieobecność 89 dni → termin 03.02.2027 + 89 dni = 03.05.2027
-#     (święto) → 04.05.2027
-#   - Tomasz Młodszy (E12): umowa na czas określony — NIE podlega ocenie
-#   - Jolanta Wytrwała (E13): urzędniczka od 2016 r., dwie oceny za sobą, rozmowa oceniająca
-#     odbyta 18.11.2026, arkusz częściowo wypełniony — termin 02.12.2026; 35 notatek
-#   - Michał Rzeczowy (E14): od 2021 r., dwie oceny „na poziomie”, w notatkach wyraźna poprawa
+#   - Ewa Lewandowska (E07): termin oceny 10.12.2026, ostatnia notatka sprzed miesięcy
+#   - Grzegorz Wójcik (E06): ponowna ocena po negatywnej — termin 15.12.2026
+#   - Tomasz Zieliński (E12): umowa na czas określony — NIE podlega ocenie
+#   - Jolanta Kamińska (E13): urzędniczka od 2016 r., dwie oceny za sobą, rozmowa oceniająca
+#     odbyta 18.11.2026, arkusz do sporządzenia — termin 02.12.2026; 35 notatek
+#   - Michał Szymański (E14): od 2021 r., dwie oceny „na poziomie”, w notatkach wyraźna poprawa
 #     (komunikacja, obsługa interesantów); 42 notatki
-#   - Natalia Bystra (E15): od 2023 r., pierwsza ocena „powyżej”, od połowy 2026 r. spadek
+#   - Natalia Dąbrowska (E15): od 2023 r., pierwsza ocena „powyżej”, od połowy 2026 r. spadek
 #     w organizacji pracy i rzetelności; 20 notatek
+#   - Adam Nowak (E16): administrator systemu — konto robocze, na razie bez dodatkowych uprawnień
 # Wartości due_date / criteria_due_date to oczekiwane wyniki reguł (A może je przeliczać
 # i porównywać w testach).
 
@@ -31,63 +29,19 @@ org_units:
   - {id: U-WK, name: Wydział Kadr, parent_id: U-KIER, city: Warszawa}
 
 employees:
-  - id: E01
-    first_name: Barbara
-    last_name: Główna
-    email: barbara.glowna@przyklady.example
-    position: {title: Generalny Dyrektor Przekładów, org_unit_id: U-KIER, is_head_of_office: true, manages_people: true}
-    basis: UMOWA_NIEOKRESLONY
-    indefinite_since: 2023-01-15
-    supervisor_id: null          # oceniający spoza urzędu (minister)
-    extra_roles: [ZARZADZAJACY]
-
-  - id: E02
-    first_name: Tadeusz
-    last_name: Generalny
-    email: tadeusz.generalny@przyklady.example
-    position: {title: Dyrektor generalny urzędu, org_unit_id: U-KIER, manages_people: true}
-    basis: MIANOWANIE
-    indefinite_since: 2015-05-12
-    appointed_year: 2015
-    grade: 6
-    grade_granted_on: 2023-06-01
-    supervisor_id: E01
-    extra_roles: [ZARZADZAJACY]
-
-  - id: E03
-    first_name: Anna
-    last_name: Kierunkowa
-    email: anna.kierunkowa@przyklady.example
-    position: {title: Dyrektor Departamentu Przekładów, org_unit_id: U-DP, manages_people: true}
-    basis: MIANOWANIE
-    indefinite_since: 2016-11-29
-    appointed_year: 2016
-    grade: 5
-    grade_granted_on: 2022-12-01
-    supervisor_id: E02
-
-  - id: E04
-    first_name: Marek
-    last_name: Naczelny
-    email: marek.naczelny@przyklady.example
-    position: {title: Naczelnik Wydziału Tłumaczeń Pisemnych, org_unit_id: U-WTP, manages_people: true}
-    basis: UMOWA_NIEOKRESLONY
-    indefinite_since: 2018-03-01
-    supervisor_id: E03
-
   - id: E05
     first_name: Henryk
-    last_name: Pryncypał
-    email: henryk.pryncypal@przyklady.example
+    last_name: Kowalczyk
+    email: henryk.kowalczyk@przyklady.example
     position: {title: Kierownik Referatu Przekładów, org_unit_id: U-RP, manages_people: true}
     basis: UMOWA_NIEOKRESLONY
     indefinite_since: 2019-03-03
-    supervisor_id: E04
+    supervisor_id: null          # przełożony spoza zespołu demo
 
   - id: E06
     first_name: Grzegorz
-    last_name: Wzór
-    email: grzegorz.wzor@przyklady.example
+    last_name: Wójcik
+    email: grzegorz.wojcik@przyklady.example
     position: {title: specjalista ds. przekładów, org_unit_id: U-RP}
     basis: MIANOWANIE
     indefinite_since: 2019-06-12
@@ -98,24 +52,12 @@ employees:
 
   - id: E07
     first_name: Ewa
-    last_name: Rzetelna
-    email: ewa.rzetelna@przyklady.example
+    last_name: Lewandowska
+    email: ewa.lewandowska@przyklady.example
     position: {title: główny specjalista ds. terminologii, org_unit_id: U-RP}
     basis: UMOWA_NIEOKRESLONY
     indefinite_since: 2024-12-10
     supervisor_id: E05
-
-  - id: E08
-    first_name: Piotr
-    last_name: Analityczny
-    email: piotr.analityczny@przyklady.example
-    position: {title: główny analityk, org_unit_id: U-WTP}
-    basis: MIANOWANIE
-    indefinite_since: 2015-09-01
-    appointed_year: 2015
-    grade: 4
-    grade_granted_on: 2022-01-10
-    supervisor_id: E04
 
   - id: E09
     first_name: Zofia
@@ -126,29 +68,10 @@ employees:
     indefinite_since: 2026-10-20
     supervisor_id: E05
 
-  - id: E10
-    first_name: Krzysztof
-    last_name: Długi
-    email: krzysztof.dlugi@przyklady.example
-    position: {title: referendarz, org_unit_id: U-WTP}
-    basis: UMOWA_NIEOKRESLONY
-    indefinite_since: 2025-02-03
-    supervisor_id: E04
-
-  - id: E11
-    first_name: Magda
-    last_name: Kadrowa
-    email: magda.kadrowa@przyklady.example
-    position: {title: starszy specjalista ds. kadr, org_unit_id: U-WK}
-    basis: UMOWA_NIEOKRESLONY
-    indefinite_since: 2025-06-02
-    supervisor_id: E02
-    extra_roles: [KADRY, ADMIN]
-
   - id: E12
     first_name: Tomasz
-    last_name: Młodszy
-    email: tomasz.mlodszy@przyklady.example
+    last_name: Zieliński
+    email: tomasz.zielinski@przyklady.example
     position: {title: młodszy referent, org_unit_id: U-RP}
     basis: UMOWA_OKRESLONY
     indefinite_since: null
@@ -156,8 +79,8 @@ employees:
 
   - id: E13
     first_name: Jolanta
-    last_name: Wytrwała
-    email: jolanta.wytrwala@przyklady.example
+    last_name: Kamińska
+    email: jolanta.kaminska@przyklady.example
     position: {title: starszy specjalista ds. weryfikacji przekładów, org_unit_id: U-RP}
     basis: MIANOWANIE
     indefinite_since: 2016-04-04
@@ -168,8 +91,8 @@ employees:
 
   - id: E14
     first_name: Michał
-    last_name: Rzeczowy
-    email: michal.rzeczowy@przyklady.example
+    last_name: Szymański
+    email: michal.szymanski@przyklady.example
     position: {title: specjalista ds. przekładów, org_unit_id: U-RP}
     basis: UMOWA_NIEOKRESLONY
     indefinite_since: 2021-02-15
@@ -177,105 +100,32 @@ employees:
 
   - id: E15
     first_name: Natalia
-    last_name: Bystra
-    email: natalia.bystra@przyklady.example
+    last_name: Dąbrowska
+    email: natalia.dabrowska@przyklady.example
     position: {title: referendarz, org_unit_id: U-RP}
     basis: UMOWA_NIEOKRESLONY
     indefinite_since: 2023-05-08
     supervisor_id: E05
 
+  - id: E16                       # konto administratora (robocze) — celowo bez extra_roles
+    first_name: Adam
+    last_name: Nowak
+    email: adam.nowak@przyklady.example
+    position: {title: administrator systemu, org_unit_id: U-KIER}
+    basis: UMOWA_OKRESLONY         # nie podlega ocenie okresowej
+    indefinite_since: null
+    supervisor_id: null
+
 absences:
-  - {employee_id: E10, start: 2026-08-03, end: 2026-10-30, justified: true}
   # dwie krótkie nieobecności Ewy — rozdzielone dniem roboczym, więc NIE łączą się
   - {employee_id: E07, start: 2026-07-06, end: 2026-07-17, justified: true}
   - {employee_id: E07, start: 2026-07-21, end: 2026-07-31, justified: true}
 
 evaluations:
-  # --- kierownictwo -----------------------------------------------------------------
-  - id: EV-E01-2025
-    employee_id: E01
-    evaluator_id: null
-    sheet: A
-    state: OBSERVATION
-    additional: [NEGOCJOWANIE, RADZENIE_SOBIE_W_KRYZYSIE]
-    criteria_set_on: 2025-01-15
-    period_from: 2025-01-15
-    due_date: 2027-01-15
-
-  - id: EV-E02-2025
-    employee_id: E02
-    evaluator_id: E01
-    sheet: B
-    state: OBSERVATION
-    additional: [WYSTAPIENIA_PUBLICZNE]
-    criteria_set_on: 2025-05-12
-    period_from: 2025-05-12
-    due_date: 2027-05-12
-
-  - id: EV-E03-2024
-    employee_id: E03
-    evaluator_id: E02
-    sheet: B
-    state: INTERVIEW_HELD
-    additional: [ZARZADZANIE_STRATEGICZNE, NEGOCJOWANIE]
-    criteria_set_on: 2024-12-05
-    period_from: 2024-12-05
-    due_date: 2026-11-30          # 29.11.2026 (niedziela) → 30.11.2026
-
-  # --- Marek: historia dwóch ocen, nowy cykl -----------------------------------------
-  - id: EV-E04-2024
-    employee_id: E04
-    evaluator_id: E03
-    sheet: B
-    state: FINAL
-    additional: [WYSTAPIENIA_PUBLICZNE]
-    criteria_set_on: 2022-03-10
-    period_from: 2022-03-10
-    due_date: 2024-03-01
-    result:
-      partial_points: {ZARZADZANIE_LUDZMI: 7, PODEJMOWANIE_DECYZJI: 7, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 5, KOMUNIKACJA: 7, WYSTAPIENIA_PUBLICZNE: 5}
-      mean_numerator: 19
-      mean_denominator: 3
-      level: POWYZEJ
-      outcome: POZYTYWNA
-      assessed_on: 2024-03-01
-      acknowledged_on: 2024-03-04
-      promotion_requested: null
-
-  - id: EV-E04-2026
-    employee_id: E04
-    evaluator_id: E03
-    sheet: B
-    state: FINAL
-    additional: [WYSTAPIENIA_PUBLICZNE, WYKORZYSTYWANIE_WIEDZY, KREATYWNOSC]
-    criteria_set_on: 2024-03-15
-    period_from: 2024-03-15
-    due_date: 2026-03-02          # 01.03.2026 (niedziela) → 02.03.2026
-    result:
-      partial_points: {ZARZADZANIE_LUDZMI: 9, PODEJMOWANIE_DECYZJI: 5, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 7, WYSTAPIENIA_PUBLICZNE: 5, WYKORZYSTYWANIE_WIEDZY: 7, KREATYWNOSC: 7}
-      mean_numerator: 27
-      mean_denominator: 4
-      level: POWYZEJ
-      outcome: POZYTYWNA
-      assessed_on: 2026-03-02
-      acknowledged_on: 2026-03-03
-      promotion_requested: null
-
-  - id: EV-E04-2028
-    employee_id: E04
-    evaluator_id: E03
-    sheet: B
-    state: OBSERVATION
-    additional: [WYSTAPIENIA_PUBLICZNE]
-    criteria_set_on: 2026-03-23
-    period_from: 2026-03-23
-    criteria_due_date: 2026-04-01
-    due_date: 2028-03-02
-
   # --- Henryk ------------------------------------------------------------------------
   - id: EV-E05-2025
     employee_id: E05
-    evaluator_id: E04
+    evaluator_id: null
     sheet: B
     state: OBSERVATION
     additional: [NEGOCJOWANIE]
@@ -346,54 +196,6 @@ evaluations:
     period_from: 2024-12-20
     due_date: 2026-12-10            # 24 mies. od zatrudnienia na czas nieokreślony
 
-  # --- Piotr: dwie kolejne „powyżej oczekiwań” → obligatoryjny stopień ----------------
-  - id: EV-E08-2024
-    employee_id: E08
-    evaluator_id: E04
-    sheet: C
-    state: FINAL
-    additional: [MYSLENIE_ANALITYCZNE]
-    criteria_set_on: 2022-11-20
-    period_from: 2022-11-20
-    due_date: 2024-11-05
-    result:
-      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 7, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 7, MYSLENIE_ANALITYCZNE: 9}
-      mean_numerator: 22
-      mean_denominator: 3
-      level: POWYZEJ
-      outcome: POZYTYWNA
-      assessed_on: 2024-11-05
-      acknowledged_on: 2024-11-06
-      promotion_requested: false
-
-  - id: EV-E08-2026
-    employee_id: E08
-    evaluator_id: E04
-    sheet: C
-    state: FINAL
-    additional: [MYSLENIE_ANALITYCZNE]
-    criteria_set_on: 2024-11-25
-    period_from: 2024-11-25
-    due_date: 2026-11-05
-    result:   # jak przykładowy arkusz nr 11 (42/6 = 7)
-      partial_points: {WYKORZYSTYWANIE_WIEDZY: 7, RZETELNOSC: 9, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7, KOMUNIKACJA: 5, MYSLENIE_ANALITYCZNE: 7}
-      mean_numerator: 7
-      mean_denominator: 1
-      level: POWYZEJ
-      outcome: POZYTYWNA
-      assessed_on: 2026-11-05
-      acknowledged_on: 2026-11-06
-      promotion_requested: false
-
-  - id: EV-E08-2028
-    employee_id: E08
-    evaluator_id: E04
-    sheet: C
-    state: CYCLE_OPEN
-    additional: []
-    criteria_due_date: 2026-12-07   # 05.12.2026 (sobota) → 07.12.2026
-    due_date: 2028-11-06            # 05.11.2028 (niedziela) → 06.11.2028
-
   # --- Zofia: nowa osoba, kryteria zaległe -------------------------------------------
   - id: EV-E09-2026
     employee_id: E09
@@ -403,28 +205,6 @@ evaluations:
     additional: []
     criteria_due_date: 2026-11-19   # 30 dni od 20.10.2026 (dzień zdarzenia się nie liczy)
     due_date: 2028-10-20
-
-  # --- Krzysztof: długa nieobecność przedłuża termin ----------------------------------
-  - id: EV-E10-2025
-    employee_id: E10
-    evaluator_id: E04
-    sheet: C
-    state: OBSERVATION
-    additional: [ORIENTACJA_NA_KLIENTA]
-    criteria_set_on: 2025-02-20
-    period_from: 2025-02-20
-    due_date: 2027-05-04            # 03.02.2027 + 89 dni = 03.05.2027 (święto) → 04.05.2027
-
-  # --- Magda -------------------------------------------------------------------------
-  - id: EV-E11-2025
-    employee_id: E11
-    evaluator_id: E02
-    sheet: C
-    state: OBSERVATION
-    additional: []
-    criteria_set_on: 2025-06-20
-    period_from: 2025-06-20
-    due_date: 2027-06-02
 
   # --- Jolanta: dwie oceny „powyżej”, bieżąca w trakcie sporządzania ------------------
   - id: EV-E13-2022
@@ -485,7 +265,6 @@ evaluations:
     form:                           # rozmowa odbyta, arkusz w wersji roboczej
       interview_date: 2026-11-18
       partial_points: {WYKORZYSTYWANIE_WIEDZY: 9, RZETELNOSC: 9, ORGANIZACJA_PRACY: 7, WSPOLPRACA: 7}
-      justification: Oceniana utrzymuje bardzo wysoką jakość weryfikacji przekładów i chętnie dzieli się wiedzą z zespołem (szkolenie z narzędzia CAT, aktualizacja glosariusza).
 
   # --- Michał: dwie oceny „na poziomie”, bieżący okres z wyraźną poprawą ----------------
   - id: EV-E14-2023
@@ -661,17 +440,6 @@ notes:
     strengths: [Cierpliwość, Jasne wyjaśnienie procedury]
     improvements: []
     ratings: [{criterion_code: ORIENTACJA_NA_KLIENTA, value: 9}]
-
-  - id: N009
-    author_id: E04
-    subject_id: E10
-    evaluation_id: EV-E10-2025
-    observed_on: 2026-11-03
-    created_at: 2026-11-03T09:00:00
-    body: Pierwszy tydzień po powrocie z długiej nieobecności. Ustaliliśmy, że przez dwa tygodnie nie dostaje nowych spraw terminowych.
-    strengths: []
-    improvements: []
-    ratings: []
 
   - id: N010
     author_id: E05
@@ -1739,3 +1507,26 @@ notes:
     strengths: ['Otwartość na uwagi', 'Kompletność informacji']
     improvements: ['Zwięzłość w korespondencji']
     ratings: [{criterion_code: WSPOLPRACA, value: 7}, {criterion_code: KOMUNIKACJA, value: 5}]
+
+  # --- Zofia i Tomasz: po jednej notatce, żeby teczki nowych osób nie były puste ---------
+  - id: N107
+    author_id: E05
+    subject_id: E09
+    evaluation_id: EV-E09-2026
+    observed_on: 2026-11-04
+    created_at: 2026-11-04T15:40:00
+    body: 'Pierwsze samodzielne tłumaczenie pisma do ministerstwa — oddane dzień przed terminem, drobne poprawki terminologiczne po weryfikacji.'
+    strengths: ['Terminowość', 'Dopytuje, gdy czegoś nie wie']
+    improvements: ['Glosariusz referatu — sprawdzać przed oddaniem']
+    ratings: []
+
+  - id: N108
+    author_id: E05
+    subject_id: E12
+    evaluation_id: null
+    observed_on: 2026-10-29
+    created_at: 2026-10-29T10:15:00
+    body: 'Sprawnie przygotował zestawienie zleceń za październik, sam wyłapał dwa zdublowane wpisy.'
+    strengths: ['Dokładność', 'Samodzielność']
+    improvements: []
+    ratings: []

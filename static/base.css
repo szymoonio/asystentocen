@@ -69,8 +69,9 @@ p { margin: 0 0 8px; }
 .topbar .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; justify-content: space-between; min-height: 64px; padding-top: 8px; padding-bottom: 8px; }
 .brand { display: flex; gap: 12px; align-items: center; color: var(--text); text-decoration: none; }
 .brand:hover { color: var(--text); }
-.flag { flex: 0 0 auto; width: 28px; height: 18px; border: 1px solid #CCCCCC; background: #FFFFFF; position: relative; }
-.flag::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: var(--accent-red); }
+/* godło + czerwona pionowa kreska + nazwa — jak w serwisach gov.pl */
+.emblem { flex: 0 0 auto; width: 38px; height: auto; display: block; }
+.brand-divider { flex: 0 0 auto; align-self: stretch; width: 2px; min-height: 44px; background: var(--accent-red); }
 .brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .brand-name { font-size: 23px; font-weight: 700; }
 .brand-office { font-size: 15px; color: var(--text-muted); }

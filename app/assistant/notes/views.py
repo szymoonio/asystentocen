@@ -149,7 +149,7 @@ def teczka(request: Request, q: str = "", sort: str = "nazwisko"):
     return render(
         request,
         "assistant/teczka_lista.html",
-        title="Teczka",
+        title="Notatki",
         rows=_sort_rows(rows, sort),
         total=total,
         q=q,
@@ -279,7 +279,7 @@ def teczka_osoby(
     return render(
         request,
         "assistant/teczka_osoba.html",
-        title=f"Teczka · {subject.full_name}",
+        title=f"Notatki · {subject.full_name}",
         subject=subject,
         is_subordinate=is_sub,
         evaluation=evaluation,

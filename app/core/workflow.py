@@ -113,7 +113,7 @@ def save_part1(c: Container, evaluation_id: str, user: UserContext, *, additiona
         _require(ctx, role=EVALUATOR, states={S.CYCLE_OPEN})
         codes = [a for a in additional if a]
         if len(codes) > MAX_ADDITIONAL:
-            raise WorkflowError("Można wybrać nie więcej niż 3 kryteria dodatkowe (§ 5 ust. 2).")
+            raise WorkflowError("Można wybrać nie więcej niż 3 kryteria dodatkowe.")
         if len(set(codes)) != len(codes):
             raise WorkflowError("Kryteria dodatkowe nie mogą się powtarzać.")
         allowed = {cdef.code for cdef in c.catalog.additional_for(SheetType(ctx.row.sheet))}
@@ -154,18 +154,59 @@ def acknowledge_criteria(c: Container, evaluation_id: str, user: UserContext, *,
         s.commit()
 
 
-# --- Część II: rozmowa i ocena ----------------------------------------------------------
+# --- Część II: rozmowa oceniająca, potem ocena na piśmie ----------------------------------
+# Etap „Rozmowa oceniająca” to nadal stan OBSERVATION (okres oceny trwa do rozmowy) — rozróżnia go
+# znacznik form.interview_stage. Stan INTERVIEW_HELD = rozmowa odbyta, oceniający sporządza ocenę.
 
 
-def record_interview(c: Container, evaluation_id: str, user: UserContext, *, interview_date: date) -> None:
+def interview_stage(row: EvaluationRow) -> bool:
+    """Czy oceniający przeszedł już do etapu rozmowy oceniającej."""
+    form = row.form or {}
+    return S(row.state) == S.OBSERVATION and bool(form.get("interview_stage") or form.get("interview_planned_on"))
+
+
+def start_interview_stage(c: Container, evaluation_id: str, user: UserContext) -> None:
+    """Przejście z okresu oceny do przygotowania rozmowy oceniającej (rozmowa jeszcze się nie odbyła)."""
+    with c.session_factory() as s:
+        ctx = _open(c, evaluation_id, user, s)
+        _require(ctx, role=EVALUATOR, states={S.OBSERVATION})
+        if not ctx.form.get("interview_stage"):
+            ctx.set_form(interview_stage=_iso(ctx.today))
+            ctx.log("INTERVIEW_STAGE_STARTED")
+        s.commit()
+
+
+def plan_interview(c: Container, evaluation_id: str, user: UserContext, *, planned_on: date | None) -> None:
+    """Termin rozmowy oceniającej, uzgodniony z ocenianym — widoczny dla obu stron."""
+    with c.session_factory() as s:
+        ctx = _open(c, evaluation_id, user, s)
+        _require(ctx, role=EVALUATOR, states={S.OBSERVATION})
+        if planned_on is None:
+            raise WorkflowError("Wybierz datę rozmowy oceniającej.")
+        if planned_on < ctx.today:
+            raise WorkflowError("Termin rozmowy nie może być w przeszłości. Jeśli rozmowa już była, zapisz ją niżej.")
+        if ctx.row.due_date and planned_on > ctx.row.due_date:
+            raise WorkflowError("Rozmowa oceniająca musi się odbyć przed terminem sporządzenia oceny.")
+        ctx.set_form(interview_stage=ctx.form.get("interview_stage") or _iso(ctx.today),
+                     interview_planned_on=_iso(planned_on))
+        ctx.log("INTERVIEW_PLANNED", planned_on=planned_on)
+        s.commit()
+
+
+def record_interview(c: Container, evaluation_id: str, user: UserContext, *, interview_date: date,
+                     conclusions: str | None = None) -> None:
     with c.session_factory() as s:
         ctx = _open(c, evaluation_id, user, s)
         _require(ctx, role=EVALUATOR, states={S.OBSERVATION, S.INTERVIEW_HELD})
+        if interview_date is None:
+            raise WorkflowError("Wpisz datę rozmowy oceniającej.")
         if interview_date > ctx.today:
             raise WorkflowError("Data rozmowy oceniającej nie może być z przyszłości.")
         if ctx.row.period_from and interview_date < ctx.row.period_from:
             raise WorkflowError("Rozmowa oceniająca nie może się odbyć przed początkiem okresu oceny.")
         ctx.set_form(interview_date=_iso(interview_date))
+        if conclusions is not None:
+            ctx.set_form(interview_conclusions=conclusions.strip() or None)
         if not ctx.row.period_to:
             # „do” = data sporządzenia (dziś) albo termin oceny, gdy wypełniana po jego upływie
             ctx.row.period_to = min(ctx.today, ctx.row.due_date) if ctx.row.due_date else ctx.today
@@ -178,20 +219,26 @@ def record_interview(c: Container, evaluation_id: str, user: UserContext, *, int
         s.commit()
 
 
+def previous_from_history(s: Session, row: EvaluationRow) -> dict[str, Any]:
+    """Dane poprzedniej oceny okresowej — zawsze z historii ocen tej osoby (ostatnia ocena ostateczna
+    sporządzona przed bieżącą). Bez historii: {"first": True} — to pierwsza ocena w systemie."""
+    query = select(EvaluationRow).where(
+        EvaluationRow.employee_id == row.employee_id, EvaluationRow.state == S.FINAL.value,
+        EvaluationRow.id != row.id, EvaluationRow.assessed_on.is_not(None),
+    )
+    if row.assessed_on:
+        query = query.where(EvaluationRow.assessed_on < row.assessed_on)
+    prev = s.scalars(query.order_by(EvaluationRow.assessed_on.desc())).first()
+    if prev is None:
+        return {"outcome": None, "level": None, "assessed_on": None, "from_history": True, "first": True}
+    return {"outcome": prev.outcome, "level": prev.level, "assessed_on": prev.assessed_on.isoformat(),
+            "from_history": True, "evaluation_id": prev.id}
+
+
 def _prefill_previous(ctx: _Ctx) -> None:
-    """Dane poprzedniej oceny urzędnika — automatycznie z historii (schemat pól arkusza)."""
-    emp = _employee(ctx)
-    if not emp.is_urzednik or ctx.form.get("previous"):
-        return
-    prev = ctx.s.scalars(
-        select(EvaluationRow)
-        .where(EvaluationRow.employee_id == ctx.row.employee_id, EvaluationRow.state == S.FINAL.value,
-               EvaluationRow.id != ctx.row.id)
-        .order_by(EvaluationRow.assessed_on.desc())
-    ).first()
-    if prev and prev.assessed_on:
-        ctx.set_form(previous={"outcome": prev.outcome, "level": prev.level,
-                               "assessed_on": prev.assessed_on.isoformat(), "from_history": True})
+    """Dane poprzedniej oceny urzędnika — automatycznie z historii, przy każdym zapisie (bez ręcznej edycji)."""
+    if _employee(ctx).is_urzednik:
+        ctx.set_form(previous=previous_from_history(ctx.s, ctx.row))
 
 
 def save_assessment(c: Container, evaluation_id: str, user: UserContext, data: dict[str, Any]) -> None:
@@ -208,8 +255,7 @@ def save_assessment(c: Container, evaluation_id: str, user: UserContext, data: d
         for key in ("justification", "iprz", "promotion_choice", "objection_addressee", "part2_place_evaluator"):
             if key in data:
                 changes[key] = (data[key] or "").strip() or None
-        if "previous" in data and not (ctx.form.get("previous") or {}).get("from_history"):
-            changes["previous"] = data["previous"]
+        # dane poprzedniej oceny nie przychodzą z formularza — liczymy je z historii (_prefill_previous niżej)
         if "part3" in data:
             changes["part3"] = data["part3"]
         if data.get("period_from"):
@@ -218,6 +264,7 @@ def save_assessment(c: Container, evaluation_id: str, user: UserContext, data: d
             ctx.row.period_to = data["period_to"]
         ctx.set_form(**changes)
         ctx.log("ASSESSMENT_SAVED")
+        _prefill_previous(ctx)
         s.commit()
 
 

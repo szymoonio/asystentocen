@@ -244,3 +244,46 @@ def test_generate_error_is_shown(client, container, fake_llm):
 
 def test_ratings_unchanged_by_summary(svc):
     assert svc.notes_repo.get("E05", "N002").ratings == [CriterionRating(criterion_code="KOMUNIKACJA", value=3)]
+
+
+# --- krótkie sugestie do panelu asystenta przy polach arkusza (strona oceny, moduł A) ----------
+
+
+def test_suggestions_json_with_llm(client, container, fake_llm):
+    services(container).llm = fake_llm({"summarize_cycle": llm_summary})
+    data = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie").json()
+    assert data["ok"] and data["generator"] == "fake-model:summarize_cycle:v1"
+    assert data["justification"][0]["text"].startswith("Grzegorz Wzór samodzielnie uzupełnił")
+    assert data["justification"][0]["notes"][0]["url"].startswith("/asystent/teczka/E06?cykl=#")
+    assert len(data["justification"]) == 1 and len(data["iprz"]) == 1  # jedna propozycja na pole
+
+
+def test_suggestions_without_llm_are_short_skeleton(client):
+    data = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie").json()
+    assert data["ok"] and data["generator"].startswith("deterministic")
+    assert len(data["justification"]) == 1 and len(data["iprz"]) == 1
+    assert all(len(p["text"]) <= 602 for p in data["justification"] + data["iprz"])
+
+
+def test_suggestions_only_for_evaluator_and_errors_as_json(client, container, fake_llm):
+    client.get("/login/E04")
+    r = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie")
+    assert r.status_code == 403 and r.json()["ok"] is False
+    client.get("/login/E05")
+    services(container).llm = fake_llm({"summarize_cycle": LLMRateLimited("x")})
+    r = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie")
+    assert r.status_code == 502 and "przeciążony" in r.json()["error"]
+
+
+def test_suggestion_for_one_field_only(client, container, fake_llm):
+    svc = services(container)
+    svc.llm = fake_llm({"summarize_cycle": llm_summary})
+    data = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie?pole=iprz").json()
+    assert data["ok"] and len(data["iprz"]) == 1 and "justification" not in data
+    assert "TYLKO pole `development`, jako JEDEN" in svc.llm.calls[-1]["user"]
+    # potem uzasadnienie: projekt IPRZ z poprzedniego wywołania zostaje w zapisanym projekcie
+    data = client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie?pole=justification").json()
+    assert data["justification"] and "iprz" not in data
+    stored = svc.drafts.stored(GRZEGORZ_EV).result
+    assert stored.justification and stored.development
+    assert client.post(f"/asystent/podsumowanie/{GRZEGORZ_EV}/sugestie?pole=x").status_code == 400

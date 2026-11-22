@@ -65,9 +65,12 @@ def test_employee_sees_only_own_step(client):
 
 def test_coach_card_and_print_button(client):
     login(client, "E05")
-    page = client.get("/core/oceny/EV-E07-2024").text
-    assert "Asystent HR" in page and "Pomóż mi przygotować się do rozmowy" in page
-    assert "Drukuj arkusz" in page and 'id="czesc-2"' in page
+    page = client.get("/core/oceny/EV-E07-2024").text  # okres oceny
+    assert "Asystent HR" in page and "Drukuj arkusz" in page
+    assert "Przejdź do rozmowy oceniającej" in page and 'id="okres"' in page
+    coach = page.split('class="card coach"')[1].split("</section>")[0]
+    assert "Dodaj notatkę" not in coach  # zamiast tego: poproś o podsumowanie (fragment modułu B)
+    assert 'data-fragment="/asystent/analiza/fragment?osoba=E07&amp;wroc=%2Fcore%2Foceny%2FEV-E07-2024&amp;tryb=krotki"' in coach
 
 
 def test_prep_page(client):
@@ -122,15 +125,23 @@ def test_dashboard_own_evaluation_box(client):
     assert '<p class="small"><a href="/asystent/teczka">Teczka</a></p>' not in page
 
 
-def test_evaluation_page_has_notes_summary_box_and_collapsed_drafts(client):
+def test_assessment_step_has_assistant_beside_fields(client):
     login(client, "E05")
-    page = client.get("/core/oceny/EV-E13-2026").text  # rozmowa odbyta, 35 notatek
-    assert 'id="asystent-podsumowanie"' in page and "Asystent HR: podsumowanie notatek" in page
-    assert 'data-fragment="/asystent/analiza/fragment?osoba=E13&amp;wroc=%2Fcore%2Foceny%2FEV-E13-2026"' in page
-    assert "Co poszło dobrze" in page and "Pokaż wszystkie" in page and "×" in page
-    assert '<details class="more drafts">' in page  # projekty tekstów zwinięte
+    page = client.get("/core/oceny/EV-E13-2026").text  # rozmowa odbyta, 35 notatek → krok „Ocena na piśmie”
+    assert 'id="asystent-podsumowanie"' in page and "tryb=krotki" in page
+    assert "Asystent HR: podsumowanie notatek" not in page and "Co poszło dobrze" not in page  # bez deterministycznej sekcji
+    assert page.count('class="assist"') == 2  # przy uzasadnieniu i przy wnioskach do IPRZ
+    assert "Wygeneruj sugestię uzasadnienia" in page and "Wygeneruj sugestię wniosków" in page
+    assert 'data-url="/asystent/podsumowanie/EV-E13-2026/sugestie?pole=justification"' in page
+    assert 'data-url="/asystent/podsumowanie/EV-E13-2026/sugestie?pole=iprz"' in page  # każde pole osobno
+    assert '<details class="more drafts">' not in page
+    # kolejność od góry: Asystent HR → Uzasadnienie → Asystent HR → Wnioski do IPRZ
+    order = [page.index(x) for x in ('data-key="justification"', 'id="justification"', 'data-key="iprz"', 'id="iprz"')]
+    assert order == sorted(order)
+    assert "_blank" not in page  # odnośniki do notatek źródłowych otwierają się w tej samej karcie
     login(client, "E13")  # oceniana nie widzi notatek przełożonego
-    assert 'id="asystent-podsumowanie"' not in client.get("/core/oceny/EV-E13-2026").text
+    page = client.get("/core/oceny/EV-E13-2026").text
+    assert 'id="asystent-podsumowanie"' not in page and 'class="assist"' not in page
 
 
 def test_prep_page_groups_points(client):
@@ -139,6 +150,25 @@ def test_prep_page_groups_points(client):
     assert "Co poszło dobrze" in page and "Do poprawy" in page and "pc-count" in page
 
 
-def test_dashboard_is_larger(client):
+def test_dashboard_uses_same_font_size_as_other_pages(client):
+    from pathlib import Path
+
+    css = Path("static/core/core.css").read_text(encoding="utf-8")
+    assert ".dashboard {" not in css and ".dashboard h1" not in css
+
+
+def test_deadline_tomorrow_is_red():
+    today = date(2026, 11, 21)
+    assert guide.tone_for_due(date(2026, 11, 22), today) == "danger"  # jutro
+    assert guide.tone_for_due(today, today) == "danger"  # dziś
+    assert guide.tone_for_due(date(2026, 11, 20), today) == "danger"  # po terminie
+    assert guide.tone_for_due(date(2026, 11, 23), today) == "warn"
+    assert guide.tone_for_due(date(2027, 1, 30), today) == ""
+
+
+def test_app_name_without_office_name_in_header(client):
     login(client, "E05")
-    assert '<div class="dashboard">' in client.get("/core/").text
+    page = client.get("/core/").text
+    header = page.split('<header class="topbar">')[1].split("</header>")[0]
+    assert "AsystentPLUS" in header and "Generalna Dyrekcja" not in header
+    assert "· AsystentPLUS</title>" in page

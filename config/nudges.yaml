@@ -20,7 +20,7 @@ email:
   enabled: true
   transport: outbox              # outbox = nic nie wysyła (tylko dziennik); smtp = prawdziwa wysyłka
   base_url: http://127.0.0.1:8000  # adres aplikacji w linkach (nadpisuje zmienna APP_BASE_URL)
-  sender: "Asystent Ocen <asystent-ocen@przyklady.example>"
+  sender: "AsystentPLUS <asystentplus@przyklady.example>"
   repeat_after_days: 21          # jeśli nadal brak notatki — ponowne przypomnienie najwcześniej po tylu dniach
   max_per_day: 3                 # najwyżej tyle maili dziennie na przełożonego (najdawniej bez notatki najpierw)
   smtp:                          # używane tylko przy transport: smtp; hasło wyłącznie ze zmiennej środowiskowej
