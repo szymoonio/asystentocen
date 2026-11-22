@@ -120,3 +120,25 @@ def test_dashboard_own_evaluation_box(client):
     page = client.get("/core/").text
     assert "Twoja ocena okresowa" in page and "03.03.2027" in page and "Szczegóły" in page
     assert '<p class="small"><a href="/asystent/teczka">Teczka</a></p>' not in page
+
+
+def test_evaluation_page_has_notes_summary_box_and_collapsed_drafts(client):
+    login(client, "E05")
+    page = client.get("/core/oceny/EV-E13-2026").text  # rozmowa odbyta, 35 notatek
+    assert 'id="asystent-podsumowanie"' in page and "Asystent HR: podsumowanie notatek" in page
+    assert 'data-fragment="/asystent/analiza/fragment?osoba=E13&amp;wroc=%2Fcore%2Foceny%2FEV-E13-2026"' in page
+    assert "Co poszło dobrze" in page and "Pokaż wszystkie" in page and "×" in page
+    assert '<details class="more drafts">' in page  # projekty tekstów zwinięte
+    login(client, "E13")  # oceniana nie widzi notatek przełożonego
+    assert 'id="asystent-podsumowanie"' not in client.get("/core/oceny/EV-E13-2026").text
+
+
+def test_prep_page_groups_points(client):
+    login(client, "E05")
+    page = client.get("/core/oceny/EV-E14-2027/przygotowanie").text
+    assert "Co poszło dobrze" in page and "Do poprawy" in page and "pc-count" in page
+
+
+def test_dashboard_is_larger(client):
+    login(client, "E05")
+    assert '<div class="dashboard">' in client.get("/core/").text

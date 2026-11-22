@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
 {% block content %}
+<div class="dashboard">
   <div class="pagehead">
     <h1>Dzień dobry, {{ me.first_name }}</h1>
     <form method="post" action="/core/scheduler/run" class="inline-form">
@@ -64,4 +65,5 @@
   </section>
   {% endif %}
 
+</div>
 {% endblock %}

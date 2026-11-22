@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
+{% import "core/_notatki.html" as nt %}
 {% block content %}
 <p class="small noprint"><a href="/core/oceny/{{ row.id }}">← ocena: {{ employee.full_name }}</a></p>
 <div class="pagehead">
@@ -33,18 +34,10 @@
     </ol>
   </section>
 
-  <div class="todo-grid">
-    <section class="card">
-      <h2>Mocne strony z notatek</h2>
-      {% for d, t in prep.strengths %}<p class="noteline"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
-      {% else %}<p class="muted small">Brak wpisów w notatkach.</p>{% endfor %}
-    </section>
-    <section class="card">
-      <h2>Obszary do poprawy</h2>
-      {% for d, t in prep.improvements %}<p class="noteline"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
-      {% else %}<p class="muted small">Brak wpisów w notatkach.</p>{% endfor %}
-    </section>
-  </div>
+  <details class="card fold" id="z-notatek" open>
+    <summary>Z notatek: co poszło dobrze, co do poprawy</summary>
+    {{ nt.pros_cons(prep.strengths, prep.improvements, teczka) }}
+  </details>
 
   <section class="card small muted">
     Dobre praktyki: mów o faktach i zachowaniach, nie o osobie · najpierw słuchaj · nie pytaj o zdrowie ani sprawy prywatne ·

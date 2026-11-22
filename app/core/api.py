@@ -216,10 +216,19 @@ def ocena(evaluation_id: str, request: Request):
     p3 = form.get("part3") or {}
     obs = _observations(c, row, summary)
     period_notes = None
-    if role == EVALUATOR and state == EvaluationState.OBSERVATION:
+    notes_box = None  # „Asystent HR: podsumowanie notatek” — tylko dla oceniającego (notatki są jego, prywatne)
+    if role == EVALUATOR and row.evaluator_id and state in (EvaluationState.OBSERVATION, EvaluationState.INTERVIEW_HELD):
         period_notes = c.notes.notes_for(row.evaluator_id, row.employee_id, since=row.period_from or row.cycle_start)
+        notes_box = {
+            "count": len(period_notes),
+            "pros": guide.grouped_points(period_notes, "strengths"),
+            "cons": guide.grouped_points(period_notes, "improvements"),
+            "teczka": c.notes.teczka_url(row.employee_id),
+            "summary_url": guide.notes_summary_url(row.employee_id, f"/core/oceny/{row.id}"),
+        }
     tips = guide.tips_for(
-        ev=summary, role=role, today=today, notes=period_notes, warnings=len(obs["warnings"]),
+        ev=summary, role=role, today=today,
+        notes=period_notes if state == EvaluationState.OBSERVATION else None, warnings=len(obs["warnings"]),
         objection_until=objection.date if objection else None,
         new_note=guide.new_note_url(c, row.employee_id) if role == EVALUATOR and row.evaluator_id else None,
     )
@@ -229,7 +238,7 @@ def ocena(evaluation_id: str, request: Request):
         row=row, ev=summary, employee=employee, evaluator=evaluator, role=role, state=state, sheet=sheet,
         sheet_def=c.catalog.sheets[sheet], form=form, criteria=criteria, live=live, result=result, issues=issues,
         additional_options=c.catalog.additional_for(sheet), drafts=drafts,
-        obs=obs, tips=tips, events=workflow.events_for(c, row.id),
+        obs=obs, tips=tips, notes_box=notes_box, events=workflow.events_for(c, row.id),
         unit=c.employees.org_unit(employee.position.org_unit_id),
         evaluator_unit=c.employees.org_unit(evaluator.position.org_unit_id) if evaluator else None,
         office=c.employees.office(), today=today, steps=STEPS, step_index=step_index,

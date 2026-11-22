@@ -1,0 +1,41 @@
+{# Zalety | do poprawy z notatek oceniającego: dwie kolumny, 5 najczęstszych, reszta zwinięta.
+   Klasy CSS wspólne z modułem B (static/base.css: .pros-cons). #}
+{% macro pros_cons(pros, cons, link="", visible=5) %}
+  <div class="pros-cons">
+    {% for title, items, cls in [("Co poszło dobrze", pros, "pc-pros"), ("Do poprawy", cons, "pc-cons")] %}
+      <div class="pc-col {{ cls }}">
+        <h3>{{ title }} <span class="muted small">({{ items | length }})</span></h3>
+        {% if items %}
+          <ul class="pc-list">{% for p in items[:visible] %}{{ item(p, link) }}{% endfor %}</ul>
+          {% if items | length > visible %}
+            <details class="more">
+              <summary>Pokaż wszystkie ({{ items | length }})</summary>
+              <ul class="pc-list">{% for p in items[visible:] %}{{ item(p, link) }}{% endfor %}</ul>
+            </details>
+          {% endif %}
+        {% else %}
+          <p class="muted small">Brak wpisów.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro item(p, link) %}
+  <li><span class="pc-text">{% if link %}<a href="{{ link }}?cykl=#{{ p.note_id }}">{{ p.text }}</a>{% else %}{{ p.text }}{% endif %}</span>
+    {% if p.count > 1 %}<span class="pc-count" title="w {{ p.count }} notatkach">×{{ p.count }}</span>{% endif %}
+    <span class="pc-date muted">{{ p.last | pl_date }}</span></li>
+{% endmacro %}
+
+{# Projekty tekstów od asystenta przy polu arkusza — zwinięte, żeby nie zasłaniały formularza. #}
+{% macro drafts_box(items, target) %}
+  {% if items %}
+    <details class="more drafts">
+      <summary>Projekt tekstu od asystenta{% if items[0].citations %} · na podstawie {{ items[0].citations | length }} notatek{% endif %}</summary>
+      {% for d in items %}
+        <div class="draft"><p>{{ d.text }}</p>
+          <button type="button" class="secondary insert-draft" data-target="{{ target }}" data-text="{{ d.text }}">Wstaw do pola</button></div>
+      {% endfor %}
+    </details>
+  {% endif %}
+{% endmacro %}

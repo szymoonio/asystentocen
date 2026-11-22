@@ -12,7 +12,7 @@
 .t-name { font-weight: 600; text-decoration: none; }
 .t-list tr.t-stale td:first-child { border-left: 4px solid var(--warn-border); }
 .t-actions { text-align: right; white-space: nowrap; }
-.t-actions .button { font-size: 14px; min-height: 40px; padding: 4px 10px; }
+.t-actions .button { font-size: 16px; min-height: 40px; padding: 4px 10px; }
 
 /* przypomnienia */
 .t-nudges { border-left: 4px solid var(--warn); }
@@ -21,7 +21,7 @@
 .t-nudge-items { margin: 0; padding-left: 1.1rem; }
 .t-nudge-items li { margin: 0.1rem 0; }
 .t-nudge-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
-.t-nudge-actions .button, .t-nudge-actions button { font-size: 14px; min-height: 40px; padding: 4px 12px; }
+.t-nudge-actions .button, .t-nudge-actions button { font-size: 16px; min-height: 40px; padding: 4px 12px; }
 .t-nudge-actions form { margin: 0; }
 @media (max-width: 720px) {
   .t-nudge { grid-template-columns: 1fr; }
@@ -51,7 +51,7 @@
 .t-filters label { font-size: 0.85rem; margin-top: 0.25rem; }
 
 /* oś czasu */
-.t-month { font-size: 15px; font-weight: 700; color: var(--text-muted); margin: 16px 0 6px; padding-bottom: 2px; border-bottom: 1px solid var(--border); }
+.t-month { font-size: 17px; font-weight: 700; color: var(--text-muted); margin: 16px 0 6px; padding-bottom: 2px; border-bottom: 1px solid var(--border); }
 .t-timeline { list-style: none; margin: 0; padding: 0 0 0 1rem; border-left: 2px solid var(--border); }
 .t-note { position: relative; padding: 0.5rem 0 0.9rem 0.75rem; }
 .t-note::before {
@@ -66,7 +66,7 @@
 .t-plus li::marker { content: "+  "; color: var(--ok); }
 .t-minus li::marker { content: "→  "; color: var(--warn); }
 .t-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
-.t-chip { font-size: 13px; padding: 1px 8px; border: 1px solid var(--border-input); background: #fff; }
+.t-chip { font-size: 15px; padding: 1px 8px; border: 1px solid var(--border-input); background: #fff; }
 .t-chip-out { border-style: dashed; color: var(--muted); }
 .secondary-badge { background: var(--bg); color: var(--muted); }
 .t-versions { margin-top: 0.4rem; }
@@ -80,7 +80,7 @@
 @media (max-width: 640px) { .t-two { grid-template-columns: 1fr; } }
 .t-scale { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; color: var(--muted); }
 .t-rating { border: 0; padding: 0; margin: 0.6rem 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 1rem; }
-.t-rating legend { float: left; width: min(22rem, 100%); padding: 0; font-size: 15px; font-weight: 600; }
+.t-rating legend { float: left; width: min(22rem, 100%); padding: 0; font-size: 17px; font-weight: 600; }
 .t-seg { display: inline-flex; border: 1px solid var(--border-input); }
 .t-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .t-seg label {
@@ -202,12 +202,12 @@
 
 /* --- wykres w czasie --- */
 .t-chart-pick { display: flex; flex-wrap: wrap; gap: 4px 0; margin-bottom: 8px; }
-.t-pill { font-size: 14px; font-weight: 600; min-height: 40px; padding: 4px 12px; border: 1px solid var(--primary); margin-right: -1px; background: #fff; color: var(--primary); }
+.t-pill { font-size: 16px; font-weight: 600; min-height: 40px; padding: 4px 12px; border: 1px solid var(--primary); margin-right: -1px; background: #fff; color: var(--primary); }
 .t-pill[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .t-chart-svg { width: 100%; height: auto; display: block; }
 .t-chart-svg .t-grid { stroke: var(--border); stroke-width: 1; }
 .t-chart-svg .t-tick { stroke: var(--muted); }
-.t-chart-svg .t-axis { fill: var(--muted); font-size: 11px; }
+.t-chart-svg .t-axis { fill: var(--muted); font-size: 12px; }
 .t-chart-svg .t-line { fill: none; stroke: var(--border-input); stroke-width: 2; }
 .t-chart-svg .t-dot { stroke: var(--surface); stroke-width: 2; cursor: pointer; }
 .t-chart-svg .t-dot.l1 { fill: var(--danger); }
@@ -233,7 +233,7 @@
 .a-generate { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 0.5rem; }
 .a-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; }
 .a-kpi { display: flex; flex-direction: column; gap: 0.15rem; }
-.a-kpi b { font-size: 26px; }
+.a-kpi b { font-size: 29px; }
 .a-kpi .a-kpi-text { font-size: 1.15rem; }
 .a-kpi-warn { border-left: 4px solid var(--warn); }
 .a-bars { display: grid; gap: 0.4rem; }
@@ -250,7 +250,7 @@
 .a-heat th, .a-heat td { padding: 0.35rem; text-align: center; border-bottom: 1px solid var(--border); }
 .a-heat th:first-child, .a-heat td:first-child { text-align: left; white-space: nowrap; }
 .a-heat { border: 1px solid var(--border); }
-.a-heat thead th { background: var(--bg-subtle); border-bottom: 2px solid var(--primary); font-size: 12px; color: var(--text); font-weight: 600; vertical-align: bottom; max-width: 7rem; }
+.a-heat thead th { background: var(--bg-subtle); border-bottom: 2px solid var(--primary); font-size: 14px; color: var(--text); font-weight: 600; vertical-align: bottom; max-width: 7rem; }
 .a-heat .a-na { color: var(--border); }
 .a-heat .a-empty { color: var(--muted); }
 .a-cols { display: flex; gap: 4px; align-items: flex-end; height: 9rem; padding-top: 1rem; }
@@ -263,7 +263,7 @@
 
 /* --- nagłówki boksów jako pasek (gov.pl) --- */
 .card > .t-section-head:first-child { margin: -10px -12px 10px; padding: 8px 12px; background: var(--primary); color: #fff; }
-.card > .t-section-head:first-child h2 { margin: 0; color: #fff; font-size: 17px; }
+.card > .t-section-head:first-child h2 { margin: 0; color: #fff; font-size: 19px; }
 .card > .t-section-head:first-child .muted { color: #fff; }
 .t-pill[aria-pressed="true"] { position: relative; z-index: 1; }
 .t-person { min-height: 44px; border-color: var(--border-input); }
@@ -273,8 +273,16 @@
 /* --- formularz notatki: objaśnienie „brak” --- */
 .t-none-hint { display: flex; gap: 8px; align-items: center; color: var(--text-muted); margin: 0 0 6px; }
 .t-seg-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 1px 10px; border: 1px solid var(--border-input);
-  background: var(--info-bg); color: var(--primary); font-size: 13px; font-weight: 600; }
+  background: var(--info-bg); color: var(--primary); font-size: 15px; font-weight: 600; }
 
 /* --- oś czasu: ocena okresowa --- */
 .t-eval { background: var(--info-bg); border: 1px solid var(--info-border); padding: 8px 10px; margin: 6px 0; }
 .t-eval::before { background: var(--accent-red); width: 12px; height: 12px; left: calc(-1rem - 7px); }
+
+/* --- wynik asystenta: najpierw krótko, szczegóły zwinięte --- */
+.a-result .a-summary { margin-bottom: 6px; }
+.a-details { margin: 4px 0 8px; }
+.a-pros-cons { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.a-pros-cons > div { flex: 1 1 18rem; min-width: 0; }
+.a-pros-cons h3 { margin-top: 4px; }
+.a-meta { margin: 0; }

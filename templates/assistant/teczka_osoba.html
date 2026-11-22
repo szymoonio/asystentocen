@@ -30,11 +30,8 @@
   {% if notice %}<div class="card t-notice">Notatka zapisana.</div>{% endif %}
 
   {% if evaluation %}
-    <section class="card">
-      <div class="t-section-head">
-        <h2>Bieżący okres oceny</h2>
-        <span class="muted small">ostatnia notatka: {{ last_note }}</span>
-      </div>
+    <details class="card fold" id="srednie" open>
+      <summary>Bieżący okres oceny <span class="fold-meta">ostatnia notatka: {{ last_note }}</span></summary>
       <p class="muted small">Średnia z suwaków w notatkach tego okresu. Kolor = poziom z § 11. Ocenę i tak wystawiasz Ty.</p>
       <div class="t-means">
         {% for cr in criteria_view %}
@@ -50,16 +47,16 @@
           </a>
         {% endfor %}
       </div>
-    </section>
+    </details>
   {% endif %}
 
   {% if chart.series[""] %}
-    <section class="card t-chart" data-chart='{{ chart | tojson }}' data-selected="{{ filters.kryterium }}" data-link="?cykl=">
-      <h2>Oceny w czasie</h2>
+    <details class="card fold t-chart" id="wykres" open data-chart='{{ chart | tojson }}' data-selected="{{ filters.kryterium }}" data-link="?cykl=">
+      <summary>Oceny w czasie</summary>
       <div class="t-chart-pick" role="group" aria-label="Wybierz kryterium"></div>
       <div class="t-chart-area"></div>
       <p class="muted small">Każda kropka to notatka — kliknij, żeby ją zobaczyć. Wszystkie okresy oceny.</p>
-    </section>
+    </details>
     <script src="{{ asset('/static/assistant/charts.js') }}" defer></script>
   {% endif %}
 

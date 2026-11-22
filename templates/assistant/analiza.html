@@ -29,18 +29,6 @@
   </div>
 {% endmacro %}
 
-{% macro point_list(items) %}
-  <ul class="a-points">
-    {% for p in items %}
-      <li>{{ p.text }}
-        {% for r in p.refs %}<a class="a-ref" href="/asystent/teczka/{{ r.subject_id }}?cykl=#{{ r.note_id }}" title="Notatka{% if widok == 'zespol' %} o: {{ names.get(r.subject_id, '') }}{% endif %}">{{ r.alias }}</a>{% endfor %}
-      </li>
-    {% else %}
-      <li class="muted">—</li>
-    {% endfor %}
-  </ul>
-{% endmacro %}
-
 {% block content %}
   <div class="t-head">
     <div>
@@ -67,43 +55,10 @@
 
   {% if error %}<div class="card t-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
 
-  {# ------------------------------------------------ podsumowanie od Claude #}
+  {# ------------------------------------------------ podsumowanie od asystenta: krótko, szczegóły zwinięte #}
   <section class="card a-claude" id="claude">
-    <div class="t-section-head">
-      <h2>Podsumowanie asystenta</h2>
-      {% if stored %}
-        <span class="muted small">
-          {{ stored.created_at.strftime("%d.%m.%Y %H:%M") }} · na podstawie {{ stored.result.used_notes }} notatek
-          {% if outdated %}<span class="badge warn">od tego czasu zmieniły się notatki</span>{% endif %}
-        </span>
-      {% endif %}
-    </div>
-    {% if stored %}
-      <p class="a-summary">{{ stored.result.summary }}</p>
-      <div class="a-three">
-        <div><h3 class="a-plus">Mocne strony</h3>{{ point_list(stored.result.strengths) }}</div>
-        <div><h3 class="a-minus">Słabe strony</h3>{{ point_list(stored.result.weaknesses) }}</div>
-        <div><h3>Co możesz zrobić</h3>{{ point_list(stored.result.recommendations) }}</div>
-      </div>
-      <p class="muted small">
-        Projekt asystenta AI — sprawdź go z notatkami (odnośniki N…). Nie jest oceną.
-        {% if stored.result.excluded_notes %}Pominięto {{ stored.result.excluded_notes }} notatki z danymi wrażliwymi.{% endif %}
-        {% if stored.result.dropped %}Odrzucono {{ stored.result.dropped }} punkty bez oparcia w notatkach.{% endif %}
-        Imiona i nazwiska są zastępowane przed wysłaniem.
-      </p>
-    {% elif llm_available %}
-      <p class="muted">Asystent przeczyta Twoje notatki{% if widok == "zespol" %} o całym zespole{% endif %} i przygotuje słowne podsumowanie: mocne i słabe strony oraz propozycje działań. Imiona i nazwiska są zastępowane przed wysłaniem.</p>
-    {% else %}
-      {{ m.llm_off("Słowne podsumowanie") }}
-    {% endif %}
-    {% if llm_available %}
-      <form method="post" action="/asystent/analiza/generuj" class="a-generate">
-        <input type="hidden" name="widok" value="{{ widok }}">
-        <input type="hidden" name="osoba" value="{{ osoba }}">
-        <button type="submit" class="{{ 'secondary' if stored and not outdated else '' }}">{{ "Odśwież analizę" if stored else "Wygeneruj analizę" }}</button>
-        <span class="muted small a-wait" hidden>Asystent czyta notatki — to może potrwać do minuty…</span>
-      </form>
-    {% endif %}
+    <h2>Podsumowanie asystenta</h2>
+    {% include "assistant/_analiza_wynik.html" %}
   </section>
 
   {% if widok == "zespol" %}
@@ -116,14 +71,14 @@
       </div>
     </div>
 
-    <section class="card">
-      <h2>Kryteria — średnia zespołu</h2>
+    <details class="card fold" id="zespol-kryteria" open>
+      <summary>Kryteria — średnia zespołu</summary>
       <p class="muted small">Z suwaków we wszystkich notatkach bieżących okresów. Kreska = 5 (na poziomie oczekiwań).</p>
       {{ bars(team.criteria) }}
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>Osoby × kryteria</h2>
+    <details class="card fold" id="zespol-macierz" open>
+      <summary>Osoby × kryteria</summary>
       <div class="a-heat-wrap">
         <table class="a-heat">
           <thead><tr><th>Osoba</th>{% for cr in team.criteria %}<th title="{{ cr.name }}"><span>{{ cr.name }}</span></th>{% endfor %}<th>Ostatnia notatka</th></tr></thead>
@@ -144,12 +99,12 @@
         </table>
       </div>
       <p class="muted small">„·” — kryterium nie należy do oceny tej osoby; „—” — brak ocen z suwaków.</p>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>Notatki w czasie</h2>
+    <details class="card fold" id="zespol-aktywnosc" open>
+      <summary>Notatki w czasie</summary>
       {{ columns(team.activity, team.max_activity) }}
-    </section>
+    </details>
 
   {% else %}
     {# ------------------------------------------------ osoba #}
@@ -162,37 +117,29 @@
         <a class="small" href="/asystent/notatka/nowa?osoba={{ person.employee.id }}">+ dodaj</a></div>
     </div>
 
-    <section class="card">
-      <h2>Kryteria</h2>
+    <details class="card fold" id="osoba-kryteria" open>
+      <summary>Kryteria</summary>
       {{ bars(person.criteria) }}
-    </section>
+    </details>
 
     {% if chart.series[""] %}
-      <section class="card t-chart" data-chart='{{ chart | tojson }}' data-link="{{ teczka }}?cykl=">
-        <h2>Oceny w czasie</h2>
+      <details class="card fold t-chart" id="osoba-wykres" open data-chart='{{ chart | tojson }}' data-link="{{ teczka }}?cykl=">
+        <summary>Oceny w czasie</summary>
         <div class="t-chart-pick" role="group" aria-label="Wybierz kryterium"></div>
         <div class="t-chart-area"></div>
-      </section>
+      </details>
       <script src="{{ asset('/static/assistant/charts.js') }}" defer></script>
     {% endif %}
 
-    <div class="a-two">
-      <section class="card">
-        <h2 class="a-plus">Zalety z notatek</h2>
-        {% for d, t, nid in person.strengths[:8] %}<p class="a-line"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
-        {% else %}<p class="muted small">Brak wpisów.</p>{% endfor %}
-      </section>
-      <section class="card">
-        <h2 class="a-minus">Obszary do poprawy z notatek</h2>
-        {% for d, t, nid in person.improvements[:8] %}<p class="a-line"><span class="muted small">{{ d | pl_date }}</span> {{ t }}</p>
-        {% else %}<p class="muted small">Brak wpisów.</p>{% endfor %}
-      </section>
-    </div>
+    <details class="card fold" id="osoba-punkty" open>
+      <summary>Z notatek: co poszło dobrze, co do poprawy</summary>
+      {{ m.pros_cons(pros, cons) }}
+    </details>
 
-    <section class="card">
-      <h2>Notatki w czasie</h2>
+    <details class="card fold" id="osoba-aktywnosc" open>
+      <summary>Notatki w czasie</summary>
       {{ columns(person_activity, (person_activity | map(attribute=1) | max) or 1) }}
-    </section>
+    </details>
   {% endif %}
 
   <script>
