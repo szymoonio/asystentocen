@@ -56,11 +56,19 @@ class AssistantDraftProvider:
         catalog: CriteriaCatalog,
         scale: Scale,
         pseudonymizer: Pseudonymizer,
+        only: str | None = None,
     ) -> SummaryResult:
-        """Projekt z LLM na żądanie oceniającego; zapisany staje się źródłem `drafts()`."""
+        """Projekt z LLM na żądanie oceniającego; zapisany staje się źródłem `drafts()`.
+        Przy `only` (jedno pole) drugie pole bierzemy z poprzedniego świeżego projektu, jeśli był."""
         result = summarize(
-            evidence, llm=llm, catalog=catalog, scale=scale, actions=self._actions, pseudonymizer=pseudonymizer
+            evidence, llm=llm, catalog=catalog, scale=scale, actions=self._actions, pseudonymizer=pseudonymizer,
+            only=only,
         )
+        if only:
+            previous = self._store.latest(evidence.evaluation.id)
+            if previous and previous.input_key == evidence.input_key:
+                other = "development" if only == "justification" else "justification"
+                setattr(result, other, getattr(previous.result, other))
         self._store.save(evidence.evaluation.id, evidence.input_key, result, self._now())
         return result
 

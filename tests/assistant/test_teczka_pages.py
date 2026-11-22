@@ -40,7 +40,8 @@ def test_timeline_and_means(client):
     assert "Pokazano 5 z 5 notatek" in page
     assert "Bieżący okres oceny" in page and 'class="t-score l' in page
     assert "brak obserwacji" in page  # Organizacja pracy bez suwaka
-    assert "Oceny w czasie" in page and "charts.js" in page
+    assert "Oceny w czasie" not in page and "charts.js" not in page  # wykres tylko w Analizie zespołu
+    assert ">Notatki</a>" in page and "← Notatki" in page and "<title>Notatki · " in page  # dawniej „Teczka”
     assert "głosowa" not in page  # notatek głosowych na razie nie wspieramy — bez znacznika
 
 

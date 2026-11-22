@@ -129,17 +129,27 @@ def summarize(
     scale: Scale,
     actions: dict[str, list[str]],
     pseudonymizer: Pseudonymizer,
+    only: str | None = None,
 ) -> SummaryResult:
-    """Rzuca `LLMError` (z `user_message`), gdy wywołanie się nie uda."""
+    """Rzuca `LLMError` (z `user_message`), gdy wywołanie się nie uda.
+
+    `only` = "justification" albo "development": model przygotowuje tylko to jedno pole
+    (przycisk asystenta przy konkretnym polu arkusza)."""
     if not evidence.notes:
         raise LLMError("brak notatek", user_message="W tym cyklu nie ma notatek, z których asystent mógłby skorzystać.")
     system, user, aliases, sources, session = build_request(
         evidence, catalog=catalog, scale=scale, actions=actions, pseudonymizer=pseudonymizer
     )
+    if only:
+        other = "development" if only == "justification" else "justification"
+        user += (f"\n\nTym razem przygotuj TYLKO pole `{only}`, jako JEDEN zwięzły akapit (2–4 zdania). "
+                 f"Pole `{other}` zwróć jako pustą listę.")
     output = llm.structured(TASK, system, user, CycleSummary)
     subject_label = session.label_for(evidence.subject)
     result = SummaryResult(generator=generator_id(llm, TASK, load_prompt(TASK).version))
     for field_name, paragraphs in (("justification", output.justification), ("development", output.development)):
+        if only and field_name != only:
+            continue
         for p in paragraphs:
             verdict = validate_paragraph(p.text, p.note_refs, sources, subject_label=subject_label)
             if not verdict.ok:

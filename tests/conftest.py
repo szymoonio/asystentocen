@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import replace
 from datetime import date
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,6 +17,10 @@ from app.main import create_app
 from app.settings import Settings
 
 DEMO_TODAY = date(2026, 11, 21)
+
+# Testy działają na pełnym zestawie osób (kierownictwo, kadry, awans, nieobecność) — seed/office.yaml
+# zawiera już tylko zespół demo. Ustawione w env, żeby objęło też build_container() bez argumentów.
+os.environ.setdefault("SEED_PATH", str(Path(__file__).parent / "fixtures" / "office_full.yaml"))
 
 
 @pytest.fixture

@@ -147,6 +147,25 @@ def test_fragment_for_evaluation_page_and_return(client, container, fake_llm):
     assert "Grzegorz Wzór wyraźnie poprawia komunikację." in client.get("/asystent/analiza/fragment?osoba=E06").text
 
 
+def test_compact_fragment_only_strengths_and_weaknesses(client, container, fake_llm):
+    services(container).llm = fake_llm({"analyze_person": _analysis})
+    url = "/asystent/analiza/fragment?osoba=E06&wroc=/core/oceny/EV-E06-2026R&tryb=krotki"
+    before = client.get(url).text
+    assert "Poproś o podsumowanie" in before and "Asystent przeczyta" not in before
+    client.post("/asystent/analiza/generuj", data={"widok": "osoba", "osoba": "E06", "wroc": "/core/oceny/EV-E06-2026R"})
+    frag = client.get(url).text
+    assert "Mocne strony" in frag and "Słabe strony" in frag
+    assert "Grzegorz Wzór wyraźnie poprawia komunikację." not in frag  # bez długiego opisu
+    assert "Co możesz zrobić" not in frag and "Odśwież podsumowanie" in frag
+    assert 'href="/asystent/teczka/E06?cykl=#' in frag  # odnośnik prowadzi do konkretnej notatki
+
+
+def test_linked_note_is_highlighted():
+    from pathlib import Path
+
+    assert ".t-note:target" in Path("static/assistant/teczka.css").read_text(encoding="utf-8")
+
+
 def test_return_address_must_stay_in_app(client, container, fake_llm):
     services(container).llm = fake_llm({"analyze_person": _analysis})
     for bad in ["//evil.example/x", "https://evil.example", "/\\evil"]:

@@ -20,7 +20,7 @@
           {% for e in subordinates %}<option value="{{ e.id }}" {% if values.osoba == e.id %}selected{% endif %}>{{ e.full_name }}</option>{% endfor %}
         </select>
         <label class="t-check small"><input type="checkbox" name="teczka" value="1" {% if values.teczka %}checked{% endif %}>
-          dołącz punkty z teczki (bez notatek z danymi wrażliwymi, po zamianie nazwisk na etykiety)</label>
+          dołącz punkty z notatek (bez notatek z danymi wrażliwymi, po zamianie nazwisk na etykiety)</label>
       </div>
     </div>
     <label for="opis">Opisz sytuację</label>

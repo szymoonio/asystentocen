@@ -279,7 +279,7 @@ class ConversationSuite(Suite):
 
     def grade(self, case, out):
         plan = out["plan"]
-        names = {p for p in ("Grzegorz", "Ewa", "Wzór", "Rzetelna", "[OSOBA")}
+        names = {p for p in ("Grzegorz", "Ewa", "Wójcik", "Lewandowska", "[OSOBA")}
         card_text = " ".join([plan["roleplay"]["persona"], plan["roleplay"]["goal"], plan["roleplay"]["resistance"], *plan["roleplay"]["phrases"]])
         plan_text = " ".join([plan["goal"], plan["opening"], *plan["questions"], *plan["avoid"]])
         checks = {

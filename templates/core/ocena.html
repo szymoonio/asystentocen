@@ -2,6 +2,37 @@
 {% block head %}<link rel="stylesheet" href="{{ asset('/static/core/core.css') }}">{% endblock %}
 
 {% import "core/_notatki.html" as nt %}
+{# Panel asystenta HR obok pola arkusza: krótkie sugestie z notatek, generowane na żądanie (moduł B). #}
+{% macro assist_box(target, what, items) %}
+  <aside class="assist" data-key="{{ target }}" aria-label="Asystent HR: sugestie {{ what }}">
+    <div class="assist-head"><span class="coach-badge">Asystent HR</span></div>
+    <div class="assist-items">
+      {% for d in items %}
+        <div class="draft"><p>{{ d.text | truncate(420) }}</p>
+          <button type="button" class="secondary insert-draft" data-target="{{ target }}" data-text="{{ d.text }}">Wstaw do pola</button></div>
+      {% endfor %}
+    </div>
+    {% if suggest_url %}
+      <button type="button" class="{{ 'secondary' if items else '' }} assist-gen" data-url="{{ suggest_url }}?pole={{ target }}">{{ "Wygeneruj ponownie" if items else "Wygeneruj sugestię " ~ what }}</button>
+      <p class="muted small assist-wait" hidden>Asystent czyta notatki…</p>
+    {% endif %}
+    <p class="muted small">Na podstawie Twoich notatek. Sprawdź i popraw przed wstawieniem.</p>
+  </aside>
+{% endmacro %}
+{% macro prev_box() %}
+        <div class="prev-auto">
+          {% if previous.first %}
+            <p>Brak — to pierwsza ocena okresowa tej osoby zapisana w systemie.</p>
+          {% else %}
+            <dl class="prev-grid">
+              <div><dt>Ocena</dt><dd>{{ previous.outcome | lower }}</dd></div>
+              <div><dt>Poziom</dt><dd>{{ LEVEL_LABELS[previous.level] if previous.level else "—" }}</dd></div>
+              <div><dt>Data sporządzenia</dt><dd>{{ pl_iso(previous.assessed_on) }}</dd></div>
+            </dl>
+          {% endif %}
+          <p class="muted small">Uzupełnione automatycznie z historii ocen okresowych{% if previous.evaluation_id %} — <a href="/core/oceny/{{ previous.evaluation_id }}">zobacz tę ocenę</a>{% endif %}.</p>
+        </div>
+{% endmacro %}
 {% macro pts_label(p) %}{{ p }} {{ "punkt" if p == 1 else ("punkty" if p == 3 else "punktów") }}{% endmacro %}
 
 {% block content %}
@@ -24,26 +55,71 @@
   {% if row.criteria_due_date and state in ["CYCLE_OPEN", "CRITERIA_CONFIRMED"] %}
     <div><span>Kryteria do</span>{{ row.criteria_due_date | pl_date }}</div>
   {% endif %}
-  <div><span>Termin oceny</span>{{ row.due_date | pl_date }}{% if row.due_basis %} <span class="small">{{ row.due_basis }}</span>{% endif %}</div>
+  <div><span>Termin oceny</span>{{ row.due_date | pl_date }}</div>
   {% if role %}<div><span>Twoja rola</span>{{ "oceniający" if role == EVALUATOR else "oceniany" }}</div>{% endif %}
 </div>
 
 {% if msg_ok %}<div class="alert ok">{{ msg_ok }}</div>{% endif %}
 {% if msg_error %}<div class="alert error">{{ msg_error }}</div>{% endif %}
 
-<ol class="stepper">
-  {% for st, label in steps %}
-    <li class="{{ 'done' if loop.index0 < step_index else ('current' if loop.index0 == step_index else '') }}">{{ label }}</li>
+<nav class="stepper" aria-label="Etapy oceny">
+  {% set ns = namespace(i=0) %}
+  {% for phase, labels in phases %}
+    <div class="phase">
+      <div class="phase-name">{{ phase }}</div>
+      <ol>
+        {% for label in labels %}
+          {% set i = ns.i %}
+          {% set cls = 'done' if (i < step_index or final) else ('current' if i == step_index else 'future') %}
+          <li class="{{ cls }}{{ ' viewing' if i == view }}">
+            {% if i <= step_index %}<a href="?krok={{ i }}" {% if i == view %}aria-current="step"{% endif %}>{% else %}<span>{% endif %}
+              <span class="step-label">{{ label }}</span>
+              {% if step_dates[i] %}<span class="step-date">{{ step_dates[i] }}</span>{% endif %}
+            {% if i <= step_index %}</a>{% else %}</span>{% endif %}
+          </li>
+          {% set ns.i = ns.i + 1 %}
+        {% endfor %}
+      </ol>
+    </div>
   {% endfor %}
-</ol>
+</nav>
+{% if view != step_index %}<p class="alert info small">Oglądasz wcześniejszy etap. <a href="?krok={{ step_index }}">Wróć do bieżącego: {{ steps[step_index] }}</a></p>{% endif %}
 
 <div class="layout">
 <div class="main">
 
-{% if tips %}
-<section class="card coach" aria-label="Asystent HR podpowiada">
+{% macro hr_outline(title=true) %}
+    {% if title %}<h3>{{ hr_panel.title }}</h3>{% endif %}
+    <ol class="pipeline">
+      {% for title, minutes, points in hr_panel.outline %}
+        <li><div class="pipeline-head"><b>{{ title }}</b><span class="muted small">{{ minutes }}</span></div>
+          <ul class="small">{% for pt in points %}<li>{{ pt }}</li>{% endfor %}</ul></li>
+      {% endfor %}
+    </ol>
+    <div class="actions">
+      <a class="button" href="{{ hr_panel.prep }}">Przygotuj szczegóły</a>
+      {% if hr_panel.cheat %}<a class="button secondary" href="{{ hr_panel.cheat }}">Ściąga z Twoich notatek</a>{% endif %}
+    </div>
+{% endmacro %}
+
+{% if hr_panel and hr_panel.top %}
+<details class="card coach hr-top" id="asystent-rozmowa"{% if hr_panel.open %} open{% endif %}>
+  <summary>
+    <span class="coach-head"><span class="coach-badge">Asystent HR</span><b>{{ tips.headline if tips else hr_panel.title }}</b></span>
+    <span class="muted small hr-top-meta">{{ hr_panel.outline | length }} etapów rozmowy · {{ hr_panel.get("duration", "ok. 40 minut") }} · rozwiń, żeby zobaczyć przebieg</span>
+  </summary>
+  {% if tips and tips.tips %}<ul>{% for t in tips.tips %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+  <div class="hr-top-body">{{ hr_outline(title=tips is not none) }}</div>
+</details>
+{% endif %}
+
+{% if tips and not hr_panel %}
+<section class="card coach" aria-label="Asystent HR podpowiada" id="asystent-podsumowanie">
   <div class="coach-head"><span class="coach-badge">Asystent HR</span><b>{{ tips.headline }}</b></div>
   {% if tips.tips %}<ul>{% for t in tips.tips %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+  {% if summary_url and view in [2, 4] %}
+    <div class="hr-summary" data-fragment="{{ summary_url }}"></div>
+  {% endif %}
   {% if tips.actions %}
     <div class="actions">
       {% for label, url, primary in tips.actions %}<a class="button {{ '' if primary else 'secondary' }}" href="{{ url }}">{{ label }}</a>{% endfor %}
@@ -52,74 +128,71 @@
 </section>
 {% endif %}
 
-{% if notes_box %}
-<details class="card fold" id="asystent-podsumowanie" open>
-  <summary>Asystent HR: podsumowanie notatek <span class="fold-meta">{{ notes_box.count }} {{ "notatka" if notes_box.count == 1 else ("notatki" if notes_box.count % 10 in [2,3,4] and notes_box.count % 100 not in [12,13,14] else "notatek") }} z tego okresu</span></summary>
-  <div class="hr-summary" data-fragment="{{ notes_box.summary_url }}">
-    <p class="muted small">Podsumowanie asystenta — <a href="{{ notes_box.summary_url }}">otwórz</a></p>
+{% macro tile(cr, extra=false) %}
+  <li class="crit-tile{{ ' extra' if extra }}" title="{{ describe.get(cr.code, []) | join(' ') }}"><b>{{ cr.name }}</b></li>
+{% endmacro %}
+{% macro criteria_split() %}
+  <div class="criteria-split">
+    {% set extra = criteria | rejectattr("mandatory") | list %}
+    <h3>Kryteria obowiązkowe <span class="crit-count">{{ (criteria | selectattr("mandatory") | list) | length }}</span></h3>
+    <ul class="crit-tiles">{% for cr in criteria if cr.mandatory %}{{ tile(cr) }}{% endfor %}</ul>
+    <h3>Kryteria dodatkowe <span class="crit-count extra">{{ extra | length }}</span></h3>
+    {% if extra %}<ul class="crit-tiles">{% for cr in extra %}{{ tile(cr, true) }}{% endfor %}</ul>{% else %}<p class="muted">Oceniający nie wybrał kryteriów dodatkowych.</p>{% endif %}
   </div>
-  <details class="more">
-    <summary>Z Twoich notatek: co poszło dobrze, co do poprawy</summary>
-    {{ nt.pros_cons(notes_box.pros, notes_box.cons, notes_box.teczka) }}
-  </details>
-</details>
-{% endif %}
+{% endmacro %}
 
-{# ============================ CZĘŚĆ I ============================ #}
+{# ============================ CZĘŚĆ I: rozmowa rozpoczynająca i kryteria ============================ #}
+{% if view <= 1 %}
 <section class="card" id="czesc-1">
-  <div class="part-title"><h2>Część I</h2><span class="muted small">dane i kryteria oceny</span></div>
-  <dl class="kv">
-    <dt>Nazwa urzędu</dt><dd>{{ office.name }}</dd>
-    <dt>Oceniany</dt><dd>{{ employee.full_name }}{% if sheet_def.has_org_unit %}, {{ unit.name }}{% endif %}, {{ employee.position.title }}</dd>
-    <dt>Oceniający</dt><dd>{% if evaluator %}{{ evaluator.full_name }}{% if sheet_def.has_org_unit and evaluator_unit %}, {{ evaluator_unit.name }}{% endif %}, {{ evaluator.position.title }}{% else %}—{% endif %}</dd>
-    <dt>Kryteria obowiązkowe</dt>
-    <dd>{% for cr in criteria if cr.mandatory %}{{ cr.name }}{{ ", " if not loop.last }}{% endfor %}</dd>
-  </dl>
+  <div class="part-title"><h2>Część I</h2><span class="muted small">kryteria oceny i termin</span></div>
 
   {% if ed("additional_criteria") %}
     <form method="post" action="/core/oceny/{{ row.id }}/kryteria" id="part1">
-      <label>Kryteria dodatkowe (0–3, § 5 ust. 2) — najistotniejsze ze względu na obowiązki z opisu stanowiska</label>
-      <div class="grid3">
-        {% for i in range(3) %}
-          {% set chosen = (row.additional or [])[i] if (row.additional or [])|length > i else "" %}
-          <select name="additional_{{ i }}" class="additional">
-            <option value="">— brak —</option>
-            {% for opt in additional_options %}
-              <option value="{{ opt.code }}" {% if opt.code == chosen %}selected{% endif %} title="{{ opt.description | join(' ') }}">{{ opt.name }}</option>
-            {% endfor %}
-          </select>
-        {% endfor %}
+      <div class="p1-section">
+        <h3><span class="p1-num">1</span> Kryteria obowiązkowe <span class="muted small">— stałe dla arkusza {{ sheet }}, nic nie wybierasz</span></h3>
+        <ul class="crit-tiles">{% for cr in criteria if cr.mandatory %}{{ tile(cr) }}{% endfor %}</ul>
       </div>
-      <div class="grid3">
-        <div>
-          <label for="due_date">Termin sporządzenia oceny</label>
-          <input type="date" id="due_date" name="due_date" value="{{ row.due_date.isoformat() if row.due_date }}">
-          <div class="muted small">wyliczony: {{ row.due_basis or "art. 81 ust. 4 ustawy" }}</div>
-        </div>
-        <div>
-          <label for="place">Miejscowość</label>
-          <input id="place" name="place" value="{{ form.part1_place_evaluator or office.city or '' }}">
+
+      <div class="p1-section">
+        <h3><span class="p1-num">2</span> Kryteria dodatkowe <span class="muted small">— wybierz do 3 najważniejszych dla tego stanowiska (możesz żadnego)</span>
+          <span class="badge" id="extra-count" aria-live="polite">wybrano {{ (row.additional or []) | length }} z 3</span></h3>
+        <div class="crit-pick">
+          {% for opt in additional_options %}
+            <label class="crit-option" title="{{ opt.description | join(' ') }}">
+              <input type="checkbox" name="additional" value="{{ opt.code }}" {% if opt.code in (row.additional or []) %}checked{% endif %}>
+              <b>{{ opt.name }}</b>
+            </label>
+          {% endfor %}
         </div>
       </div>
-      <details class="small" style="margin-top:.75rem">
-        <summary>Co omówić na rozmowie rozpoczynającej (§ 5 ust. 1)</summary>
-        <ol>
-          <li>główne obowiązki wynikające z opisu stanowiska pracy,</li>
-          <li>kryteria obowiązkowe i wybrane kryteria dodatkowe,</li>
-          <li>oczekiwania co do sposobu spełniania kryteriów,</li>
-          <li>cele na okres oceny (jeśli uzasadnione) i sposób ich realizacji.</li>
-        </ol>
-      </details>
-      <div class="actions">
-        <button class="secondary" type="submit">Zapisz</button>
-        <button type="submit" name="confirm" value="1">Potwierdzam przeprowadzenie rozmowy i przekazuję ocenianemu</button>
+
+      <div class="p1-section">
+        <h3><span class="p1-num">3</span> Termin oceny</h3>
+        <div class="p1-row">
+          <div>
+            <label for="due_date">Termin sporządzenia oceny</label>
+            <input type="date" id="due_date" name="due_date" value="{{ row.due_date.isoformat() if row.due_date }}">
+            <div class="muted small">Wyliczony automatycznie — zmień tylko, jeśli jest powód.</div>
+          </div>
+          <div>
+            <label for="place">Miejscowość</label>
+            <input id="place" name="place" value="{{ form.part1_place_evaluator or office.city or '' }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="p1-footer">
+        <button class="secondary" type="submit">Zapisz wersję roboczą</button>
+        <div>
+          <button type="submit" name="confirm" value="1">Rozmowa rozpoczynająca odbyła się — przekaż ocenianemu</button>
+          <div class="muted small">Oceniany dostanie kryteria i termin do potwierdzenia. Potem nie da się ich zmienić.</div>
+        </div>
       </div>
     </form>
   {% else %}
+    {{ criteria_split() }}
     <dl class="kv">
-      <dt>Kryteria dodatkowe</dt>
-      <dd>{% for cr in criteria if not cr.mandatory %}{{ cr.name }}{{ ", " if not loop.last }}{% else %}brak{% endfor %}</dd>
-      <dt>Termin sporządzenia oceny</dt><dd>{{ row.due_date | pl_date }}</dd>
+      <dt>Termin sporządzenia oceny</dt><dd><b>{{ row.due_date | pl_date }}</b></dd>
       <dt>Potwierdzenie oceniającego</dt>
       <dd>{% if form.part1_confirmed_by_evaluator_on %}{{ form.part1_place_evaluator }}, {{ pl_iso(form.part1_confirmed_by_evaluator_on) }}{% else %}—{% endif %}</dd>
       <dt>Potwierdzenie ocenianego</dt>
@@ -128,38 +201,93 @@
   {% endif %}
 
   {% if ed("part1_place_employee") %}
-    <form method="post" action="/core/oceny/{{ row.id }}/kryteria/potwierdz" class="actions">
-      <input name="place" value="{{ office.city or '' }}" style="max-width:14rem" aria-label="Miejscowość">
-      <button type="submit">Potwierdzam przeprowadzenie rozmowy i zapoznanie się z kryteriami oraz terminem oceny</button>
+    <form method="post" action="/core/oceny/{{ row.id }}/kryteria/potwierdz" class="ack-form" id="ack-criteria">
+      <label class="ack-check">
+        <input type="checkbox" name="oswiadczenie" value="1" required>
+        <span>Oświadczam, że przeprowadzono ze mną rozmowę rozpoczynającą oraz że zapoznałem(-łam) się z kryteriami oceny i terminem jej sporządzenia.</span>
+      </label>
+      <div class="actions">
+        <input name="place" value="{{ office.city or '' }}" style="max-width:14rem" aria-label="Miejscowość">
+        <button type="submit" disabled>Potwierdzam</button>
+      </div>
     </form>
   {% elif state == "CRITERIA_CONFIRMED" %}
     <p class="muted small">Czeka na potwierdzenie przez ocenianego.</p>
   {% endif %}
 </section>
+{% endif %}
 
-{# ============================ CZĘŚĆ II ============================ #}
-{% if after_obs %}
-<section class="card" id="czesc-2">
-  <div class="part-title"><h2>Część II</h2><span class="muted small">rozmowa oceniająca i ocena</span></div>
-
-  {% if state == "OBSERVATION" %}
-    {% if role == EVALUATOR %}
-      <p>Okres oceny trwa od {{ row.period_from | pl_date }}. Przed sporządzeniem oceny przeprowadź rozmowę oceniającą (§ 10).</p>
-      <details class="small">
-        <summary>Co omówić na rozmowie oceniającej (§ 10)</summary>
-        <ol>
-          <li>główne obowiązki w okresie oceny i sposób ich realizacji, z uwzględnieniem kryteriów,</li>
-          <li>realizację celów, jeśli zostały wyznaczone,</li>
-          <li>kierunki rozwoju zawodowego i potrzeby w zakresie podnoszenia kwalifikacji.</li>
-        </ol>
-      </details>
-      <form method="post" action="/core/oceny/{{ row.id }}/rozmowa" class="actions">
-        <input type="date" name="interview_date" value="{{ today.isoformat() }}" max="{{ today.isoformat() }}" style="max-width:12rem" aria-label="Data rozmowy oceniającej">
-        <button type="submit">Rozmowa oceniająca odbyła się — przejdź do oceny</button>
+{# ============================ OKRES OCENY ============================ #}
+{% if view == 2 %}
+<section class="card" id="okres">
+  <h2>Okres oceny</h2>
+  <p>Od <b>{{ row.period_from | pl_date }}</b> do {% if row.period_to %}<b>{{ row.period_to | pl_date }}</b>{% else %}terminu oceny <b>{{ row.due_date | pl_date }}</b>{% endif %}.</p>
+  {{ criteria_split() }}
+  {% if role == EVALUATOR and state == "OBSERVATION" and not in_interview %}
+    <div class="next-step">
+      <p class="muted small">Gdy zbliża się termin, przejdź do etapu rozmowy oceniającej: umówisz termin z ocenianym i przygotujesz się. Rozmowa nie jest przez to jeszcze odnotowana.</p>
+      <form method="post" action="/core/oceny/{{ row.id }}/rozmowa/etap" class="actions">
+        <button type="submit">Przejdź do rozmowy oceniającej →</button>
       </form>
-    {% else %}
-      <p class="muted">Trwa okres oceny (od {{ row.period_from | pl_date }} do terminu {{ row.due_date | pl_date }}).</p>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{# ============================ ROZMOWA OCENIAJĄCA ============================ #}
+{% if view == 3 %}
+<section class="card" id="rozmowa">
+  <h2>Rozmowa oceniająca</h2>
+  {% if form.interview_date %}
+    <p>Odbyła się <b>{{ pl_iso(form.interview_date) }}</b>.</p>
+    {% if role == EVALUATOR and form.interview_conclusions %}
+      <h3>Wnioski z rozmowy <span class="muted small">— widzisz je tylko Ty</span></h3>
+      <div class="readonly-text">{{ form.interview_conclusions }}</div>
     {% endif %}
+  {% elif role == EVALUATOR and state == "OBSERVATION" %}
+    <div class="interview-steps">
+      <div class="interview-step">
+        <h3>1. Umów termin z ocenianym</h3>
+        {% if planned %}<p>Umówiona na <b>{{ planned | pl_date }}</b>.</p>{% endif %}
+        <form method="post" action="/core/oceny/{{ row.id }}/rozmowa/termin" class="inline-row">
+          <input type="date" name="planned_on" value="{{ planned.isoformat() if planned }}" min="{{ today.isoformat() }}" {% if row.due_date %}max="{{ row.due_date.isoformat() }}"{% endif %} aria-label="Termin rozmowy oceniającej">
+          <button type="submit" class="secondary">{{ "Zmień termin" if planned else "Zapisz termin" }}</button>
+        </form>
+        <p class="muted small">Najlepiej 2–3 tygodnie przed terminem oceny ({{ row.due_date | pl_date }}).</p>
+      </div>
+      <div class="interview-step">
+        <h3>2. Przygotuj się</h3>
+        <p class="small">Przebieg rozmowy i przycisk „Przygotuj szczegóły” masz w panelu asystenta HR powyżej.</p>
+      </div>
+      <div class="interview-step">
+        <h3>3. Po rozmowie</h3>
+        <form method="post" action="/core/oceny/{{ row.id }}/rozmowa">
+          <label for="idate">Data rozmowy</label>
+          <input type="date" id="idate" name="interview_date" value="{{ (planned if planned and planned <= today else today).isoformat() }}" max="{{ today.isoformat() }}" style="max-width:12rem">
+          <label for="iconc">Najważniejsze wnioski z rozmowy <span class="muted small">— tylko dla Ciebie, przydadzą się przy ocenie i wnioskach do IPRZ</span></label>
+          <textarea id="iconc" name="interview_conclusions" rows="4" placeholder="np. chce rozwijać analizę danych; zgadzamy się co do terminowości; prosi o szkolenie z KPA">{{ form.interview_conclusions or "" }}</textarea>
+          <div class="actions"><button type="submit">Rozmowa oceniająca odbyła się — przejdź do oceny</button></div>
+        </form>
+      </div>
+    </div>
+  {% elif planned %}
+    <p>Rozmowa oceniająca jest umówiona na <b>{{ planned | pl_date }}</b>.</p>
+  {% else %}
+    <p class="muted">Przełożony umówi z Tobą termin rozmowy oceniającej.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{# ============================ CZĘŚĆ II: ocena na piśmie ============================ #}
+{% if view >= 4 %}
+<section class="card" id="czesc-2">
+  <div class="part-title"><h2>Część II</h2><span class="muted small">ocena na piśmie</span></div>
+
+  {% if state == "INTERVIEW_HELD" and role == EVALUATOR and form.interview_conclusions %}
+    <div class="conclusions">
+      <b>Wnioski z rozmowy {{ pl_iso(form.interview_date) }}</b> <span class="muted small">— weź je pod uwagę przy ocenie</span>
+      <div class="readonly-text">{{ form.interview_conclusions }}</div>
+    </div>
   {% endif %}
 
   {% if state == "INTERVIEW_HELD" and role == EVALUATOR %}
@@ -194,33 +322,29 @@
         <div><span class="muted small">Średnia</span><div class="big" id="live-mean">{{ format_mean(live.mean) if live else "—" }}</div></div>
         <div><span class="muted small">Poziom</span><div id="live-level">{{ live.level.label if live else "—" }}</div></div>
         <div><span class="muted small">Ocena</span><div id="live-outcome"><b>{{ live.outcome if live else "—" }}</b></div></div>
-        <div class="small muted" id="live-note">{% if live and live.forced_negative %}Negatywna: co najmniej jedna ocena cząstkowa „znacznie poniżej oczekiwań” (§ 11 ust. 1 pkt 4).{% endif %}</div>
+        <div class="small muted" id="live-note">{% if live and live.forced_negative %}Negatywna: co najmniej jedna ocena cząstkowa „znacznie poniżej oczekiwań”.{% endif %}</div>
       </div>
 
-      <label for="justification">Uzasadnienie przyznanej oceny <span class="muted small" id="just-hint">(obowiązkowe przy ocenie negatywnej)</span></label>
-      {{ nt.drafts_box(drafts.get("UZASADNIENIE", []), "justification") }}
-      <textarea id="justification" name="justification" rows="6">{{ form.justification or "" }}</textarea>
+      {# kolejność od góry: Asystent HR → pole, które podpowiada #}
+      <div class="assist-row">
+        {{ assist_box("justification", "uzasadnienia", []) }}
+        <div class="assist-field">
+          <label for="justification">Uzasadnienie przyznanej oceny <span class="muted small" id="just-hint">— obowiązkowe przy ocenie negatywnej</span></label>
+          <textarea id="justification" name="justification" rows="8">{{ form.justification or "" }}</textarea>
+        </div>
+      </div>
 
-      <label for="iprz">Wnioski dotyczące indywidualnego programu rozwoju zawodowego <span class="muted small">(obowiązkowe)</span></label>
-      {{ nt.drafts_box(drafts.get("WNIOSKI_IPRZ", []), "iprz") }}
-      <textarea id="iprz" name="iprz" rows="5">{{ form.iprz or "" }}</textarea>
+      <div class="assist-row">
+        {{ assist_box("iprz", "wniosków", []) }}
+        <div class="assist-field">
+          <label for="iprz">Wnioski dotyczące indywidualnego programu rozwoju zawodowego <span class="muted small">— obowiązkowe</span></label>
+          <textarea id="iprz" name="iprz" rows="7">{{ form.iprz or "" }}</textarea>
+        </div>
+      </div>
 
       {% if urzednik %}
         <h3>Dane dotyczące poprzedniej oceny okresowej urzędnika służby cywilnej</h3>
-        {% set prev = form.previous or {} %}
-        {% if prev.from_history %}
-          <p>{{ prev.outcome | lower }} · {{ LEVEL_LABELS[prev.level] if prev.level else "—" }} · {{ pl_iso(prev.assessed_on) }} <span class="muted small">(z historii)</span></p>
-        {% else %}
-          <div class="grid3">
-            <div><label>Ocena</label><select name="prev_outcome">
-              {% for v, l in [("", "brak"), ("POZYTYWNA", "pozytywna"), ("NEGATYWNA", "negatywna")] %}<option value="{{ v }}" {% if prev.outcome == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
-            </select></div>
-            <div><label>Poziom</label><select name="prev_level"><option value="">—</option>
-              {% for lv, lab in LEVEL_LABELS.items() %}<option value="{{ lv }}" {% if prev.level == lv %}selected{% endif %}>{{ lab }}</option>{% endfor %}
-            </select></div>
-            <div><label>Data sporządzenia</label><input type="date" name="prev_assessed_on" value="{{ prev.assessed_on or '' }}"></div>
-          </div>
-        {% endif %}
+        {{ prev_box() }}
 
         <label>Czy do oceny dołączono wniosek o przyznanie kolejnego stopnia służbowego?</label>
         <select name="promotion_choice" id="promotion_choice" style="max-width:14rem">
@@ -230,7 +354,7 @@
         </select>
 
         <fieldset id="part3" style="margin-top:1rem; {% if form.promotion_choice != 'TAK' %}display:none{% endif %}">
-          <legend><b>Część III</b> — wniosek o przyznanie kolejnego stopnia służbowego (art. 89 ust. 1)</legend>
+          <legend><b>Część III</b> — wniosek o przyznanie kolejnego stopnia służbowego</legend>
           <div class="grid3">
             <div><label>Rok mianowania</label><input type="number" name="p3_appointed_year" min="2008" max="{{ today.year }}" value="{{ p3.appointed_year or employee.appointed_year or '' }}"></div>
             <div><label>Posiadany stopień służbowy</label><select name="p3_grade" id="p3_grade">
@@ -288,6 +412,7 @@
     </div>
     {% if form.justification %}<h3>Uzasadnienie</h3><div class="readonly-text">{{ form.justification }}</div>{% endif %}
     <h3>Wnioski dotyczące IPRZ</h3><div class="readonly-text">{{ form.iprz or "—" }}</div>
+    {% if urzednik %}<h3>Dane dotyczące poprzedniej oceny okresowej urzędnika służby cywilnej</h3>{{ prev_box() }}{% endif %}
     {% if urzednik %}<p class="small">Wniosek o kolejny stopień służbowy: <b>{{ form.promotion_choice or "—" }}</b></p>{% endif %}
     <dl class="kv small">
       <dt>Zatwierdził oceniający</dt><dd>{{ form.part2_place_evaluator }}, {{ result.assessed_on | pl_date }}</dd>
@@ -301,7 +426,7 @@
         <input name="place" value="{{ office.city or '' }}" style="max-width:14rem" aria-label="Miejscowość">
         <button type="submit">Przeprowadzono ze mną rozmowę oceniającą; zapoznałem(-łam) się z oceną i wnioskami</button>
       </form>
-      <p class="small muted">Pouczenie: od oceny przysługuje sprzeciw w terminie 7 dni od dnia zapoznania się z oceną (art. 83 ust. 1 ustawy){% if form.objection_addressee %} do {{ form.objection_addressee }}{% else %} do {{ sheet_def.objection_addressee or "dyrektora generalnego urzędu" }}{% endif %}.</p>
+      <p class="small muted">Pouczenie: od oceny przysługuje sprzeciw w terminie 7 dni od dnia zapoznania się z oceną{% if form.objection_addressee %} do {{ form.objection_addressee }}{% else %} do {{ sheet_def.objection_addressee or "dyrektora generalnego urzędu" }}{% endif %}.</p>
     {% elif role == EVALUATOR or user.has(Role.KADRY) %}
       <details>
         <summary>Oceniany nie może lub nie chce potwierdzić zapoznania — stwierdź fikcję zapoznania</summary>
@@ -315,7 +440,7 @@
   {% endif %}
 
   {% if state == "ACKNOWLEDGED" and objection %}
-    <p>Sprzeciw można wnieść do <b>{{ objection.date | pl_date }}</b> ({{ objection.basis }}). Po tym terminie ocena staje się ostateczna.</p>
+    <p>Sprzeciw można wnieść do <b>{{ objection.date | pl_date }}</b>. Po tym terminie ocena staje się ostateczna.</p>
     {% if role == EMPLOYEE %}
       <details><summary>Wnieś sprzeciw</summary>
         <form method="post" action="/core/oceny/{{ row.id }}/sprzeciw">
@@ -327,7 +452,7 @@
   {% endif %}
 
   {% if state == "OBJECTION" %}
-    <div class="alert warn">Wniesiono sprzeciw {{ pl_iso(form.objection.filed_on) }} · rozpatrzenie do {{ pl_iso(form.objection.review_by) }} (art. 83 ust. 3).</div>
+    <div class="alert warn">Wniesiono sprzeciw {{ pl_iso(form.objection.filed_on) }} · rozpatrzenie do {{ pl_iso(form.objection.review_by) }}.</div>
     <div class="readonly-text">{{ form.objection.text }}</div>
     {% if user.has(Role.KADRY) or user.has(Role.ZARZADZAJACY) %}
       <form method="post" action="/core/oceny/{{ row.id }}/sprzeciw/decyzja">
@@ -345,7 +470,7 @@
 </section>
 {% endif %}
 
-{% if assessed and urzednik and form.promotion_choice == "TAK" %}
+{% if view >= 4 and assessed and urzednik and form.promotion_choice == "TAK" %}
 <section class="card">
   <div class="part-title"><h2>Część III</h2><span class="muted small">wniosek o przyznanie kolejnego stopnia służbowego</span></div>
   <p>Wnioskuję o przyznanie <b>{{ next_grade }}</b> stopnia służbowego.</p>
@@ -357,7 +482,15 @@
 
 {# ============================ PANEL BOCZNY ============================ #}
 <aside class="side">
-  {% if role == EVALUATOR and state in ["OBSERVATION", "INTERVIEW_HELD"] %}
+  {% if hr_panel and not hr_panel.top %}
+  <section class="card coach hr-side" aria-label="Asystent HR: przebieg rozmowy">
+    <div class="coach-head"><span class="coach-badge">Asystent HR</span>{% if tips %}<b>{{ tips.headline }}</b>{% endif %}</div>
+    {% if tips and tips.tips %}<ul class="small">{% for t in tips.tips %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+    {{ hr_outline() }}
+  </section>
+  {% endif %}
+
+  {% if role == EVALUATOR and state in ["OBSERVATION", "INTERVIEW_HELD"] and view in [2, 3, 4] %}
   <section class="card obs">
     <h2>Twoje obserwacje</h2>
     <p class="small muted">Średnia z suwaków w notatkach. Tylko do wglądu.</p>
@@ -375,13 +508,13 @@
       </li>
     {% endfor %}
     </ul>
-    {% if obs.url %}<p class="small"><a href="{{ obs.url }}">Otwórz teczkę</a></p>{% endif %}
+    {% if obs.url %}<p class="small"><a href="{{ obs.url }}">Otwórz notatki</a></p>{% endif %}
   </section>
   {% endif %}
 
-  {% if role == EVALUATOR and state in ["CRITERIA_CONFIRMED", "OBSERVATION", "INTERVIEW_HELD"] %}
-  <section class="card">
-    <h2>Zmiana terminu oceny</h2>
+  {% if role == EVALUATOR and state in ["CRITERIA_CONFIRMED", "OBSERVATION", "INTERVIEW_HELD"] and view == step_index %}
+  <details class="card fold" id="zmiana-terminu">
+    <summary>Zmiana terminu oceny</summary>
     {% if can_change_due %}
       <form method="post" action="/core/oceny/{{ row.id }}/termin">
         <label for="nd">Nowy termin</label><input type="date" id="nd" name="new_date" min="{{ today.isoformat() }}">
@@ -392,7 +525,7 @@
     {% else %}
       <p class="small muted">Niedostępna — {{ change_basis }}.</p>
     {% endif %}
-  </section>
+  </details>
   {% endif %}
 
   {% if user.has(Role.ADMIN) %}
@@ -422,13 +555,22 @@
 
 <script>
 (() => {
-  // Kryteria dodatkowe: bez powtórzeń między trzema listami
-  const sels = [...document.querySelectorAll("select.additional")];
-  const syncAdditional = () => {
-    const chosen = sels.map(s => s.value).filter(Boolean);
-    sels.forEach(s => [...s.options].forEach(o => { o.disabled = o.value && o.value !== s.value && chosen.includes(o.value); }));
+  // Potwierdzenie ocenianego: przycisk aktywny dopiero po zaznaczeniu oświadczenia
+  const ack = document.getElementById("ack-criteria");
+  if (ack) {
+    const box = ack.querySelector('input[name="oswiadczenie"]'), btn = ack.querySelector('button[type="submit"]');
+    const sync = () => { btn.disabled = !box.checked; };
+    box.addEventListener("change", sync); sync();
+  }
+
+  // Kryteria dodatkowe: najwyżej 3 zaznaczone; licznik „wybrano N z 3”
+  const picks = [...document.querySelectorAll('#part1 input[name="additional"]')];
+  const syncPicks = () => {
+    const n = picks.filter((p) => p.checked).length;
+    picks.forEach((p) => { p.disabled = !p.checked && n >= 3; p.closest(".crit-option").classList.toggle("off", p.disabled); });
+    const badge = document.getElementById("extra-count"); if (badge) badge.textContent = `wybrano ${n} z 3`;
   };
-  sels.forEach(s => s.addEventListener("change", syncAdditional)); syncAdditional();
+  picks.forEach((p) => p.addEventListener("change", syncPicks)); syncPicks();
 
   // Wynik na żywo (§ 11) — serwer i tak liczy ostatecznie
   const form = document.getElementById("assessment");
@@ -447,8 +589,8 @@
       document.getElementById("live-mean").textContent = String(mean).replace(".", ",");
       document.getElementById("live-level").textContent = band[3];
       document.getElementById("live-outcome").innerHTML = "<b>" + (positive ? "POZYTYWNA" : "NEGATYWNA") + "</b>";
-      document.getElementById("live-note").textContent = forced && band[0] >= 4 ? "Negatywna: co najmniej jedna ocena cząstkowa „znacznie poniżej oczekiwań” (§ 11 ust. 1 pkt 4)." : "";
-      document.getElementById("just-hint").textContent = positive ? "(opcjonalne przy ocenie pozytywnej)" : "(obowiązkowe — ocena negatywna)";
+      document.getElementById("live-note").textContent = forced && band[0] >= 4 ? "Negatywna: co najmniej jedna ocena cząstkowa „znacznie poniżej oczekiwań”." : "";
+      document.getElementById("just-hint").textContent = positive ? "— opcjonalne przy ocenie pozytywnej" : "— obowiązkowe, ocena negatywna";
     };
     form.addEventListener("change", update); update();
   }
@@ -475,9 +617,48 @@
     } catch (e) { /* zostaje link */ }
   });
 
-  document.querySelectorAll(".insert-draft").forEach(b => b.addEventListener("click", () => {
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest(".insert-draft");
+    if (!b) return;
     const t = document.getElementById(b.dataset.target);
     t.value = t.value ? t.value + "\n\n" + b.dataset.text : b.dataset.text; t.focus();
+  });
+
+  // Sugestie asystenta HR obok uzasadnienia i wniosków do IPRZ — każdy przycisk analizuje tylko swoje pole.
+  const boxes = [...document.querySelectorAll(".assist[data-key]")];
+  const render = (box, items) => {
+    const list = box.querySelector(".assist-items");
+    list.innerHTML = "";
+    if (!items.length) { list.innerHTML = '<p class="muted small">Za mało notatek, żeby coś zaproponować.</p>'; return; }
+    items.forEach((it) => {
+      const d = document.createElement("div"); d.className = "draft";
+      const p = document.createElement("p"); p.textContent = it.text; d.append(p);
+      if (it.notes.length) {
+        const src = document.createElement("p"); src.className = "muted small"; src.append("Notatki: ");
+        it.notes.forEach((n, i) => { const a = document.createElement("a"); a.href = n.url; a.textContent = n.label; src.append(a); if (i < it.notes.length - 1) src.append(", "); });
+        d.append(src);
+      }
+      const b = document.createElement("button"); b.type = "button"; b.className = "secondary insert-draft";
+      b.dataset.target = box.dataset.key; b.dataset.text = it.text; b.textContent = "Wstaw do pola"; d.append(b);
+      list.append(d);
+    });
+  };
+  boxes.forEach((box) => box.querySelector(".assist-gen")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget, wait = box.querySelector(".assist-wait");
+    btn.disabled = true; if (wait) wait.hidden = false;
+    try {
+      const res = await fetch(btn.dataset.url, {method: "POST", headers: {Accept: "application/json"}});
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Asystent nie odpowiedział.");
+      render(box, data[box.dataset.key] || []);
+      btn.textContent = "Wygeneruj ponownie"; btn.classList.add("secondary");
+    } catch (err) {
+      box.querySelector(".assist-items").innerHTML = "";
+      const p = document.createElement("p"); p.className = "alert error small"; p.textContent = err.message;
+      box.querySelector(".assist-items").append(p);
+    } finally {
+      btn.disabled = false; if (wait) wait.hidden = true;
+    }
   }));
 })();
 </script>

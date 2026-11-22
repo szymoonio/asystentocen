@@ -8,7 +8,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title }} · Asystent Ocen</title>
+  <title>{{ title }} · AsystentPLUS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
@@ -20,10 +20,11 @@
   <header class="topbar">
     <div class="wrap">
       <a class="brand" href="/">
-        <span class="flag" aria-hidden="true"></span>
+        <img class="emblem" src="{{ asset('/static/img/godlo.svg') }}" alt="Godło Rzeczypospolitej Polskiej" width="38" height="45">
+        <span class="brand-divider" aria-hidden="true"></span>
         <span class="brand-text">
-          <span class="brand-name">Asystent Ocen</span>
-          <span class="brand-office">{{ office.name }}</span>
+          <span class="brand-name">AsystentPLUS</span>
+          <span class="brand-office">ocena okresowa w służbie cywilnej</span>
         </span>
       </a>
       <details class="userswitch">
@@ -43,7 +44,7 @@
     <div class="wrap">
       {{ nav_link("/core/", "Pulpit", path in ["/", "/core/", "/core"]) }}
       {{ nav_link("/core/oceny", "Oceny", path.startswith("/core/oceny")) }}
-      {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/teczka", "Teczka", path.startswith("/asystent/teczka") or path.startswith("/asystent/notatka")) }}{% endif %}
+      {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/teczka", "Notatki", path.startswith("/asystent/teczka") or path.startswith("/asystent/notatka")) }}{% endif %}
       {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/analiza", "Analiza zespołu", path.startswith("/asystent/analiza")) }}{% endif %}
       {% if user.has("OCENIAJACY") %}{{ nav_link("/asystent/hr", "Asystent HR", path.startswith("/asystent/hr")) }}{% endif %}
       {% if user.has("KADRY") %}{{ nav_link("/core/kadry", "Kadry", path.startswith("/core/kadry")) }}{% endif %}

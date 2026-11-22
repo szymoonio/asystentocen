@@ -5,6 +5,7 @@
 .alert.ok { background: var(--success-bg); color: var(--success); border-color: var(--success); }
 .alert.error { background: var(--error-bg); color: var(--error); border-color: var(--error); }
 .alert.warn { background: var(--warn-bg); color: var(--warn-text); border-color: var(--warn-border); }
+.alert.info { background: var(--info-bg); color: var(--text); border-color: var(--info-border); }
 
 /* --- nagłówek strony --- */
 .pagehead { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
@@ -15,13 +16,26 @@
 .meta div span { display: block; font-size: 15px; color: var(--text-muted); }
 
 /* --- pasek etapów: belka 4px — zrobione / bieżące / przyszłe --- */
-.stepper { display: grid; grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr)); list-style: none; padding: 0; margin: 0 0 12px;
-  border: 1px solid var(--border); border-right: 0; }
-.stepper li { padding: 6px 8px; border-top: 4px solid var(--border); border-right: 1px solid var(--border); font-size: 15px; color: var(--text-muted); }
+/* --- pasek etapów: 4 fazy, 8 kroków; kroki do bieżącego są zakładkami --- */
+.stepper { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 12px; border: 1px solid var(--border); background: var(--surface); }
+.stepper .phase { flex: var(--n, 1) 1 0; min-width: 9rem; border-right: 1px solid var(--border); }
+.stepper .phase:nth-child(1) { --n: 2; } .stepper .phase:nth-child(2) { --n: 1; }
+.stepper .phase:nth-child(3) { --n: 2; } .stepper .phase:nth-child(4) { --n: 3; }
+.stepper .phase:last-child { border-right: 0; }
+.stepper .phase-name { padding: 4px 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: var(--bg-subtle); border-bottom: 1px solid var(--border); }
+.stepper ol { display: flex; list-style: none; margin: 0; padding: 0; }
+.stepper li { flex: 1 1 0; min-width: 0; border-top: 4px solid var(--border); border-right: 1px solid var(--border); font-size: 15px; color: var(--text-muted); }
+.stepper li:last-child { border-right: 0; }
+.stepper li > a, .stepper li > span { display: block; padding: 6px 8px; color: inherit; text-decoration: none; height: 100%; }
+.stepper li > a:hover { background: var(--bg-subtle); }
+.stepper .step-label { display: block; line-height: 1.25; }
+.stepper .step-date { display: block; font-size: 13px; color: var(--text-muted); margin-top: 2px; font-weight: 400; }
 .stepper li.done { border-top-color: var(--primary); color: var(--text); }
 .stepper li.current { border-top-color: var(--accent-red); color: var(--text); font-weight: 700; }
-.stepper li.done::before { content: "✓ "; color: var(--primary); font-weight: 700; }
-.stepper li.current::before { content: "● "; color: var(--accent-red); }
+.stepper li.done .step-label::before { content: "✓ "; color: var(--primary); font-weight: 700; }
+.stepper li.current .step-label::before { content: "● "; color: var(--accent-red); }
+.stepper li.viewing { background: var(--info-bg); box-shadow: inset 0 -3px 0 var(--primary); }
+@media (max-width: 700px) { .stepper .phase { flex-basis: 100%; border-right: 0; border-bottom: 1px solid var(--border); } }
 
 /* --- układ dwóch kolumn --- */
 .layout { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
@@ -136,23 +150,6 @@ button.link:hover { background: none; color: var(--primary-dark); }
 .own-eval-facts dd { margin: 0; font-size: 19px; font-weight: 700; }
 .own-eval-facts dd .muted { font-size: 17px; font-weight: 400; }
 
-/* --- pulpit: większy (ok. 120%) — najczęściej odwiedzana strona --- */
-.dashboard { font-size: 20px; }
-.dashboard h1 { font-size: 38px; }
-.dashboard .section-title { font-size: 27px; margin-top: 20px; }
-.dashboard .todo h3 { font-size: 22px; padding: 10px 14px; }
-.dashboard .todo-item { min-height: 56px; padding: 8px 12px; }
-.dashboard .todo-item .badge { font-size: 17px; padding: 2px 10px; }
-.dashboard .bigbutton { font-size: 22px; min-height: 58px; padding: 12px 26px; }
-.dashboard .person { font-size: 19px; }
-.dashboard .person .muted, .dashboard .small { font-size: 17px; }
-.dashboard .own-eval > h2:first-child { font-size: 22px; padding: 10px 14px; }
-.dashboard .own-eval-facts dt { font-size: 16px; }
-.dashboard .own-eval-facts dd { font-size: 22px; }
-.dashboard .own-eval-facts dd .muted { font-size: 18px; }
-.dashboard .button { font-size: 19px; }
-.dashboard .todo-grid { gap: 16px; }
-
 /* --- ocena: asystent HR — podsumowanie notatek, zwinięte projekty tekstów --- */
 .hr-summary { margin-bottom: 6px; }
 .hr-summary .a-generate { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 6px; }
@@ -163,3 +160,83 @@ button.link:hover { background: none; color: var(--primary-dark); }
 .hr-summary .a-pros-cons > div { flex: 1 1 18rem; min-width: 0; }
 .hr-summary .a-points { margin: 0; padding-left: 20px; }
 .drafts { margin: 4px 0 6px; }
+
+/* --- kryteria jako kafelki (część I: wypełnianie i podgląd) --- */
+.criteria-split h3 { margin: 12px 0 6px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.criteria-split h3:first-child { margin-top: 0; }
+.criteria-split { margin-bottom: 4px; }
+.next-step { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.next-step .actions { margin-top: 8px; }
+.crit-count { display: inline-block; min-width: 22px; padding: 0 6px; background: var(--primary); color: #fff; font-size: 13px; text-align: center; }
+.crit-count.extra { background: var(--accent-red); }
+.crit-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 8px; }
+.crit-tile { border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 8px 10px; background: var(--surface); }
+.crit-tile.extra { border-left-color: var(--accent-red); }
+.crit-tile b, .crit-option b { display: block; line-height: 1.25; }
+.crit-desc { display: block; margin-top: 3px; font-size: 14px; color: var(--text-muted); line-height: 1.35; }
+
+.p1-section { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.p1-section:first-child { padding-top: 4px; }
+.p1-section h3 { margin: 0 0 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 19px; }
+.p1-section h3 .badge { margin-left: auto; }
+.p1-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 15px; }
+.crit-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 8px; }
+.crit-option { display: flex; gap: 10px; align-items: center; border: 1px solid var(--border-input); padding: 8px 10px; cursor: pointer; margin: 0; font-weight: 400; }
+.crit-option input { margin: 0; width: 18px; height: 18px; flex: none; }
+.crit-option:has(input:checked) { border-color: var(--accent-red); box-shadow: inset 4px 0 0 var(--accent-red); background: #fff7f8; }
+.crit-option.off { opacity: .45; cursor: not-allowed; }
+.p1-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 18rem)); gap: 12px 24px; }
+.p1-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; padding-top: 14px; }
+.p1-footer > div { text-align: right; }
+.p1-footer > div .small { margin-top: 4px; }
+
+/* --- potwierdzenie kryteriów przez ocenianego: obowiązkowe oświadczenie --- */
+.ack-form { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--info-border); background: var(--info-bg); }
+.ack-check { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-weight: 400; cursor: pointer; }
+.ack-check input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.ack-form .actions { margin-top: 10px; }
+.ack-form button[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* --- dane poprzedniej oceny (z historii, tylko do odczytu) --- */
+.prev-auto { border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 8px 12px; background: var(--bg-subtle); }
+.prev-grid { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 4px; }
+.prev-grid dt { font-size: 14px; color: var(--text-muted); }
+.prev-grid dd { margin: 0; font-weight: 700; }
+.prev-auto p { margin: 0 0 4px; }
+
+/* --- etap rozmowy oceniającej --- */
+.interview-steps { display: grid; gap: 12px; }
+.interview-step { border-left: 4px solid var(--primary); padding: 4px 0 4px 12px; }
+.interview-step h3 { margin-top: 0; }
+.inline-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.inline-row input { max-width: 12rem; }
+.conclusions { background: var(--info-bg); border: 1px solid var(--info-border); padding: 8px 12px; margin-bottom: 12px; }
+
+/* --- panel asystenta HR z przebiegiem rozmowy --- */
+.hr-side h3 { margin: 10px 0 6px; font-size: 17px; }
+.pipeline { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.pipeline > li { counter-increment: step; position: relative; padding: 0 0 8px 30px; }
+.pipeline > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.pipeline > li:not(:last-child)::after { content: ""; position: absolute; left: 10px; top: 24px; bottom: 2px; border-left: 2px solid var(--info-border); }
+.pipeline-head { display: flex; justify-content: space-between; gap: 8px; }
+.pipeline ul { margin: 2px 0 0; padding-left: 16px; }
+
+/* --- asystent HR obok uzasadnienia i wniosków do IPRZ --- */
+/* Asystent HR nad polem, którego dotyczy (jedno pod drugim) */
+.assist-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 16px; }
+.assist-field textarea { width: 100%; }
+.assist { background: var(--info-bg); border: 1px solid var(--info-border); border-left: 4px solid var(--primary); padding: 8px 10px; font-size: 15px; }
+.assist .draft { background: #fff; border: 1px solid var(--info-border); padding: 6px 8px; margin: 6px 0; }
+.assist .draft p { margin: 0 0 4px; white-space: pre-line; }
+.assist .assist-gen { margin-top: 6px; }
+.assist > p.small { margin: 6px 0 0; }
+
+/* --- krok „Rozmowa rozpoczynająca i kryteria”: asystent HR na górze, domyślnie zwinięty --- */
+.hr-top > summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.hr-top > summary::-webkit-details-marker { display: none; }
+.hr-top > summary .coach-head::after { content: "▾"; margin-left: auto; color: var(--primary); transition: transform .15s; }
+.hr-top[open] > summary .coach-head::after { transform: rotate(180deg); }
+.hr-top[open] > summary .hr-top-meta { display: none; }
+.hr-top .pipeline { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 4px 16px; }
+.hr-top .pipeline > li::after { display: none; }

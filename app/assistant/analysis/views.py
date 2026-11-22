@@ -92,7 +92,7 @@ def _safe_back(value: str) -> str | None:
 
 @router.get("/analiza/fragment")
 @html_errors
-def fragment(request: Request, osoba: str = "", wroc: str = ""):
+def fragment(request: Request, osoba: str = "", wroc: str = "", tryb: str = ""):
     """Podsumowanie notatek o osobie do osadzenia na innej stronie (np. ocena okresowa w module A)."""
     c, user, svc, subordinates, notes, scale = _context(request)
     person = _person(c, subordinates, notes, scale, osoba)
@@ -102,6 +102,7 @@ def fragment(request: Request, osoba: str = "", wroc: str = ""):
         outdated=bool(stored and stored.input_key != analysis_llm.input_key(person.notes)),
         llm_available=svc.llm.available(analysis_llm.PERSON_TASK), widok="osoba", osoba=osoba,
         names={e.id: e.full_name for e in subordinates}, wroc=_safe_back(wroc),
+        compact=tryb == "krotki",  # tylko mocne i słabe strony — mały panel asystenta HR przy ocenie
     )
 
 

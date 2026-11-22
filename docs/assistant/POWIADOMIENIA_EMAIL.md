@@ -27,9 +27,9 @@ APP_BASE_URL=http://127.0.0.1:8000
 ```
 
 - `MAIL_REDIRECT_TO` — dane demo mają adresy `@przyklady.example`, które nie istnieją; wszystkie maile
-  idą więc na Twój adres, a w temacie jest `[demo → Henryk Pryncypał]`.
+  idą więc na Twój adres, a w temacie jest `[demo → Henryk Kowalczyk]`.
 - `MAIL_ONLY_FOR` — tylko przypomnienia dla tych przełożonych (id z `seed/office.yaml`); bez tego
-  dostaniesz też maile Barbary, Tadeusza, Marka itd.
+  dostaniesz też maile pozostałych przełożonych
 - Gmail: hasło aplikacji (nie zwykłe hasło) — wymaga włączonej weryfikacji dwuetapowej na koncie Google,
   potem „Hasła aplikacji” w ustawieniach bezpieczeństwa konta.
 - Link w mailu prowadzi na `APP_BASE_URL` — działa na komputerze, na którym chodzi serwer.

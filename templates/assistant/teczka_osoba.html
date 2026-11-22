@@ -2,7 +2,7 @@
 {% import "assistant/_macros.html" as m %}
 {% block head %}{{ m.head() }}{% endblock %}
 {% block content %}
-  <p class="small"><a href="/asystent/teczka">← Teczka</a></p>
+  <p class="small"><a href="/asystent/teczka">← Notatki</a></p>
   <div class="t-head">
     <div>
       <h1>{{ subject.full_name }}</h1>
@@ -50,15 +50,6 @@
     </details>
   {% endif %}
 
-  {% if chart.series[""] %}
-    <details class="card fold t-chart" id="wykres" open data-chart='{{ chart | tojson }}' data-selected="{{ filters.kryterium }}" data-link="?cykl=">
-      <summary>Oceny w czasie</summary>
-      <div class="t-chart-pick" role="group" aria-label="Wybierz kryterium"></div>
-      <div class="t-chart-area"></div>
-      <p class="muted small">Każda kropka to notatka — kliknij, żeby ją zobaczyć. Wszystkie okresy oceny.</p>
-    </details>
-    <script src="{{ asset('/static/assistant/charts.js') }}" defer></script>
-  {% endif %}
 
   <section class="card" id="os-czasu">
     <h2>Oś czasu</h2>

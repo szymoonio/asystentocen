@@ -14,7 +14,7 @@ from app.settings import ROOT
 
 
 def create_app(container: Container | None = None) -> FastAPI:
-    app = FastAPI(title="Cyfrowy Asystent Ocen Okresowych")
+    app = FastAPI(title="AsystentPLUS")
     app.state.container = container or build_container()
     app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
     app.include_router(shell.router)
